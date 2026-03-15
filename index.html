@@ -1153,7 +1153,7 @@
             const AUTHOR_QQ = '2165384053';
             
             // 所有签名原始内容 - 从签名合集代码完整整合
-            const SIGNATURE_RAW_1 = '<color=#D2FFBD>⁺「</color><color=#FFB5E0>幸福</color><size=18><color=#CFFFE2>请降临在</color></size><size=14><u><color=#FFB0DD>阿念</color></u></size><color=#C4FFBD>身上」⁺</color>';
+            // 删除第一个个性标签 (SIGNATURE_RAW_1)
             const SIGNATURE_RAW_2 = '<u><i><b><color=#949494>我会</color><size=18><color=#FFFFFF>听@署名の</color></size><size=18><color=#8A0000>永远</color></size><size=18><color=#949494>活在</color></size><size=15><color=#FFFFFF>您の</color></size><size=18><color=#8A0000>牢笼</color></size><size=18><color=#ffffff>里</color></size></b></i></u>';
             const SIGNATURE_RAW_3 = '<size=12><color=#FFFFFF>检测到角色</color><color=#FFBF47>逍遥</color><color=#FFFFFF>当前</color><color=#FF0000>好感度为：</color></size><size=12><color=#FFB5CA>♡♡♡♡︎♡︎90%…</color></size>';
             const SIGNATURE_RAW_4 = '<size=15><color=#c7c7c7>嗯</color></size><size=18><color=#ffffff>嗯</color></size><size=15><color=#c7c7c7>啊</color></size><size=18><color=#ffffff>啊</color></size><size=15><color=#c7c7c7>的，和我聊天</color></size><size=17><color=#ff0000>你很</color></size><size=22><b><color=#d10000>爽</color></b></size><size=17><color=#ff0000>吗</color></size>';
@@ -1257,7 +1257,7 @@
             const SIGNATURE_RAW_98 = '<size=12><color=#B3DBF2>†°</color><color=#BADEF3>想离</color><color=#C1E2F4>你近</color><color=#C9E5F6>点</color><color=#D0E9F7>\n                近到</color><color=#D4EAF8>我</color><color=#D7ECF8>的</color><color=#DBEEF9>眼泪</color><color=#E9F5FB>砸进你的心</color><color=#FFFFFF>₊꧞\n</color></size>';
             const SIGNATURE_RAW_99 = '<size=11><color=#C9E0F7>♡₊</color><b><color=#D1E4F8>爱</color></b><color=#D3E6F8>不是</color><i><color=#D7E8F9>展览</color></i><color=#DBEAFA>何必</color><color=#DFECFA>给谁</color><color=#E3EEFB>看</color><color=#E6F1FB>\n                              随别人说</color></size><size=12><color=#EEF5FD>长</color></size><size=11><color=#F0F6FD>道短</color><color=#F4F8FE>·₊˚⊹\n</color></size>';
             
-            // 新增签名 - QQ: 1571199718
+            // 第二个个性标签 - QQ: 1571199718
             const SIGNATURE_RAW_100 = '<u><i><size=18><color=#C20000>早</color></size><color=#787878>就</color><size=14><color=#b0b0b0>说过</color></size><color=#FFFFFF>有些</color><size=18><color=#C20000>感觉</color></size><color=#FFFFFF>只能</color><size=18><color=#C20000>我给你</color></size></i></u>';
 
             // 界面ID常量 - 清晰的层级关系
@@ -1681,8 +1681,7 @@
                 
                 // 收集所有签名，带上对应的QQ号或名称
                 const signatures = [
-                    // 原有54个签名
-                    { raw: SIGNATURE_RAW_1, qq: AUTHOR_QQ, displayName: AUTHOR_QQ, html: getSignatureHtml1() },
+                    // 原有54个签名 - 删除了第一个，从第2个开始
                     { raw: SIGNATURE_RAW_2, qq: AUTHOR_QQ, displayName: AUTHOR_QQ, html: getSignatureHtml2() },
                     { raw: SIGNATURE_RAW_3, qq: AUTHOR_QQ, displayName: AUTHOR_QQ, html: getSignatureHtml3() },
                     { raw: SIGNATURE_RAW_4, qq: AUTHOR_QQ, displayName: AUTHOR_QQ, html: getSignatureHtml4() },
@@ -1783,7 +1782,7 @@
                     { raw: SIGNATURE_RAW_97, qq: '1991725572', displayName: '1991725572', html: getSignatureHtml97() },
                     { raw: SIGNATURE_RAW_98, qq: '1991725572', displayName: '1991725572', html: getSignatureHtml98() },
                     { raw: SIGNATURE_RAW_99, qq: '1991725572', displayName: '1991725572', html: getSignatureHtml99() },
-                    // 新增签名 - QQ: 1571199718 (这是第二个标签)
+                    // 第二个个性标签 - QQ: 1571199718
                     { raw: SIGNATURE_RAW_100, qq: '1571199718', displayName: '1571199718', html: getSignatureHtml100() }
                 ];
 
@@ -1800,12 +1799,12 @@
                     signatureDiv.className = 'signature-text';
                     signatureDiv.innerHTML = displayHtml;
                     
-                    // 添加QQ标签 - 第1个和第2个不显示QQ
+                    // 添加QQ标签 - 第1个和第2个不显示QQ（现在第一个是原来的第二个）
                     const qqTag = document.createElement('div');
                     qqTag.className = 'signature-qq';
                     
-                    // 原有的前两个签名不显示QQ，其他都显示对应的QQ或名称
-                    if (index === 1 || index === 2) {
+                    // 第一个签名（原来的第二个）不显示QQ，其他都显示对应的QQ或名称
+                    if (index === 1) {
                         qqTag.textContent = '';
                         qqTag.style.display = 'none';
                     } else {
@@ -1854,8 +1853,7 @@
                 setTimeout(performGlobalSearch, 10);
             }
 
-            // 辅助函数：获取签名的HTML显示内容（原有54个保持不变）
-            function getSignatureHtml1() { return `<span style="color: #D2FFBD;">⁺「</span><span style="color: #FFB5E0;">幸福</span><span style="font-size: 0.9rem; color: #CFFFE2;">请降临在</span><span style="font-size: 0.8rem;"><u><span style="color: #FFB0DD;">阿念</span></u></span><span style="color: #C4FFBD;">身上」⁺</span>`; }
+            // 辅助函数：获取签名的HTML显示内容
             function getSignatureHtml2() { return `<u><i><b><span style="color: #949494;">我会</span><span style="font-size: 0.9rem; color: #FFFFFF;">听@署名の</span><span style="font-size: 0.9rem; color: #8A0000;">永远</span><span style="font-size: 0.9rem; color: #949494;">活在</span><span style="font-size: 0.8rem; color: #FFFFFF;">您の</span><span style="font-size: 0.9rem; color: #8A0000;">牢笼</span><span style="font-size: 0.9rem; color: #ffffff;">里</span></b></i></u>`; }
             function getSignatureHtml3() { return `<span style="font-size: 0.7rem;"><span style="color: #FFFFFF;">检测到角色</span><span style="color: #FFBF47;">逍遥</span><span style="color: #FFFFFF;">当前</span><span style="color: #FF0000;">好感度为：</span></span><br><span style="font-size: 0.7rem; color: #FFB5CA;">♡♡♡♡︎♡︎90%…</span>`; }
             function getSignatureHtml4() { return `<span style="font-size: 0.8rem; color: #c7c7c7;">嗯</span><span style="font-size: 0.9rem; color: #ffffff;">嗯</span><span style="font-size: 0.8rem; color: #c7c7c7;">啊</span><span style="font-size: 0.9rem; color: #ffffff;">啊</span><span style="font-size: 0.8rem; color: #c7c7c7;">的，和我聊天</span><span style="font-size: 0.9rem; color: #ff0000;">你很</span><span style="font-size: 1.1rem; font-weight: bold; color: #d10000;">爽</span><span style="font-size: 0.9rem; color: #ff0000;">吗</span>`; }
@@ -1959,7 +1957,7 @@
             function getSignatureHtml98() { return `<span style="font-size: 0.7rem;"><span style="color: #B3DBF2;">†°</span><span style="color: #BADEF3;">想离</span><span style="color: #C1E2F4;">你近</span><span style="color: #C9E5F6;">点</span><span style="color: #D0E9F7;"><br>                近到</span><span style="color: #D4EAF8;">我</span><span style="color: #D7ECF8;">的</span><span style="color: #DBEEF9;">眼泪</span><span style="color: #E9F5FB;">砸进你的心</span><span style="color: #FFFFFF;">₊꧞<br></span></span>`; }
             function getSignatureHtml99() { return `<span style="font-size: 0.6rem;"><span style="color: #C9E0F7;">♡₊</span><b><span style="color: #D1E4F8;">爱</span></b><span style="color: #D3E6F8;">不是</span><i><span style="color: #D7E8F9;">展览</span></i><span style="color: #DBEAFA;">何必</span><span style="color: #DFECFA;">给谁</span><span style="color: #E3EEFB;">看</span><span style="color: #E6F1FB;"><br>                              随别人说</span></span><span style="font-size: 0.7rem; color: #EEF5FD;">长</span><span style="font-size: 0.6rem;"><span style="color: #F0F6FD;">道短</span><span style="color: #F4F8FE;">·₊˚⊹<br></span></span>`; }
             
-            // 新增签名的HTML函数 - QQ: 1571199718 (这是第二个标签)
+            // 新增签名的HTML函数 - QQ: 1571199718 (第二个个性标签)
             function getSignatureHtml100() { return `<u><i><span style="font-size: 0.9rem; color: #C20000;">早</span><span style="color: #787878;">就</span><span style="font-size: 0.8rem; color: #b0b0b0;">说过</span><span style="color: #FFFFFF;">有些</span><span style="font-size: 0.9rem; color: #C20000;">感觉</span><span style="color: #FFFFFF;">只能</span><span style="font-size: 0.9rem; color: #C20000;">我给你</span></i></u>`; }
 
             // 第1级：皮肤分类
