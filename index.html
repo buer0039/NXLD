@@ -1112,7 +1112,7 @@
             </div>
             <div class="thanks-body">
                 <p>感谢小猫原创、TwT、蜜雪小橙、</p>
-                <p>小夕、祁厌提供的个签代码</p>
+                <p>小夕、祁厌、Jocelyn提供的个签代码</p>
             </div>
             <div class="thanks-footer">
                 <button class="thanks-close" id="closeThanks">关闭</button>
@@ -1269,6 +1269,14 @@
             
             // 修正SIGNATURE_RAW_104中的颜色值错误
             const SIGNATURE_RAW_104_CORRECTED = '<color=#B51A00><i><size=16></size></i></color><color=#FFFFFF><b><i><size=12>不要</size></i></b></color><color=#B51A00><b><i><u><size=16>让你的眼泪</size></u></i></b></color><color=#FFFFFF><b><i><size=12>迁怒于</size></i></b></color><color=#FFFFFF><b><i><size=16>我</size></i></b></color><color=#B51A00><i><size=16>☆</size></i></color>';
+            
+            // 新增签名 - QQ: 3654685688
+            const SIGNATURE_RAW_105 = '<color=#7A7A7A><u><size=13>你</size></u></color><color=#FFFFFF><size=15>说想</size></color><color=#B50000><b><size=18>进步</size></b></color><color=#FFFFFF><i><size=14>可我一</size></i></color><color=#9C0000><b><size=20>进</size></b></color><color=#5E5E5E><size=15>你</size></color><color=#FFFFFF><i><size=16>就</size></i></color><color=#940000><b><size=19>说不</size></b></color>';
+            const SIGNATURE_RAW_106 = '<color=#4BFFFF><size=16> 「</size></color><color=#4BFFFF><b><size=16>无</size></b></color><color=#4BFFFF><b><u><size=16>情道」</size></u></b></color><color=#80FFFF><u><size=14>唯一</size></u></color><color=#A6FFFF><size=20>天才</size></color><color=#CAFFFF><size=21>剑修</size></color><color=#BBFFFF><size=15>找婆娘</size></color>';
+            const SIGNATURE_RAW_107 = '<color=#FFB3DA><i><size=15>⁺♡∥</size></i></color><color=#FFB3DA><b><size=20>离开</size></b></color><u><i><size=15><color=#FFB3DA>是</color><color=#FFD9ED>选</color><color=#FFFFFF>择</color></size></i></u><color=#FFB3DA><i><u><size=15>.</size></u></i></color><color=#FFFFFF><b><size=20>爱你</size></b></color><u><i><size=15><color=#FFB3DA>是</color><color=#FFD9ED>永</color><color=#FFFFFF>远</color></size></i></u><u><i><size=15><color=#FFB3DA>∥</color><color=#FFD9ED>+</color><color=#FFFFFF>☆</color></size></i></u>';
+            const SIGNATURE_RAW_108 = '<u><i><size=19><color="#FF0000">挂哥</color></size></i><size=17><color="#BEBEBE">就该被</color></size><i><size=19><color="#FF0000">我</color></size></i><size=17><color="#FFFFFF">狠狠</color></size><i><size=19><color="#FF0000">法</color></size></i></u>';
+            const SIGNATURE_RAW_109 = '<color=#FF0000><b><size=18>恨</size></b></color><color=#FFFFFF><u><size=14>我</size></u></color><color=#FFFFFF><size=14>不就是</size></color><color=#FF0000><b><size=18>想</size></b></color><color=#FFFFFF><u><size=15>我</size></u></color><color=#FFFFFF><size=15>吗</size></color><color=#808080><b><size=14>+.”</size></b></color>';
+            const SIGNATURE_RAW_110 = '<color=#FFFFFF><u><size=15>我</size></u></color><color=#FF0000><b><size=19>欲成冰</size></b></color><color=#808080><i><size=15>再也</size></i></color><color=#FFFFFF><u><size=15>無</size></u></color><color=#FF0000><b><size=19>退路</size></b></color>';
 
             // 界面ID常量 - 清晰的层级关系
             const VIEWS = {
@@ -1799,7 +1807,14 @@
                     { raw: SIGNATURE_RAW_101, qq: '413375149', displayName: '413375149', html: getSignatureHtml101() },
                     { raw: SIGNATURE_RAW_102, qq: '413375149', displayName: '413375149', html: getSignatureHtml102() },
                     { raw: SIGNATURE_RAW_103, qq: '413375149', displayName: '413375149', html: getSignatureHtml103() },
-                    { raw: SIGNATURE_RAW_104_CORRECTED, qq: '413375149', displayName: '413375149', html: getSignatureHtml104() }
+                    { raw: SIGNATURE_RAW_104_CORRECTED, qq: '413375149', displayName: '413375149', html: getSignatureHtml104() },
+                    // 新增签名 - QQ: 3654685688
+                    { raw: SIGNATURE_RAW_105, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml105() },
+                    { raw: SIGNATURE_RAW_106, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml106() },
+                    { raw: SIGNATURE_RAW_107, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml107() },
+                    { raw: SIGNATURE_RAW_108, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml108() },
+                    { raw: SIGNATURE_RAW_109, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml109() },
+                    { raw: SIGNATURE_RAW_110, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml110() }
                 ];
 
                 // 创建签名卡片的辅助函数
@@ -1815,11 +1830,9 @@
                     signatureDiv.className = 'signature-text';
                     signatureDiv.innerHTML = displayHtml;
                     
-                    // 添加QQ标签 - 现在第一个签名也显示QQ
+                    // 添加QQ标签 - 所有签名都显示QQ标签
                     const qqTag = document.createElement('div');
                     qqTag.className = 'signature-qq';
-                    
-                    // 所有签名都显示QQ标签
                     qqTag.textContent = `QQ:${displayName}`;
                     
                     const hintDiv = document.createElement('div');
@@ -1976,6 +1989,14 @@
             function getSignatureHtml102() { return `<u><i><span style="font-size: 0.7rem;"><span style="color: #D9C9FE;">是</span><span style="color: #D6C9FE;">你</span><span style="color: #D4C9FE;">悄</span><span style="color: #D1C9FE;">然</span><span style="color: #CEC8FE;">下</span><span style="color: #CCC8FE;">的</span><span style="color: #C9C8FE;">雪</span><span style="color: #C7C8FE;">在</span><span style="color: #C4C8FE;">离</span><span style="color: #C1C8FE;">我</span><span style="color: #BFC7FF;">而</span><span style="color: #BCC7FF;">去</span><span style="color: #B9C7FF;">吗</span><span style="color: #B7C7FF;">(</span><span style="color: #B4C7FF;">´</span><span style="color: #B2C7FF;">^</span><span style="color: #AFC6FF;">\`</span><span style="color: #ACC6FF;"></span><span style="color: #AAC6FF;">)</span><span style="color: #A7C6FF;">*</span></span></i></u>`; }
             function getSignatureHtml103() { return `<span style="color: #B51A00;"><b><span style="font-size: 0.9rem;">+*</span></b></span><span style="color: #FFFFFF;"><i><span style="font-size: 0.8rem;">你</span></i></span><span style="color: #B51A00;"><i><u><span style="font-size: 1rem;">爱我</span></u></i></span><span style="color: #FFFFFF;"><i><span style="font-size: 0.9rem;">的真心</span></i></span><span style="color: #B51A00;"><i><span style="font-size: 0.9rem;">好恶心</span></i></span><span style="color: #B51A00;"><b><span style="font-size: 0.9rem;">*+</span></b></span>`; }
             function getSignatureHtml104() { return `<span style="color: #B51A00;"><i><span style="font-size: 0.9rem;"></span></i></span><span style="color: #FFFFFF;"><b><i><span style="font-size: 0.7rem;">不要</span></i></b></span><span style="color: #B51A00;"><b><i><u><span style="font-size: 0.9rem;">让你的眼泪</span></u></i></b></span><span style="color: #FFFFFF;"><b><i><span style="font-size: 0.7rem;">迁怒于</span></i></b></span><span style="color: #FFFFFF;"><b><i><span style="font-size: 0.9rem;">我</span></i></b></span><span style="color: #B51A00;"><i><span style="font-size: 0.9rem;">☆</span></i></span>`; }
+
+            // 新增签名的HTML函数 - QQ: 3654685688
+            function getSignatureHtml105() { return `<span style="color: #7A7A7A;"><u><span style="font-size: 0.7rem;">你</span></u></span><span style="color: #FFFFFF;"><span style="font-size: 0.8rem;">说想</span></span><span style="color: #B50000;"><b><span style="font-size: 0.9rem;">进步</span></b></span><span style="color: #FFFFFF;"><i><span style="font-size: 0.8rem;">可我一</span></i></span><span style="color: #9C0000;"><b><span style="font-size: 1rem;">进</span></b></span><span style="color: #5E5E5E;"><span style="font-size: 0.8rem;">你</span></span><span style="color: #FFFFFF;"><i><span style="font-size: 0.9rem;">就</span></i></span><span style="color: #940000;"><b><span style="font-size: 1rem;">说不</span></b></span>`; }
+            function getSignatureHtml106() { return `<span style="color: #4BFFFF;"><span style="font-size: 0.9rem;"> 「</span></span><span style="color: #4BFFFF;"><b><span style="font-size: 0.9rem;">无</span></b></span><span style="color: #4BFFFF;"><b><u><span style="font-size: 0.9rem;">情道」</span></u></b></span><span style="color: #80FFFF;"><u><span style="font-size: 0.8rem;">唯一</span></u></span><span style="color: #A6FFFF;"><span style="font-size: 1rem;">天才</span></span><span style="color: #CAFFFF;"><span style="font-size: 1.1rem;">剑修</span></span><span style="color: #BBFFFF;"><span style="font-size: 0.8rem;">找婆娘</span></span>`; }
+            function getSignatureHtml107() { return `<span style="color: #FFB3DA;"><i><span style="font-size: 0.8rem;">⁺♡∥</span></i></span><span style="color: #FFB3DA;"><b><span style="font-size: 1rem;">离开</span></b></span><u><i><span style="font-size: 0.8rem;"><span style="color: #FFB3DA;">是</span><span style="color: #FFD9ED;">选</span><span style="color: #FFFFFF;">择</span></span></i></u><span style="color: #FFB3DA;"><i><u><span style="font-size: 0.8rem;">.</span></u></i></span><span style="color: #FFFFFF;"><b><span style="font-size: 1rem;">爱你</span></b></span><u><i><span style="font-size: 0.8rem;"><span style="color: #FFB3DA;">是</span><span style="color: #FFD9ED;">永</span><span style="color: #FFFFFF;">远</span></span></i></u><u><i><span style="font-size: 0.8rem;"><span style="color: #FFB3DA;">∥</span><span style="color: #FFD9ED;">+</span><span style="color: #FFFFFF;">☆</span></span></i></u>`; }
+            function getSignatureHtml108() { return `<u><i><span style="font-size: 1rem;"><span style="color: #FF0000;">挂哥</span></span></i><span style="font-size: 0.9rem;"><span style="color: #BEBEBE;">就该被</span></span><i><span style="font-size: 1rem;"><span style="color: #FF0000;">我</span></span></i><span style="font-size: 0.9rem;"><span style="color: #FFFFFF;">狠狠</span></span><i><span style="font-size: 1rem;"><span style="color: #FF0000;">法</span></span></i></u>`; }
+            function getSignatureHtml109() { return `<span style="color: #FF0000;"><b><span style="font-size: 0.9rem;">恨</span></b></span><span style="color: #FFFFFF;"><u><span style="font-size: 0.7rem;">我</span></u></span><span style="color: #FFFFFF;"><span style="font-size: 0.7rem;">不就是</span></span><span style="color: #FF0000;"><b><span style="font-size: 0.9rem;">想</span></b></span><span style="color: #FFFFFF;"><u><span style="font-size: 0.8rem;">我</span></u></span><span style="color: #FFFFFF;"><span style="font-size: 0.8rem;">吗</span></span><span style="color: #808080;"><b><span style="font-size: 0.7rem;">+.”</span></b></span>`; }
+            function getSignatureHtml110() { return `<span style="color: #FFFFFF;"><u><span style="font-size: 0.8rem;">我</span></u></span><span style="color: #FF0000;"><b><span style="font-size: 1rem;">欲成冰</span></b></span><span style="color: #808080;"><i><span style="font-size: 0.8rem;">再也</span></i></span><span style="color: #FFFFFF;"><u><span style="font-size: 0.8rem;">無</span></u></span><span style="color: #FF0000;"><b><span style="font-size: 1rem;">退路</span></b></span>`; }
 
             // 第1级：皮肤分类
             function showSkinCategoryOnly(pushToHistory = true) {
