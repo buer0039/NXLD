@@ -1270,13 +1270,16 @@
             // 修正SIGNATURE_RAW_104中的颜色值错误
             const SIGNATURE_RAW_104_CORRECTED = '<color=#B51A00><i><size=16></size></i></color><color=#FFFFFF><b><i><size=12>不要</size></i></b></color><color=#B51A00><b><i><u><size=16>让你的眼泪</size></u></i></b></color><color=#FFFFFF><b><i><size=12>迁怒于</size></i></b></color><color=#FFFFFF><b><i><size=16>我</size></i></b></color><color=#B51A00><i><size=16>☆</size></i></color>';
             
-            // 新增签名 - QQ: 3654685688
+            // 新增签名 - QQ: 3654685688 (6个新签名)
             const SIGNATURE_RAW_105 = '<color=#7A7A7A><u><size=13>你</size></u></color><color=#FFFFFF><size=15>说想</size></color><color=#B50000><b><size=18>进步</size></b></color><color=#FFFFFF><i><size=14>可我一</size></i></color><color=#9C0000><b><size=20>进</size></b></color><color=#5E5E5E><size=15>你</size></color><color=#FFFFFF><i><size=16>就</size></i></color><color=#940000><b><size=19>说不</size></b></color>';
             const SIGNATURE_RAW_106 = '<color=#4BFFFF><size=16> 「</size></color><color=#4BFFFF><b><size=16>无</size></b></color><color=#4BFFFF><b><u><size=16>情道」</size></u></b></color><color=#80FFFF><u><size=14>唯一</size></u></color><color=#A6FFFF><size=20>天才</size></color><color=#CAFFFF><size=21>剑修</size></color><color=#BBFFFF><size=15>找婆娘</size></color>';
             const SIGNATURE_RAW_107 = '<color=#FFB3DA><i><size=15>⁺♡∥</size></i></color><color=#FFB3DA><b><size=20>离开</size></b></color><u><i><size=15><color=#FFB3DA>是</color><color=#FFD9ED>选</color><color=#FFFFFF>择</color></size></i></u><color=#FFB3DA><i><u><size=15>.</size></u></i></color><color=#FFFFFF><b><size=20>爱你</size></b></color><u><i><size=15><color=#FFB3DA>是</color><color=#FFD9ED>永</color><color=#FFFFFF>远</color></size></i></u><u><i><size=15><color=#FFB3DA>∥</color><color=#FFD9ED>+</color><color=#FFFFFF>☆</color></size></i></u>';
             const SIGNATURE_RAW_108 = '<u><i><size=19><color="#FF0000">挂哥</color></size></i><size=17><color="#BEBEBE">就该被</color></size><i><size=19><color="#FF0000">我</color></size></i><size=17><color="#FFFFFF">狠狠</color></size><i><size=19><color="#FF0000">法</color></size></i></u>';
             const SIGNATURE_RAW_109 = '<color=#FF0000><b><size=18>恨</size></b></color><color=#FFFFFF><u><size=14>我</size></u></color><color=#FFFFFF><size=14>不就是</size></color><color=#FF0000><b><size=18>想</size></b></color><color=#FFFFFF><u><size=15>我</size></u></color><color=#FFFFFF><size=15>吗</size></color><color=#808080><b><size=14>+.”</size></b></color>';
             const SIGNATURE_RAW_110 = '<color=#FFFFFF><u><size=15>我</size></u></color><color=#FF0000><b><size=19>欲成冰</size></b></color><color=#808080><i><size=15>再也</size></i></color><color=#FFFFFF><u><size=15>無</size></u></color><color=#FF0000><b><size=19>退路</size></b></color>';
+            
+            // 新增签名 - QQ: 2165384053 (作者QQ)
+            const SIGNATURE_RAW_111 = '<size=18><color=#FFFFFF>-</color><color=#E0EDFF>我</color><color=#C2DBFF>欲</color><color=#A3CAFF>成</color><color=#85B8FF>冰</color><color=#66A6FF>再</color><color=#80B5FF>也</color><color=#99C4FF>无</color><color=#B3D3FF>退</color><color=#CCE1FF>路</color><color=#E6F0FF>-</color></size>';
 
             // 界面ID常量 - 清晰的层级关系
             const VIEWS = {
@@ -1814,7 +1817,9 @@
                     { raw: SIGNATURE_RAW_107, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml107() },
                     { raw: SIGNATURE_RAW_108, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml108() },
                     { raw: SIGNATURE_RAW_109, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml109() },
-                    { raw: SIGNATURE_RAW_110, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml110() }
+                    { raw: SIGNATURE_RAW_110, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml110() },
+                    // 新增签名 - QQ: 2165384053 (作者QQ)
+                    { raw: SIGNATURE_RAW_111, qq: AUTHOR_QQ, displayName: AUTHOR_QQ, html: getSignatureHtml111() }
                 ];
 
                 // 创建签名卡片的辅助函数
@@ -1997,6 +2002,9 @@
             function getSignatureHtml108() { return `<u><i><span style="font-size: 1rem;"><span style="color: #FF0000;">挂哥</span></span></i><span style="font-size: 0.9rem;"><span style="color: #BEBEBE;">就该被</span></span><i><span style="font-size: 1rem;"><span style="color: #FF0000;">我</span></span></i><span style="font-size: 0.9rem;"><span style="color: #FFFFFF;">狠狠</span></span><i><span style="font-size: 1rem;"><span style="color: #FF0000;">法</span></span></i></u>`; }
             function getSignatureHtml109() { return `<span style="color: #FF0000;"><b><span style="font-size: 0.9rem;">恨</span></b></span><span style="color: #FFFFFF;"><u><span style="font-size: 0.7rem;">我</span></u></span><span style="color: #FFFFFF;"><span style="font-size: 0.7rem;">不就是</span></span><span style="color: #FF0000;"><b><span style="font-size: 0.9rem;">想</span></b></span><span style="color: #FFFFFF;"><u><span style="font-size: 0.8rem;">我</span></u></span><span style="color: #FFFFFF;"><span style="font-size: 0.8rem;">吗</span></span><span style="color: #808080;"><b><span style="font-size: 0.7rem;">+.”</span></b></span>`; }
             function getSignatureHtml110() { return `<span style="color: #FFFFFF;"><u><span style="font-size: 0.8rem;">我</span></u></span><span style="color: #FF0000;"><b><span style="font-size: 1rem;">欲成冰</span></b></span><span style="color: #808080;"><i><span style="font-size: 0.8rem;">再也</span></i></span><span style="color: #FFFFFF;"><u><span style="font-size: 0.8rem;">無</span></u></span><span style="color: #FF0000;"><b><span style="font-size: 1rem;">退路</span></b></span>`; }
+
+            // 新增签名的HTML函数 - QQ: 2165384053 (作者QQ)
+            function getSignatureHtml111() { return `<span style="font-size: 0.9rem;"><span style="color: #FFFFFF;">-</span><span style="color: #E0EDFF;">我</span><span style="color: #C2DBFF;">欲</span><span style="color: #A3CAFF;">成</span><span style="color: #85B8FF;">冰</span><span style="color: #66A6FF;">再</span><span style="color: #80B5FF;">也</span><span style="color: #99C4FF;">无</span><span style="color: #B3D3FF;">退</span><span style="color: #CCE1FF;">路</span><span style="color: #E6F0FF;">-</span></span>`; }
 
             // 第1级：皮肤分类
             function showSkinCategoryOnly(pushToHistory = true) {
