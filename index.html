@@ -1280,6 +1280,11 @@
             
             // 新增签名 - QQ: 2165384053 (作者QQ)
             const SIGNATURE_RAW_111 = '<size=18><color=#FFFFFF>-</color><color=#E0EDFF>我</color><color=#C2DBFF>欲</color><color=#A3CAFF>成</color><color=#85B8FF>冰</color><color=#66A6FF>再</color><color=#80B5FF>也</color><color=#99C4FF>无</color><color=#B3D3FF>退</color><color=#CCE1FF>路</color><color=#E6F0FF>-</color></size>';
+            
+            // 新增签名 - QQ: 3654685688 (三个新签名)
+            const SIGNATURE_RAW_112 = '<size=12><color=#FF0000>♡あ</color><color=#DF0000>な</color><color=#BF0000>た</color><color=#9F0000>は</color><color=#800000>私</color><color=#600000>の</color><color=#400000>も</color><color=#200000>の</color><color=#000000>よ♡<color=#FFFFFF><i><u><size=12>\n                             -你只能是我的-\n</size></u></i></color></color></size>';
+            const SIGNATURE_RAW_113 = '<color=#FF0000><b><size=20>♡@署名\n</size></b></color><color=#808080><u><size=17>你\n</size></u></color><color=#FFFFFF><size=15>就是\n</size></color><color=#808080><i><size=18>我</size></i></color><color=#FFFFFF><size=15>唯一的</size></color><color=#FF0000><b><u><size=19>小狗</size></u></b></color><color=#FFFFFF><size=15>呀</size></color><color=#808080><size=15>♡\n</size></color>';
+            const SIGNATURE_RAW_114 = '<color=#FF0000><b><size=20>@署名\n</size></b></color><color=#808080><u><size=17>我\n</size></u></color><color=#FFFFFF><size=15>是你\n</size></color><color=#808080><i><size=18>唯一</size></i></color><color=#FFFFFF><size=15>の</size></color><color=#FF0000><b><u><size=19>小狗</size></u></b></color><color=#FFFFFF><size=15>吗</size></color><color=#808080><size=15>꒦ິ^꒦ິ\n</size></color>';
 
             // 界面ID常量 - 清晰的层级关系
             const VIEWS = {
@@ -1819,7 +1824,11 @@
                     { raw: SIGNATURE_RAW_109, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml109() },
                     { raw: SIGNATURE_RAW_110, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml110() },
                     // 新增签名 - QQ: 2165384053 (作者QQ)
-                    { raw: SIGNATURE_RAW_111, qq: AUTHOR_QQ, displayName: AUTHOR_QQ, html: getSignatureHtml111() }
+                    { raw: SIGNATURE_RAW_111, qq: AUTHOR_QQ, displayName: AUTHOR_QQ, html: getSignatureHtml111() },
+                    // 新增签名 - QQ: 3654685688 (三个新签名)
+                    { raw: SIGNATURE_RAW_112, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml112() },
+                    { raw: SIGNATURE_RAW_113, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml113() },
+                    { raw: SIGNATURE_RAW_114, qq: '3654685688', displayName: '3654685688', html: getSignatureHtml114() }
                 ];
 
                 // 创建签名卡片的辅助函数
@@ -2005,6 +2014,11 @@
 
             // 新增签名的HTML函数 - QQ: 2165384053 (作者QQ)
             function getSignatureHtml111() { return `<span style="font-size: 0.9rem;"><span style="color: #FFFFFF;">-</span><span style="color: #E0EDFF;">我</span><span style="color: #C2DBFF;">欲</span><span style="color: #A3CAFF;">成</span><span style="color: #85B8FF;">冰</span><span style="color: #66A6FF;">再</span><span style="color: #80B5FF;">也</span><span style="color: #99C4FF;">无</span><span style="color: #B3D3FF;">退</span><span style="color: #CCE1FF;">路</span><span style="color: #E6F0FF;">-</span></span>`; }
+
+            // 新增签名的HTML函数 - QQ: 3654685688 (三个新签名)
+            function getSignatureHtml112() { return `<span style="font-size: 0.7rem;"><span style="color: #FF0000;">♡あ</span><span style="color: #DF0000;">な</span><span style="color: #BF0000;">た</span><span style="color: #9F0000;">は</span><span style="color: #800000;">私</span><span style="color: #600000;">の</span><span style="color: #400000;">も</span><span style="color: #200000;">の</span><span style="color: #000000;">よ♡<br><span style="color: #FFFFFF;"><i><u><span style="font-size: 0.7rem;">                             -你只能是我的-</span></u></i></span></span></span>`; }
+            function getSignatureHtml113() { return `<span style="color: #FF0000;"><b><span style="font-size: 1rem;">♡@署名<br></span></b></span><span style="color: #808080;"><u><span style="font-size: 0.9rem;">你<br></span></u></span><span style="color: #FFFFFF;"><span style="font-size: 0.8rem;">就是<br></span></span><span style="color: #808080;"><i><span style="font-size: 0.9rem;">我</span></i></span><span style="color: #FFFFFF;"><span style="font-size: 0.8rem;">唯一的</span></span><span style="color: #FF0000;"><b><u><span style="font-size: 1rem;">小狗</span></u></b></span><span style="color: #FFFFFF;"><span style="font-size: 0.8rem;">呀</span></span><span style="color: #808080;"><span style="font-size: 0.8rem;">♡<br></span></span>`; }
+            function getSignatureHtml114() { return `<span style="color: #FF0000;"><b><span style="font-size: 1rem;">@署名<br></span></b></span><span style="color: #808080;"><u><span style="font-size: 0.9rem;">我<br></span></u></span><span style="color: #FFFFFF;"><span style="font-size: 0.8rem;">是你<br></span></span><span style="color: #808080;"><i><span style="font-size: 0.9rem;">唯一</span></i></span><span style="color: #FFFFFF;"><span style="font-size: 0.8rem;">の</span></span><span style="color: #FF0000;"><b><u><span style="font-size: 1rem;">小狗</span></u></b></span><span style="color: #FFFFFF;"><span style="font-size: 0.8rem;">吗</span></span><span style="color: #808080;"><span style="font-size: 0.8rem;">꒦ິ^꒦ິ<br></span></span>`; }
 
             // 第1级：皮肤分类
             function showSkinCategoryOnly(pushToHistory = true) {
