@@ -670,8 +670,8 @@
             display: inline;
         }
 
-        /* QQ标签 */
-        .signature-qq {
+        /* QQ/抖音标签 */
+        .signature-platform {
             color: rgba(255, 255, 255, 0.5);
             font-size: 0.6rem;
             font-weight: 300;
@@ -690,7 +690,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .signature-card:hover .signature-qq {
+        .signature-card:hover .signature-platform {
             color: rgba(255, 255, 255, 0.7);
         }
 
@@ -740,6 +740,23 @@
             font-size: 0.95rem;
         }
 
+        .form-select {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f0f2ff;
+            font-size: 0.95rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer;
+        }
+
+        .form-select option {
+            background: #1f2937;
+            color: #f0f2ff;
+        }
+
         .form-input {
             width: 100%;
             padding: 1rem;
@@ -752,7 +769,7 @@
             resize: vertical;
         }
 
-        .form-input:focus {
+        .form-input:focus, .form-select:focus {
             outline: none;
             border-color: #818cf8;
             box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
@@ -886,67 +903,9 @@
             color: #f59e0b;
         }
 
-        .query-item-status.rejected {
+        .query-item-status.bug {
             background: rgba(239, 68, 68, 0.1);
             color: #ef4444;
-        }
-
-        /* 管理员下载按钮 */
-        .download-html-btn {
-            background: linear-gradient(135deg, #8b5cf6, #6366f1);
-            border: none;
-            border-radius: 2rem;
-            padding: 0.8rem 1.5rem;
-            color: white;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 1rem;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .download-html-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px -8px #8b5cf6;
-        }
-
-        .download-html-btn.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .download-html-btn.disabled:hover {
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* 上传按钮 */
-        .upload-html-btn {
-            background: linear-gradient(135deg, #10b981, #059669);
-            border: none;
-            border-radius: 2rem;
-            padding: 0.8rem 1.5rem;
-            color: white;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 1rem;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .upload-html-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px -8px #10b981;
         }
 
         /* 日志容器 */
@@ -991,8 +950,8 @@
             color: #ef4444;
         }
 
-        .log-content.uploaded {
-            color: #8b5cf6;
+        .log-content.bug {
+            color: #ef4444;
         }
 
         /* 顶部提示 */
@@ -1348,7 +1307,7 @@
                 font-size: 0.7rem; 
             }
             
-            .signature-qq {
+            .signature-platform {
                 font-size: 0.55rem;
             }
             
@@ -1420,7 +1379,7 @@
                 <!-- 提交签名按钮 -->
                 <div class="submit-signature-btn" id="submitSignatureBtn">
                     <i class="fas fa-pen"></i>
-                    提交签名
+                    提交反馈
                 </div>
                 <!-- 知情协议按钮 -->
                 <div class="agreement-btn" id="agreementBtn">
@@ -1549,7 +1508,7 @@
             let currentRoleCategory = '';
             
             // 当前管理员权限级别
-            let currentAdminLevel = 'guest'; // 'guest', 'admin', 'super'
+            let currentAdminLevel = 'guest';
             
             // 作者QQ
             const AUTHOR_QQ = '2165384053';
@@ -1558,132 +1517,11 @@
             let isCloudConnected = false;
             let cloudCheckInterval = null;
 
-            // 固定签名原始内容 - 已全部移出，只保留元数据
-            const FIXED_SIGNATURES_METADATA = [
-                { qq: '1571199718', displayName: '1571199718', raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '3309961380', displayName: '3309961380', raw: '', html: '' },
-                { qq: '1991725572', displayName: '凯砂oYo', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1991725572', displayName: '1991725572', raw: '', html: '' },
-                { qq: '1571199718', displayName: '1571199718', raw: '', html: '' },
-                { qq: '413375149', displayName: '413375149', raw: '', html: '' },
-                { qq: '413375149', displayName: '413375149', raw: '', html: '' },
-                { qq: '413375149', displayName: '413375149', raw: '', html: '' },
-                { qq: '413375149', displayName: '413375149', raw: '', html: '' },
-                { qq: '3654685688', displayName: '3654685688', raw: '', html: '' },
-                { qq: '3654685688', displayName: '3654685688', raw: '', html: '' },
-                { qq: '3654685688', displayName: '3654685688', raw: '', html: '' },
-                { qq: '3654685688', displayName: '3654685688', raw: '', html: '' },
-                { qq: '3654685688', displayName: '3654685688', raw: '', html: '' },
-                { qq: '3654685688', displayName: '3654685688', raw: '', html: '' },
-                { qq: AUTHOR_QQ, displayName: AUTHOR_QQ, raw: '', html: '' },
-                { qq: '3654685688', displayName: '3654685688', raw: '', html: '' },
-                { qq: '3654685688', displayName: '3654685688', raw: '', html: '' },
-                { qq: '3654685688', displayName: '3654685688', raw: '', html: '' }
-            ];
-            
             // 云端数据缓存
-            let pendingSignatures = [];
-            let approvedSignatures = [];
-            let operationLogs = [];
+            let pendingSignatures = [];      // 待审核签名投稿
+            let bugReports = [];              // Bug反馈
+            let approvedSignatures = [];      // 已通过签名
+            let operationLogs = [];            // 操作日志
 
             // 界面ID常量
             const VIEWS = {
@@ -1706,7 +1544,7 @@
                 QINLING_DIFFICULTY: 'qinlingDifficulty',
                 SUBTEAM: 'subteam',
                 SIGNATURE_PAGE: 'signaturePage',
-                SUBMIT_SIGNATURE: 'submitSignature',
+                SUBMIT_FEEDBACK: 'submitFeedback',
                 ADMIN_PAGE: 'adminPage'
             };
 
@@ -1761,8 +1599,21 @@
             // 检查云端连接
             async function checkCloudConnection() {
                 try {
-                    const { error } = await supabase.from('_test').select('*').limit(1).maybeSingle();
-                    updateCloudStatus(true);
+                    // 先尝试查询测试表
+                    const { error } = await supabase
+                        .from('_test')
+                        .select('*')
+                        .limit(1)
+                        .maybeSingle();
+                    
+                    if (error && error.message.includes('relation') && error.message.includes('does not exist')) {
+                        updateCloudStatus(false, '请在Supabase控制台创建表');
+                    } else if (error) {
+                        console.error('连接错误:', error);
+                        updateCloudStatus(false, '云端连接失败');
+                    } else {
+                        updateCloudStatus(true);
+                    }
                 } catch (err) {
                     console.error('云端连接失败:', err);
                     updateCloudStatus(false, '云端连接失败，使用本地存储');
@@ -1777,6 +1628,15 @@
 
             // 从云端加载数据
             async function loadFromCloud() {
+                if (!isCloudConnected) {
+                    // 降级到本地存储
+                    pendingSignatures = JSON.parse(localStorage.getItem('pendingSignatures') || '[]');
+                    bugReports = JSON.parse(localStorage.getItem('bugReports') || '[]');
+                    approvedSignatures = JSON.parse(localStorage.getItem('approvedSignatures') || '[]');
+                    operationLogs = JSON.parse(localStorage.getItem('operationLogs') || '[]');
+                    return;
+                }
+
                 try {
                     // 加载待审核签名
                     const { data: pendingData, error: pendingError } = await supabase
@@ -1786,6 +1646,15 @@
 
                     if (pendingError) throw pendingError;
                     pendingSignatures = pendingData || [];
+
+                    // 加载Bug反馈
+                    const { data: bugData, error: bugError } = await supabase
+                        .from('bug_reports')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+
+                    if (bugError) throw bugError;
+                    bugReports = bugData || [];
 
                     // 加载已通过签名
                     const { data: approvedData, error: approvedError } = await supabase
@@ -1813,6 +1682,7 @@
                     
                     // 降级到本地存储
                     pendingSignatures = JSON.parse(localStorage.getItem('pendingSignatures') || '[]');
+                    bugReports = JSON.parse(localStorage.getItem('bugReports') || '[]');
                     approvedSignatures = JSON.parse(localStorage.getItem('approvedSignatures') || '[]');
                     operationLogs = JSON.parse(localStorage.getItem('operationLogs') || '[]');
                 }
@@ -1843,6 +1713,35 @@
                 } catch (err) {
                     console.error('保存待审核签名失败:', err);
                     localStorage.setItem('pendingSignatures', JSON.stringify(pendingSignatures));
+                    updateCloudStatus(false);
+                }
+            }
+
+            // 保存Bug反馈到云端
+            async function saveBugReports() {
+                if (!isCloudConnected) {
+                    localStorage.setItem('bugReports', JSON.stringify(bugReports));
+                    return;
+                }
+
+                try {
+                    // 先删除所有现有数据
+                    await supabase.from('bug_reports').delete().neq('id', '');
+                    
+                    // 插入新数据
+                    if (bugReports.length > 0) {
+                        const { error } = await supabase
+                            .from('bug_reports')
+                            .insert(bugReports.map(b => ({
+                                ...b,
+                                created_at: new Date().toISOString()
+                            })));
+
+                        if (error) throw error;
+                    }
+                } catch (err) {
+                    console.error('保存Bug反馈失败:', err);
+                    localStorage.setItem('bugReports', JSON.stringify(bugReports));
                     updateCloudStatus(false);
                 }
             }
@@ -2024,8 +1923,8 @@
                         case VIEWS.SIGNATURE_PAGE:
                             showSignaturePage(false);
                             break;
-                        case VIEWS.SUBMIT_SIGNATURE:
-                            showSubmitSignature(false);
+                        case VIEWS.SUBMIT_FEEDBACK:
+                            showSubmitFeedback(false);
                             break;
                         case VIEWS.ADMIN_PAGE:
                             showAdminPage(false);
@@ -2255,16 +2154,16 @@
                     signatureDiv.className = 'signature-text';
                     signatureDiv.innerHTML = signature.html || convertToHtml(signature.content);
                     
-                    const qqTag = document.createElement('div');
-                    qqTag.className = 'signature-qq';
-                    qqTag.textContent = `QQ:${signature.qq}`;
+                    const platformTag = document.createElement('div');
+                    platformTag.className = 'signature-platform';
+                    platformTag.textContent = signature.platform === 'douyin' ? `dy:${signature.account}` : `QQ:${signature.account}`;
                     
                     const hintDiv = document.createElement('div');
                     hintDiv.className = 'copy-hint';
                     hintDiv.innerHTML = '<i class="fas fa-copy"></i> 点击复制原内容';
                     
                     signatureCard.appendChild(signatureDiv);
-                    signatureCard.appendChild(qqTag);
+                    signatureCard.appendChild(platformTag);
                     signatureCard.appendChild(hintDiv);
                     
                     signatureCard.addEventListener('click', (e) => {
@@ -2280,7 +2179,7 @@
                 
                 const topHint = document.createElement('div');
                 topHint.className = 'top-hint';
-                topHint.innerHTML = '<i class="fas fa-info-circle"></i> 下方QQ为原作者账号 <i class="fas fa-qq"></i>';
+                topHint.innerHTML = '<i class="fas fa-info-circle"></i> 点击卡片可复制原内容 <i class="fas fa-qq"></i> <i class="fab fa-tiktok"></i>';
                 container.appendChild(topHint);
                 
                 const signatureGrid = document.createElement('div');
@@ -2299,15 +2198,15 @@
                 setTimeout(performGlobalSearch, 10);
             }
 
-            // 提交签名页面
-            function showSubmitSignature(pushToHistory = true) {
+            // 提交反馈页面
+            function showSubmitFeedback(pushToHistory = true) {
                 resetAll();
                 
                 if (pushToHistory) {
-                    historyStack.push(VIEWS.SUBMIT_SIGNATURE);
+                    historyStack.push(VIEWS.SUBMIT_FEEDBACK);
                 }
                 
-                statusTag.textContent = '提交签名';
+                statusTag.textContent = '提交反馈';
                 
                 const container = document.createElement('div');
                 container.className = 'submit-form';
@@ -2315,14 +2214,28 @@
                 const form = document.createElement('div');
                 form.innerHTML = `
                     <div class="form-group">
-                        <label class="form-label">你的QQ号</label>
-                        <input type="text" class="form-input" id="submitQQ" placeholder="请输入你的QQ号" maxlength="20">
+                        <label class="form-label">反馈类型</label>
+                        <select class="form-select" id="feedbackType">
+                            <option value="signature">签名投稿</option>
+                            <option value="bug">Bug反馈</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">签名内容（支持HTML标签）</label>
+                        <label class="form-label">你的账号</label>
+                        <input type="text" class="form-input" id="submitAccount" placeholder="请输入你的QQ号或抖音号">
+                    </div>
+                    <div class="form-group" id="platformGroup">
+                        <label class="form-label">平台选择</label>
+                        <select class="form-select" id="platformType">
+                            <option value="qq">QQ</option>
+                            <option value="douyin">抖音</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="contentGroup">
+                        <label class="form-label" id="contentLabel">签名内容（支持HTML标签）</label>
                         <textarea class="form-input form-textarea" id="submitContent" placeholder="请输入你的签名内容，例如：&lt;color=#FF0000&gt;我爱你&lt;/color&gt;"></textarea>
                     </div>
-                    <button class="submit-button" id="doSubmitSignatureBtn">提交签名</button>
+                    <button class="submit-button" id="doSubmitBtn">提交</button>
                     <div class="submit-info" id="submitInfo"></div>
                 `;
                 
@@ -2333,7 +2246,7 @@
                 querySection.className = 'query-section';
                 querySection.innerHTML = `
                     <div class="query-input-group">
-                        <input type="text" class="form-input" id="queryQQ" placeholder="输入QQ号查询提交状态" style="flex: 1;">
+                        <input type="text" class="form-input" id="queryAccount" placeholder="输入账号查询提交状态" style="flex: 1;">
                         <button class="query-button" id="queryBtn">查询</button>
                     </div>
                     <div class="query-result" id="queryResult"></div>
@@ -2343,21 +2256,34 @@
                 
                 innerDynamic.appendChild(container);
                 
-                // 提交签名事件
-                document.getElementById('doSubmitSignatureBtn').addEventListener('click', async function() {
+                // 反馈类型切换
+                document.getElementById('feedbackType').addEventListener('change', function(e) {
+                    const type = e.target.value;
+                    const platformGroup = document.getElementById('platformGroup');
+                    const contentGroup = document.getElementById('contentGroup');
+                    const contentLabel = document.getElementById('contentLabel');
+                    
+                    if (type === 'bug') {
+                        platformGroup.style.display = 'none';
+                        contentLabel.textContent = 'Bug描述';
+                        document.getElementById('submitContent').placeholder = '请详细描述你遇到的Bug...';
+                    } else {
+                        platformGroup.style.display = 'block';
+                        contentLabel.textContent = '签名内容（支持HTML标签）';
+                        document.getElementById('submitContent').placeholder = '请输入你的签名内容，例如：<color=#FF0000>我爱你</color>';
+                    }
+                });
+                
+                // 提交事件
+                document.getElementById('doSubmitBtn').addEventListener('click', async function() {
                     const btn = this;
-                    const qq = document.getElementById('submitQQ').value.trim();
+                    const type = document.getElementById('feedbackType').value;
+                    const account = document.getElementById('submitAccount').value.trim();
                     const content = document.getElementById('submitContent').value.trim();
                     const infoDiv = document.getElementById('submitInfo');
                     
-                    if (!qq || !content) {
-                        infoDiv.textContent = '请填写QQ号和签名内容';
-                        infoDiv.style.color = '#ef4444';
-                        return;
-                    }
-                    
-                    if (!/^\d+$/.test(qq)) {
-                        infoDiv.textContent = 'QQ号必须为数字';
+                    if (!account || !content) {
+                        infoDiv.textContent = '请填写完整信息';
                         infoDiv.style.color = '#ef4444';
                         return;
                     }
@@ -2366,65 +2292,87 @@
                     btn.innerHTML = '<span class="loading-spinner"></span> 提交中...';
                     
                     try {
-                        // 检查是否已提交过
-                        const existing = pendingSignatures.find(s => s.qq === qq && s.content === content);
-                        if (existing) {
-                            infoDiv.textContent = '你已经提交过相同的签名了，请等待审核';
-                            infoDiv.style.color = '#f59e0b';
-                            return;
+                        if (type === 'signature') {
+                            const platform = document.getElementById('platformType').value;
+                            
+                            // 检查是否已提交过相同的签名
+                            const existing = pendingSignatures.find(s => s.account === account && s.content === content && s.platform === platform);
+                            if (existing) {
+                                infoDiv.textContent = '你已经提交过相同的签名了，请等待审核';
+                                infoDiv.style.color = '#f59e0b';
+                                return;
+                            }
+                            
+                            // 添加到待审核列表
+                            const newSignature = {
+                                account: account,
+                                platform: platform,
+                                content: content,
+                                html: convertToHtml(content),
+                                timestamp: new Date().toLocaleString()
+                            };
+                            
+                            pendingSignatures.push(newSignature);
+                            await savePendingSignatures();
+                            await addLog('提交签名', `${platform === 'qq' ? 'QQ' : '抖音'}:${account} 提交了新签名`, 'info');
+                            
+                            infoDiv.textContent = '提交成功！请等待管理员审核。';
+                            infoDiv.style.color = '#10b981';
+                        } else {
+                            // Bug反馈
+                            const newBug = {
+                                account: account,
+                                content: content,
+                                timestamp: new Date().toLocaleString(),
+                                status: 'pending'
+                            };
+                            
+                            bugReports.push(newBug);
+                            await saveBugReports();
+                            await addLog('Bug反馈', `${account} 提交了Bug反馈`, 'bug');
+                            
+                            infoDiv.textContent = 'Bug反馈已提交，感谢你的支持！';
+                            infoDiv.style.color = '#10b981';
                         }
                         
-                        // 添加到待审核列表
-                        const newSignature = {
-                            qq: qq,
-                            content: content,
-                            html: convertToHtml(content),
-                            timestamp: new Date().toLocaleString()
-                        };
-                        
-                        pendingSignatures.push(newSignature);
-                        await savePendingSignatures();
-                        await addLog('提交签名', `QQ:${qq} 提交了新签名`, 'info');
-                        
-                        infoDiv.textContent = '提交成功！请等待管理员审核。你可以使用QQ号查询审核状态。';
-                        infoDiv.style.color = '#10b981';
-                        
-                        document.getElementById('submitQQ').value = '';
+                        document.getElementById('submitAccount').value = '';
                         document.getElementById('submitContent').value = '';
                     } catch (err) {
                         infoDiv.textContent = '提交失败，请重试';
                         infoDiv.style.color = '#ef4444';
                     } finally {
                         btn.disabled = false;
-                        btn.innerHTML = '提交签名';
+                        btn.innerHTML = '提交';
                     }
                 });
                 
                 // 查询事件
                 document.getElementById('queryBtn').addEventListener('click', function() {
-                    const qq = document.getElementById('queryQQ').value.trim();
+                    const account = document.getElementById('queryAccount').value.trim();
                     const resultDiv = document.getElementById('queryResult');
                     
-                    if (!qq) {
-                        resultDiv.innerHTML = '<div style="color: #ef4444; padding: 1rem; text-align: center;">请输入QQ号</div>';
+                    if (!account) {
+                        resultDiv.innerHTML = '<div style="color: #ef4444; padding: 1rem; text-align: center;">请输入账号</div>';
                         return;
                     }
                     
-                    // 查询待审核
-                    const pending = pendingSignatures.filter(s => s.qq === qq);
-                    // 查询已通过
-                    const approved = approvedSignatures.filter(s => s.qq === qq);
+                    // 查询待审核签名
+                    const pending = pendingSignatures.filter(s => s.account === account);
+                    // 查询已通过签名
+                    const approved = approvedSignatures.filter(s => s.account === account);
+                    // 查询Bug反馈
+                    const bugs = bugReports.filter(b => b.account === account);
                     
                     let html = '';
                     
                     if (pending.length > 0) {
-                        html += '<div style="margin-bottom: 1rem;"><h4 style="color: #f59e0b; margin-bottom: 0.5rem;">待审核</h4>';
+                        html += '<div style="margin-bottom: 1rem;"><h4 style="color: #f59e0b; margin-bottom: 0.5rem;">待审核签名</h4>';
                         pending.forEach(s => {
                             html += `
                                 <div class="query-item">
                                     <div class="query-item-info">
                                         <div class="signature-preview">${s.html || convertToHtml(s.content)}</div>
-                                        <div class="query-item-qq">提交时间: ${s.timestamp}</div>
+                                        <div class="query-item-qq">${s.platform === 'qq' ? 'QQ' : '抖音'}:${s.account}</div>
                                     </div>
                                     <span class="query-item-status pending">待审核</span>
                                 </div>
@@ -2434,15 +2382,31 @@
                     }
                     
                     if (approved.length > 0) {
-                        html += '<div><h4 style="color: #10b981; margin-bottom: 0.5rem;">已通过</h4>';
+                        html += '<div><h4 style="color: #10b981; margin-bottom: 0.5rem;">已通过签名</h4>';
                         approved.forEach(s => {
                             html += `
                                 <div class="query-item">
                                     <div class="query-item-info">
                                         <div class="signature-preview">${s.html || convertToHtml(s.content)}</div>
-                                        <div class="query-item-qq">已加入签名合集</div>
+                                        <div class="query-item-qq">${s.platform === 'qq' ? 'QQ' : '抖音'}:${s.account}</div>
                                     </div>
                                     <span class="query-item-status">已通过</span>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    if (bugs.length > 0) {
+                        html += '<div><h4 style="color: #ef4444; margin-bottom: 0.5rem;">Bug反馈</h4>';
+                        bugs.forEach(b => {
+                            html += `
+                                <div class="query-item">
+                                    <div class="query-item-info">
+                                        <div>${b.content.substring(0, 50)}${b.content.length > 50 ? '...' : ''}</div>
+                                        <div class="query-item-qq">提交时间: ${b.timestamp}</div>
+                                    </div>
+                                    <span class="query-item-status bug">${b.status === 'pending' ? '待处理' : '已处理'}</span>
                                 </div>
                             `;
                         });
@@ -2525,8 +2489,8 @@
                     levelBadge.style.background = currentAdminLevel === 'super' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(16, 185, 129, 0.2)';
                     levelBadge.style.color = currentAdminLevel === 'super' ? '#a78bfa' : '#10b981';
                     levelBadge.innerHTML = currentAdminLevel === 'super' ? 
-                        '<i class="fas fa-crown"></i> 超级管理员模式（可下载/上传）' : 
-                        '<i class="fas fa-user"></i> 普通管理员模式（仅可审核）';
+                        '<i class="fas fa-crown"></i> 超级管理员模式' : 
+                        '<i class="fas fa-user"></i> 普通管理员模式';
                     panel.appendChild(levelBadge);
                     
                     // 刷新按钮
@@ -2541,33 +2505,32 @@
                     });
                     panel.appendChild(refreshBtn);
                     
-                    // 超级管理员专属功能
-                    if (currentAdminLevel === 'super') {
-                        // 下载HTML按钮
-                        const downloadBtn = document.createElement('button');
-                        downloadBtn.className = 'download-html-btn';
-                        downloadBtn.innerHTML = '<i class="fas fa-download"></i> 下载当前HTML文件（保存所有签名）';
-                        downloadBtn.addEventListener('click', function() {
-                            downloadCurrentHtml();
-                        });
-                        panel.appendChild(downloadBtn);
-                        
-                        // 上传HTML按钮
-                        const uploadBtn = document.createElement('button');
-                        uploadBtn.className = 'upload-html-btn';
-                        uploadBtn.innerHTML = '<i class="fas fa-upload"></i> 上传已保存的HTML文件（恢复签名）';
-                        uploadBtn.addEventListener('click', function() {
-                            uploadHtmlFile();
-                        });
-                        panel.appendChild(uploadBtn);
+                    // Bug反馈区域
+                    const bugSection = document.createElement('div');
+                    bugSection.className = 'submit-form';
+                    bugSection.style.marginBottom = '2rem';
+                    
+                    let bugHtml = '<h3 style="color: #ef4444; margin-bottom: 1rem;">Bug反馈</h3>';
+                    
+                    if (bugReports.length === 0) {
+                        bugHtml += '<div style="color: #9ca3af; text-align: center; padding: 2rem;">暂无Bug反馈</div>';
                     } else {
-                        // 普通管理员显示灰色按钮
-                        const disabledBtn = document.createElement('button');
-                        disabledBtn.className = 'download-html-btn disabled';
-                        disabledBtn.innerHTML = '<i class="fas fa-lock"></i> 需要超级管理员权限';
-                        disabledBtn.disabled = true;
-                        panel.appendChild(disabledBtn);
+                        bugReports.forEach((bug, index) => {
+                            bugHtml += `
+                                <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
+                                    <div style="margin-bottom: 0.5rem;"><span style="color: #818cf8;">账号:</span> ${bug.account}</div>
+                                    <div style="margin-bottom: 0.5rem; color: #f0f2ff;">${bug.content}</div>
+                                    <div style="margin-bottom: 0.5rem; color: #9ca3af; font-size: 0.8rem;">提交时间: ${bug.timestamp}</div>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="query-button" style="background: #10b981;" onclick="window.resolveBug(${index})">标记已处理</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
                     }
+                    
+                    bugSection.innerHTML = bugHtml;
+                    panel.appendChild(bugSection);
                     
                     // 待审核签名
                     const pendingSection = document.createElement('div');
@@ -2582,7 +2545,7 @@
                         pendingSignatures.forEach((sig, index) => {
                             pendingHtml += `
                                 <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
-                                    <div style="margin-bottom: 0.5rem;"><span style="color: #818cf8;">QQ:</span> ${sig.qq}</div>
+                                    <div style="margin-bottom: 0.5rem;"><span style="color: #818cf8;">账号:</span> ${sig.account} (${sig.platform === 'qq' ? 'QQ' : '抖音'})</div>
                                     <div style="margin-bottom: 0.5rem; color: #f0f2ff;" class="signature-preview">${sig.html || convertToHtml(sig.content)}</div>
                                     <div style="margin-bottom: 0.5rem; color: #9ca3af; font-size: 0.8rem;">提交时间: ${sig.timestamp}</div>
                                     <div style="display: flex; gap: 0.5rem;">
@@ -2609,7 +2572,7 @@
                         approvedSignatures.forEach((sig, index) => {
                             approvedHtml += `
                                 <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
-                                    <div style="margin-bottom: 0.5rem;"><span style="color: #818cf8;">QQ:</span> ${sig.qq}</div>
+                                    <div style="margin-bottom: 0.5rem;"><span style="color: #818cf8;">账号:</span> ${sig.account} (${sig.platform === 'qq' ? 'QQ' : '抖音'})</div>
                                     <div style="margin-bottom: 0.5rem; color: #f0f2ff;" class="signature-preview">${sig.html || convertToHtml(sig.content)}</div>
                                     <div style="display: flex; gap: 0.5rem;">
                                         <button class="query-button" style="background: #ef4444;" onclick="window.deleteApprovedSignature(${index})">删除</button>
@@ -2638,7 +2601,7 @@
                             if (log.action.includes('通过')) logClass += ' approved';
                             else if (log.action.includes('拒绝')) logClass += ' rejected';
                             else if (log.action.includes('删除')) logClass += ' deleted';
-                            else if (log.action.includes('上传')) logClass += ' uploaded';
+                            else if (log.action.includes('Bug')) logClass += ' bug';
                             
                             logHtml += `
                                 <div class="log-item">
@@ -2657,10 +2620,22 @@
                     container.appendChild(panel);
                     
                     // 添加全局函数供按钮调用
+                    window.resolveBug = async (index) => {
+                        const bug = bugReports[index];
+                        bugReports.splice(index, 1);
+                        
+                        await saveBugReports();
+                        await addLog('处理Bug', `${bug.account} 的Bug反馈已处理`, 'bug');
+                        
+                        showAdminPanel();
+                        showToast('Bug已标记为已处理');
+                    };
+                    
                     window.approveSignature = async (index) => {
                         const sig = pendingSignatures[index];
                         const newApproved = {
-                            qq: sig.qq,
+                            account: sig.account,
+                            platform: sig.platform,
                             content: sig.content,
                             html: sig.html,
                             timestamp: new Date().toLocaleString()
@@ -2671,7 +2646,7 @@
                         
                         await savePendingSignatures();
                         await saveApprovedSignatures();
-                        await addLog('通过签名', `QQ:${sig.qq} 的签名已通过`, 'approved');
+                        await addLog('通过签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名已通过`, 'approved');
                         
                         showAdminPanel();
                         showToast('签名已通过');
@@ -2682,7 +2657,7 @@
                         pendingSignatures.splice(index, 1);
                         
                         await savePendingSignatures();
-                        await addLog('拒绝签名', `QQ:${sig.qq} 的签名被拒绝`, 'rejected');
+                        await addLog('拒绝签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被拒绝`, 'rejected');
                         
                         showAdminPanel();
                         showToast('签名已拒绝');
@@ -2693,7 +2668,7 @@
                         approvedSignatures.splice(index, 1);
                         
                         await saveApprovedSignatures();
-                        await addLog('删除签名', `QQ:${sig.qq} 的签名被删除`, 'deleted');
+                        await addLog('删除签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被删除`, 'deleted');
                         
                         showAdminPanel();
                         showToast('签名已删除');
@@ -2701,81 +2676,6 @@
                 }
                 
                 refreshBackButton();
-            }
-
-            // 上传HTML文件
-            function uploadHtmlFile() {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.html,.htm';
-                
-                input.onchange = (e) => {
-                    const file = e.target.files[0];
-                    const reader = new FileReader();
-                    
-                    reader.onload = async (event) => {
-                        try {
-                            const content = event.target.result;
-                            
-                            // 尝试从HTML文件中提取已通过的签名数据
-                            const approvedMatch = content.match(/approvedSignatures\s*=\s*JSON\.parse\(localStorage\.getItem\(['"]approvedSignatures['"]\)\s*\|\|\s*'(\[.*?\])'/);
-                            
-                            if (approvedMatch && approvedMatch[1]) {
-                                const importedApproved = JSON.parse(approvedMatch[1]);
-                                if (Array.isArray(importedApproved)) {
-                                    // 合并签名，避免重复
-                                    const existingMap = new Map();
-                                    approvedSignatures.forEach(s => existingMap.set(s.qq + s.content, s));
-                                    importedApproved.forEach(s => {
-                                        const key = s.qq + s.content;
-                                        if (!existingMap.has(key)) {
-                                            approvedSignatures.push(s);
-                                            existingMap.set(key, s);
-                                        }
-                                    });
-                                    
-                                    await saveApprovedSignatures();
-                                    await addLog('上传文件', `成功导入 ${importedApproved.length} 个签名`, 'uploaded');
-                                    showToast(`成功导入 ${importedApproved.length} 个签名`);
-                                    
-                                    // 刷新管理员面板
-                                    showAdminPanel();
-                                }
-                            } else {
-                                showToast('未在文件中找到有效的签名数据');
-                            }
-                        } catch (err) {
-                            console.error('解析文件失败:', err);
-                            showToast('文件解析失败，请确保上传的是正确的备份文件');
-                        }
-                    };
-                    
-                    reader.readAsText(file);
-                };
-                
-                input.click();
-            }
-
-            // 下载当前HTML文件
-            function downloadCurrentHtml() {
-                // 获取当前HTML内容
-                const htmlContent = document.documentElement.outerHTML;
-                
-                // 创建Blob
-                const blob = new Blob([htmlContent], { type: 'text/html' });
-                const url = URL.createObjectURL(blob);
-                
-                // 创建下载链接
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `NXLD数值库_备份_${new Date().toISOString().slice(0,10)}.html`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                addLog('下载文件', `备份文件已下载`, 'info');
-                showToast('HTML文件下载成功，已保存所有签名数据');
             }
 
             // 原有功能函数占位（保持不变）
@@ -2833,9 +2733,9 @@
                 }
             });
 
-            // 新增按钮事件
+            // 提交反馈按钮事件
             submitSignatureBtn.addEventListener('click', function() {
-                showSubmitSignature();
+                showSubmitFeedback();
                 searchInput.value = '';
             });
 
