@@ -4,13 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>NXLD数值库</title>
+    <!-- 现代字体 - 使用更优雅的字体组合 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 (免费图标库) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Supabase JS客户端 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 样式保持不变，与之前相同 */
         * {
             margin: 0;
             padding: 0;
@@ -146,7 +148,7 @@
             font-weight: 300;
         }
 
-        .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn, .year-badge {
+        .agreement-btn {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 2rem;
@@ -162,23 +164,30 @@
             white-space: nowrap;
         }
 
-        .submit-signature-btn {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-        }
-
-        .admin-btn i {
-            color: #f59e0b;
-        }
-
-        .thanks-btn i {
-            color: #fbbf24;
-        }
-
-        .agreement-btn:hover, .admin-btn:hover, .thanks-btn:hover {
+        .agreement-btn:hover {
             background: rgba(255, 255, 255, 0.08);
             border-color: rgba(129, 140, 248, 0.3);
             color: #a5b4fc;
+        }
+
+        .agreement-btn i {
+            color: #818cf8;
+            font-size: 0.9rem;
+        }
+
+        .submit-signature-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            border-radius: 2rem;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .submit-signature-btn:hover {
@@ -186,12 +195,75 @@
             box-shadow: 0 8px 16px -8px #10b981;
         }
 
+        .admin-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 2rem;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(5px);
+            white-space: nowrap;
+        }
+
+        .admin-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(129, 140, 248, 0.3);
+            color: #a5b4fc;
+        }
+
+        .admin-btn i {
+            color: #f59e0b;
+            font-size: 0.9rem;
+        }
+
+        .thanks-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 2rem;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(5px);
+            white-space: nowrap;
+        }
+
+        .thanks-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(129, 140, 248, 0.3);
+            color: #a5b4fc;
+        }
+
+        .thanks-btn i {
+            color: #fbbf24;
+            font-size: 0.9rem;
+        }
+
         .year-badge {
-            cursor: default;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 2rem;
+            padding: 0.6rem 1.5rem;
+            font-size: 0.9rem;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .year-badge i {
             color: #818cf8;
+            font-size: 0.8rem;
         }
 
         .cloud-status {
@@ -223,6 +295,10 @@
             color: #ef4444;
         }
 
+        .cloud-status i {
+            font-size: 0.7rem;
+        }
+
         .faction-switch {
             display: flex;
             gap: 1rem;
@@ -249,6 +325,10 @@
             gap: 0.6rem;
         }
 
+        .faction-btn i {
+            font-size: 1.1rem;
+        }
+
         .faction-btn.active {
             background: linear-gradient(135deg, #4f46e5, #7c3aed);
             color: white;
@@ -266,6 +346,7 @@
             overflow-y: auto;
             scrollbar-width: thin;
             scrollbar-color: #4b5563 #1f2937;
+            scroll-behavior: smooth;
         }
 
         .content-area::-webkit-scrollbar {
@@ -301,6 +382,11 @@
             gap: 0.5rem;
         }
 
+        .status-badge i {
+            font-size: 0.8rem;
+            color: #818cf8;
+        }
+
         .back-btn-modern {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -313,10 +399,12 @@
             gap: 0.6rem;
             cursor: pointer;
             transition: all 0.2s;
+            backdrop-filter: blur(5px);
         }
 
         .back-btn-modern:hover {
             background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.1);
             transform: translateX(-3px);
         }
 
@@ -338,12 +426,14 @@
             gap: 0.8rem;
             cursor: pointer;
             transition: all 0.25s;
+            backdrop-filter: blur(5px);
         }
 
         .menu-card:hover {
             background: rgba(255, 255, 255, 0.04);
             border-color: rgba(129, 140, 248, 0.3);
             transform: translateY(-4px);
+            box-shadow: 0 15px 30px -15px #000;
         }
 
         .menu-icon {
@@ -366,35 +456,189 @@
             background: linear-gradient(135deg, #10b981, #059669);
         }
 
-        .signature-grid {
+        .menu-card span {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+
+        .menu-card small {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+
+        .category-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 1rem;
-            margin: 1rem 0;
+            margin: 1.5rem 0;
+        }
+
+        .category-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 1.5rem;
+            padding: 1.2rem 0.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .category-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(129, 140, 248, 0.3);
+            transform: scale(1.02);
+        }
+
+        .category-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 1rem;
+            background: rgba(129, 140, 248, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #818cf8;
+            font-size: 1.2rem;
+        }
+
+        .category-card span {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #d1d5db;
+        }
+
+        .item-grid-modern {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 0.8rem;
+            margin: 1.5rem 0;
+        }
+
+        .item-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 1.2rem;
+            padding: 0.9rem 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: #d1d5db;
+            cursor: pointer;
+            transition: all 0.18s;
+            min-height: 60px;
+            word-break: break-word;
+        }
+
+        .item-card:hover {
+            background: rgba(129, 140, 248, 0.1);
+            border-color: #818cf8;
+            transform: scale(1.02);
+            box-shadow: 0 8px 16px -8px #4f46e5;
+        }
+
+        .value-card-modern {
+            background: linear-gradient(145deg, rgba(79, 70, 229, 0.15), rgba(124, 58, 237, 0.15));
+            border: 2px solid rgba(129, 140, 248, 0.4);
+            border-radius: 2.5rem;
+            padding: 3rem 2rem;
+            margin: 2rem 0;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px -20px #4f46e5;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .value-card-modern:hover {
+            background: linear-gradient(145deg, rgba(79, 70, 229, 0.25), rgba(124, 58, 237, 0.25));
+            border-color: #818cf8;
+            transform: scale(1.02);
+            box-shadow: 0 0 40px rgba(129, 140, 248, 0.4);
+        }
+
+        .value-card-modern:active {
+            transform: scale(0.98);
+        }
+
+        .value-display {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #f0f2ff;
+            text-shadow: 0 0 20px rgba(129, 140, 248, 0.5);
+            word-break: break-all;
+            margin-bottom: 1rem;
+        }
+
+        .copy-hint-value {
+            font-size: 0.9rem;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .value-card-modern:hover .copy-hint-value {
+            opacity: 1;
+        }
+
+        .signature-card-container {
+            position: relative;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .signature-card {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 182, 193, 0.3);
             border-radius: 1.2rem;
-            padding: 1rem 0.8rem 0.4rem;
+            padding: 1rem 0.8rem 0.4rem 0.8rem;
             text-align: center;
+            backdrop-filter: blur(10px);
             cursor: pointer;
             transition: all 0.3s;
-            min-height: 130px;
+            box-shadow: 0 0 10px rgba(255, 192, 203, 0.1);
+            line-height: 1.4;
+            position: relative;
+            z-index: 10;
+            width: 100%;
             display: flex;
             flex-direction: column;
+            min-height: 130px;
             justify-content: space-between;
         }
 
         .signature-card:hover {
             background: rgba(255, 255, 255, 0.08);
             border-color: rgba(255, 182, 193, 0.6);
+            transform: scale(1.01);
+            box-shadow: 0 0 15px rgba(255, 192, 203, 0.2);
+        }
+
+        .signature-card:active {
+            transform: scale(0.99);
         }
 
         .signature-text {
             font-size: 0.8rem;
+            font-weight: 400;
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.2);
             line-height: 1.4;
+            margin-bottom: 0.3rem;
             flex: 1;
             display: flex;
             align-items: center;
@@ -402,15 +646,31 @@
             flex-wrap: wrap;
         }
 
+        .signature-text span, .signature-text i, .signature-text b, .signature-text u {
+            display: inline;
+        }
+
         .signature-platform {
             color: rgba(255, 255, 255, 0.5);
             font-size: 0.6rem;
+            font-weight: 300;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
+            pointer-events: none;
+            text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
             padding: 0.15rem 0.3rem;
             border-radius: 0.8rem;
             background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(2px);
             width: fit-content;
-            margin: 0.1rem auto 0;
+            margin: 0.1rem auto 0 auto;
+            transition: color 0.2s;
+            line-height: 1.2;
             border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .signature-card:hover .signature-platform {
+            color: rgba(255, 255, 255, 0.7);
         }
 
         .copy-hint {
@@ -418,10 +678,22 @@
             font-size: 0.5rem;
             color: #9ca3af;
             opacity: 0.4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.2rem;
         }
 
         .signature-card:hover .copy-hint {
             opacity: 0.7;
+        }
+
+        .signature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+            position: relative;
         }
 
         .submit-form {
@@ -444,7 +716,7 @@
             font-size: 0.95rem;
         }
 
-        .form-select, .form-input {
+        .form-select {
             width: 100%;
             padding: 1rem;
             border-radius: 1.5rem;
@@ -452,20 +724,39 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: #f0f2ff;
             font-size: 0.95rem;
-            font-family: inherit;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer;
         }
 
         .form-select option {
             background: #1f2937;
+            color: #f0f2ff;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f0f2ff;
+            font-size: 0.95rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            resize: vertical;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #818cf8;
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
         }
 
         .form-textarea {
             min-height: 120px;
-            resize: vertical;
         }
 
-        .submit-button, .query-button {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        .submit-button {
+            background: linear-gradient(135deg, #10b981, #059669);
             border: none;
             border-radius: 2rem;
             padding: 1rem 2rem;
@@ -477,12 +768,12 @@
             width: 100%;
         }
 
-        .submit-button:hover, .query-button:hover {
+        .submit-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 16px -8px #4f46e5;
+            box-shadow: 0 8px 16px -8px #10b981;
         }
 
-        .submit-button:disabled, .query-button:disabled {
+        .submit-button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
@@ -508,6 +799,30 @@
             margin-bottom: 1rem;
         }
 
+        .query-button {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none;
+            border-radius: 2rem;
+            padding: 0.8rem 1.5rem;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .query-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px -8px #4f46e5;
+        }
+
+        .query-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .query-result {
             background: rgba(255, 255, 255, 0.02);
             border-radius: 1.5rem;
@@ -530,6 +845,19 @@
 
         .query-item-info {
             flex: 1;
+        }
+
+        .query-item-info .signature-preview {
+            font-size: 0.8rem;
+            margin-bottom: 0.3rem;
+            color: #f0f2ff;
+        }
+
+        .query-item-info .signature-preview span, 
+        .query-item-info .signature-preview i, 
+        .query-item-info .signature-preview b, 
+        .query-item-info .signature-preview u {
+            display: inline;
         }
 
         .query-item-qq {
@@ -570,16 +898,35 @@
             font-size: 0.85rem;
         }
 
+        .log-item:last-child {
+            border-bottom: none;
+        }
+
         .log-time {
             color: #818cf8;
             font-size: 0.7rem;
             margin-right: 0.5rem;
         }
 
-        .log-content.approved { color: #10b981; }
-        .log-content.rejected { color: #ef4444; }
-        .log-content.deleted { color: #ef4444; }
-        .log-content.bug { color: #ef4444; }
+        .log-content {
+            color: #d1d5db;
+        }
+
+        .log-content.approved {
+            color: #10b981;
+        }
+
+        .log-content.rejected {
+            color: #ef4444;
+        }
+
+        .log-content.deleted {
+            color: #ef4444;
+        }
+
+        .log-content.bug {
+            color: #ef4444;
+        }
 
         .top-hint {
             text-align: center;
@@ -592,13 +939,38 @@
             border-radius: 2rem;
         }
 
-        .search-highlight {
-            background: rgba(129, 140, 248, 0.25) !important;
-            border-color: #818cf8 !important;
-            transform: scale(1.02);
+        .top-hint i {
+            color: #818cf8;
+            margin: 0 0.3rem;
         }
 
-        .agreement-modal, .thanks-modal {
+        .hint-modern {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.9rem;
+            margin: 1rem 0 0.5rem;
+            padding: 0.5rem;
+            background: rgba(129, 140, 248, 0.05);
+            border-radius: 2rem;
+            border: 1px dashed rgba(129, 140, 248, 0.2);
+        }
+
+        .divider-modern {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), rgba(129, 140, 248, 0.3), rgba(255, 255, 255, 0.05), transparent);
+            margin: 2rem 0;
+        }
+
+        .search-highlight {
+            background: rgba(129, 140, 248, 0.25) !important;
+            box-shadow: 0 0 20px rgba(129, 140, 248, 0.4) !important;
+            border-color: #818cf8 !important;
+            transform: scale(1.02);
+            transition: all 0.2s;
+        }
+
+        .agreement-modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -615,12 +987,12 @@
             transition: all 0.3s;
         }
 
-        .agreement-modal.show, .thanks-modal.show {
+        .agreement-modal.show {
             opacity: 1;
             visibility: visible;
         }
 
-        .agreement-content, .thanks-content {
+        .agreement-content {
             background: rgba(18, 22, 40, 0.95);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(129, 140, 248, 0.3);
@@ -633,22 +1005,28 @@
             transition: transform 0.3s;
         }
 
-        .agreement-modal.show .agreement-content,
-        .thanks-modal.show .thanks-content {
+        .agreement-modal.show .agreement-content {
             transform: translateY(0);
         }
 
-        .agreement-header, .thanks-header {
+        .agreement-header {
             display: flex;
             align-items: center;
             gap: 1rem;
             margin-bottom: 1.5rem;
         }
 
-        .agreement-header i { color: #818cf8; }
-        .thanks-header i { color: #fbbf24; }
+        .agreement-header i {
+            font-size: 2rem;
+            color: #818cf8;
+        }
 
-        .agreement-body, .thanks-body {
+        .agreement-header h3 {
+            font-size: 1.5rem;
+            color: #f0f2ff;
+        }
+
+        .agreement-body {
             color: #d1d5db;
             font-size: 1rem;
             line-height: 1.6;
@@ -658,7 +1036,12 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .agreement-close, .thanks-close {
+        .agreement-footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .agreement-close {
             background: linear-gradient(135deg, #4f46e5, #7c3aed);
             border: none;
             border-radius: 2rem;
@@ -670,8 +1053,102 @@
             transition: all 0.2s;
         }
 
+        .agreement-close:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px -8px #4f46e5;
+        }
+
+        .thanks-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .thanks-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .thanks-content {
+            background: rgba(18, 22, 40, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            border-radius: 2.5rem;
+            padding: 2.5rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 25px 50px -12px #000;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .thanks-modal.show .thanks-content {
+            transform: translateY(0);
+        }
+
+        .thanks-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .thanks-header i {
+            font-size: 2rem;
+            color: #fbbf24;
+        }
+
+        .thanks-header h3 {
+            font-size: 1.5rem;
+            color: #f0f2ff;
+        }
+
+        .thanks-body {
+            color: #d1d5db;
+            font-size: 1rem;
+            line-height: 2;
+            margin-bottom: 2rem;
+            padding: 1rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .thanks-body p {
+            margin: 0.5rem 0;
+        }
+
+        .thanks-footer {
+            display: flex;
+            justify-content: flex-end;
+        }
+
         .thanks-close {
             background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none;
+            border-radius: 2rem;
+            padding: 0.8rem 2rem;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .thanks-close:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px -8px #f59e0b;
         }
 
         .copyright-modern {
@@ -680,6 +1157,8 @@
             right: 20px;
             color: rgba(156, 163, 175, 0.4);
             font-size: 0.8rem;
+            font-weight: 400;
+            letter-spacing: 2px;
             z-index: 100;
             backdrop-filter: blur(4px);
             padding: 4px 12px;
@@ -697,7 +1176,10 @@
             color: white;
             padding: 0.8rem 2rem;
             border-radius: 2rem;
+            font-size: 0.95rem;
             z-index: 1000;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3);
             animation: fadeInOut 1.5s ease;
         }
 
@@ -715,7 +1197,7 @@
             border: 2px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             border-top-color: #fff;
-            animation: spin 1s linear infinite;
+            animation: spin 1s ease-in-out infinite;
         }
 
         @keyframes spin {
@@ -723,23 +1205,126 @@
         }
 
         @media (max-width: 768px) {
-            body { padding: 0.8rem; }
-            .modern-container { padding: 1.2rem; border-radius: 2rem; }
-            .header { flex-direction: column; align-items: flex-start; }
-            .search-wrapper { width: 100%; }
-            .header-actions { width: 100%; flex-wrap: wrap; }
-            .signature-grid { grid-template-columns: repeat(2, 1fr); }
-            .query-input-group { flex-direction: column; }
+            body {
+                padding: 0.8rem;
+            }
+            
+            .modern-container { 
+                padding: 1.2rem; 
+                border-radius: 2rem;
+            }
+            
+            .header { 
+                flex-direction: column; 
+                align-items: flex-start; 
+                gap: 1rem;
+            }
+            
+            .search-wrapper { 
+                width: 100%; 
+            }
+            
+            .header-actions { 
+                width: 100%; 
+                flex-wrap: wrap; 
+                justify-content: space-between;
+            }
+            
+            .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn { 
+                flex: 1; 
+                justify-content: center;
+                min-width: 120px;
+            }
+            
+            .year-badge {
+                flex: 1;
+                justify-content: center;
+            }
+            
+            .main-menu-grid { 
+                grid-template-columns: 1fr; 
+            }
+            
+            .category-grid { 
+                grid-template-columns: repeat(2, 1fr); 
+            }
+            
+            .item-grid-modern { 
+                grid-template-columns: repeat(2, 1fr); 
+            }
+            
+            .value-display { 
+                font-size: 1.8rem; 
+            }
+            
+            .signature-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.8rem;
+            }
+            
+            .signature-card {
+                min-height: 120px;
+                padding: 0.8rem 0.5rem 0.3rem 0.5rem;
+            }
+            
+            .signature-text { 
+                font-size: 0.7rem; 
+            }
+            
+            .signature-platform {
+                font-size: 0.55rem;
+            }
+            
+            .copy-hint {
+                font-size: 0.45rem;
+            }
+            
+            .content-area {
+                padding: 1.2rem;
+                max-height: 70vh;
+            }
+            
+            .top-hint {
+                font-size: 0.8rem;
+                padding: 0.4rem;
+            }
+            
+            .query-input-group {
+                flex-direction: column;
+            }
         }
 
         @media (max-width: 480px) {
-            .signature-grid { grid-template-columns: 1fr; }
-            .faction-btn { padding: 0.6rem 1rem; }
+            .signature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .category-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .item-grid-modern {
+                grid-template-columns: 1fr;
+            }
+            
+            .logo-text h1 {
+                font-size: 1.5rem;
+            }
+            
+            .faction-btn {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+            
+            .signature-card {
+                min-height: 110px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="modern-container">
+        <!-- 头部区域 -->
         <div class="header">
             <div class="logo-area">
                 <div class="logo-icon">
@@ -755,30 +1340,42 @@
                     <i class="fas fa-search"></i>
                     <input type="text" class="search-box-modern" id="searchInput" placeholder="搜索所有按钮...">
                 </div>
+                <!-- 提交签名按钮 -->
                 <div class="submit-signature-btn" id="submitSignatureBtn">
-                    <i class="fas fa-pen"></i> 提交反馈
+                    <i class="fas fa-pen"></i>
+                    提交反馈
                 </div>
+                <!-- 知情协议按钮 -->
                 <div class="agreement-btn" id="agreementBtn">
-                    <i class="fas fa-scale-balanced"></i> 知情协议
+                    <i class="fas fa-scale-balanced"></i>
+                    知情协议
                 </div>
+                <!-- 管理员入口按钮 -->
                 <div class="admin-btn" id="adminBtn">
-                    <i class="fas fa-crown"></i> 管理
+                    <i class="fas fa-crown"></i>
+                    管理
                 </div>
+                <!-- 致谢名单按钮 -->
                 <div class="thanks-btn" id="thanksBtn">
-                    <i class="fas fa-heart"></i> 致谢名单
+                    <i class="fas fa-heart"></i>
+                    致谢名单
                 </div>
                 <div class="year-badge">
-                    <i class="far fa-copyright"></i> 2026 NXLD
+                    <i class="far fa-copyright"></i>
+                    2026 NXLD
                 </div>
             </div>
         </div>
 
+        <!-- 阵营切换 - 只保留超自然行动组 -->
         <div class="faction-switch">
             <button class="faction-btn active" id="supernaturalBtn">
-                <i class="fas fa-hand-sparkles"></i> 超自然行动组
+                <i class="fas fa-hand-sparkles"></i>
+                超自然行动组
             </button>
         </div>
 
+        <!-- 主要内容区域 -->
         <div class="content-area" id="dynamicContent">
             <div class="status-header">
                 <div class="status-badge">
@@ -787,17 +1384,25 @@
                 </div>
                 <div id="backButtonContainer"></div>
             </div>
+
+            <!-- 核心动态区域 -->
             <div id="innerDynamic" style="min-height: 300px;"></div>
         </div>
     </div>
 
+    <!-- 云端连接状态 -->
     <div class="cloud-status" id="cloudStatus">
-        <i class="fas fa-circle"></i> <span>云端连接中...</span>
+        <i class="fas fa-circle"></i>
+        <span>云端连接中...</span>
     </div>
 
+    <!-- NXLD 版权标志 -->
     <div class="copyright-modern">NXLD</div>
+
+    <!-- 复制成功提示容器 -->
     <div id="toastContainer"></div>
 
+    <!-- 知情协议弹窗 -->
     <div class="agreement-modal" id="agreementModal">
         <div class="agreement-content">
             <div class="agreement-header">
@@ -815,6 +1420,7 @@
         </div>
     </div>
 
+    <!-- 致谢名单弹窗 -->
     <div class="thanks-modal" id="thanksModal">
         <div class="thanks-content">
             <div class="thanks-header">
@@ -833,14 +1439,18 @@
 
     <script>
         (function() {
+            // Supabase配置
             const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
             const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
             
+            // 初始化Supabase客户端
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-                auth: { persistSession: false }
+                auth: {
+                    persistSession: false
+                }
             });
 
-            // DOM 元素
+            // 获取DOM元素
             const supernaturalBtn = document.getElementById('supernaturalBtn');
             const innerDynamic = document.getElementById('innerDynamic');
             const backContainer = document.getElementById('backButtonContainer');
@@ -857,26 +1467,421 @@
             const adminBtn = document.getElementById('adminBtn');
             const cloudStatus = document.getElementById('cloudStatus');
 
-            // 状态变量
+            // 历史栈
             let historyStack = [];
+            
+            // 当前选中的分类
+            let currentPropCategory = '';
+            let currentDecorCategory = '';
+            let currentRoleCategory = '';
+            
+            // 当前管理员权限级别
             let currentAdminLevel = 'guest';
+            
+            // 作者QQ
+            const AUTHOR_QQ = '2165384053';
+            
+            // 禁止的账号关键词
+            const FORBIDDEN_ACCOUNTS = ['null', 'undefined', 'nil', 'none'];
+            
+            // 云端连接状态
             let isCloudConnected = false;
             let cloudCheckInterval = null;
+            let isReconnecting = false;
 
-            // 数据存储
-            let pendingSignatures = [];
-            let bugReports = [];
-            let approvedSignatures = [];
-            let operationLogs = [];
+            // 云端数据缓存
+            let pendingSignatures = [];      // 待审核签名投稿
+            let bugReports = [];              // Bug反馈
+            let approvedSignatures = [];      // 已通过签名
+            let operationLogs = [];            // 操作日志
 
+            // 界面ID常量
             const VIEWS = {
                 SUPERNATURAL_INITIAL: 'supernaturalInitial',
+                SECRET_GRID: 'secretGrid',
+                ITEM_LIST: 'itemList',
+                SKIN_CATEGORY: 'skinCategory',
+                PROP_CATEGORY: 'propCategory',
+                DECOR_CATEGORY: 'decorCategory',
+                DECOR_DETAIL: 'decorDetail',
+                ROLE_CATEGORY: 'roleCategory',
+                ROLE_DETAIL: 'roleDetail',
+                DANCE_SKIN_LIST: 'danceSkinList',
+                PROP_SKIN_DETAIL: 'propSkinDetail',
+                SKIN_VALUE: 'skinValue',
+                TEAM_ROW: 'teamRow',
+                DIFFICULTY: 'difficulty',
+                JINGJUE_DIFFICULTY: 'jingjueDifficulty',
+                KUNLUN_DIFFICULTY: 'kunlunDifficulty',
+                QINLING_DIFFICULTY: 'qinlingDifficulty',
+                SUBTEAM: 'subteam',
                 SIGNATURE_PAGE: 'signaturePage',
                 SUBMIT_FEEDBACK: 'submitFeedback',
                 ADMIN_PAGE: 'adminPage'
             };
 
-            // 工具函数
+            // 全局按钮数据库
+            const globalButtonDB = [
+                '模式数值', '局内物品', '皮肤数值', '主页签名',
+                '道具皮肤', '装饰皮肤', '角色皮肤', '动作舞蹈',
+                '刺刀', '铲子', '桃木剑', '长鞭', '传送器', '摸金符', '腰包', '短管猎枪',
+                '专业手电', '葫芦', '黄牛能量饮料', '额外背包', '夜视仪', '音响', '荧光-桃心',
+                '转轮手枪', '急救包', '喷气背包', '电击枪', '除颤仪',
+                '星耀之旅「演唱会」', '惊魂逃生测试版「pvp对抗」', '石鼓书院「废案」', '长城脚下', '殷墟古城', '阿房宫遗址',
+                '古蜀遗迹', '精绝古城', '昆仑秘境', '秦陵龙宫',
+                '单队', 'D级「废案」', '多队', '蜀道入口', '古蜀遗迹「普通」', '古蜀遗迹「困难」', '古蜀遗迹「极限」',
+                '精绝古城「普通」', '精绝古城「困难」', '精绝古城「极限」', '精绝古城「废案」',
+                '昆仑秘境「困难」', '昆仑秘境「极限」', '昆仑秘境「噩梦」', '昆仑秘境「废案」',
+                '秦陵龙宫「极限」', '秦陵龙宫「噩梦」', '秦陵龙宫「炼狱」', '秦陵龙宫「废案」',
+                '双队', '四队',
+                '抬手', '不可以', '鼓掌', '摇头', '推手舞', '拍屁股', '指', '比心', '认可',
+                '龇牙舞', '阿帕次舞', '奶龙舞', '奶龙龇牙舞', '汽车摇', '萨克斯律动舞', '青海摇',
+                '九万字舞', '老鼠舞', '胜利舞', '来财舞', '姬穿墙', 'DL摇', '鹏友摇', '锤子舞',
+                '骑马舞', '旋转舞', '人皇步', '失落', '小鸡舞',
+                '小黄', '爱丽丝', '零', '阿念', '逍遥', '薇薇安', '巫铃儿', '莉莉', '艾伦', '小满', '兰', '临云', '爱德华',
+                '遗失的童话', '霓裳踏雪', '青丘一梦', '罗丽', '呱呱雨衣', '异色序曲',
+                '血色中的玛丽', '瑞羽衔春', '冰公主',
+                '卡皮巴拉', '赤炼将军', '青云逸歌', '罗宾汉', '荒野落日', '磨砺成锋', '渡鸦公爵', '搬开山',
+                '灵昭鹿鸣', '王子与骑士', '迷途僵宝',
+                '碧落', '紫气', '泽引山海', '绣春逍影', '莲华渡', '万迭云华', '剑仙',
+                '黑月挽歌', '圣光之逾', '白光莹', '沧海之遗（蓝）', '沧海之遗（粉）', '海月息潮', '先锋小姐',
+                '素影瑶光', '镜生遗梦', '镜花辞', '琢玉怀乡',
+                '情公主', '除妖小师妹',
+                '水王子',
+                '绛云', '燕燕于飞',
+                '靛月', '千夜星谕',
+                '织锦云程',
+                '梵卓之礼'
+            ];
+
+            // ========== 账号验证函数 ==========
+            function isValidAccount(account) {
+                if (!account || typeof account !== 'string') return false;
+                
+                const trimmed = account.trim().toLowerCase();
+                
+                // 检查是否为禁止的关键词
+                if (FORBIDDEN_ACCOUNTS.includes(trimmed)) {
+                    return false;
+                }
+                
+                // 检查是否只包含数字（QQ号）
+                if (/^\d+$/.test(trimmed)) {
+                    return trimmed.length >= 5 && trimmed.length <= 20;
+                }
+                
+                // 抖音号：允许字母、数字、下划线、点，长度4-20
+                return /^[a-zA-Z0-9_.]{4,20}$/.test(trimmed);
+            }
+
+            function getAccountValidationMessage(account) {
+                if (!account || typeof account !== 'string') {
+                    return '账号不能为空';
+                }
+                
+                const trimmed = account.trim().toLowerCase();
+                
+                if (FORBIDDEN_ACCOUNTS.includes(trimmed)) {
+                    return '禁止使用此账号';
+                }
+                
+                if (/^\d+$/.test(trimmed)) {
+                    if (trimmed.length < 5) {
+                        return 'QQ号至少5位数字';
+                    }
+                    if (trimmed.length > 20) {
+                        return 'QQ号不能超过20位';
+                    }
+                } else {
+                    if (!/^[a-zA-Z0-9_.]+$/.test(trimmed)) {
+                        return '抖音号只能包含字母、数字、下划线、点';
+                    }
+                    if (trimmed.length < 4) {
+                        return '抖音号至少4个字符';
+                    }
+                    if (trimmed.length > 20) {
+                        return '抖音号不能超过20个字符';
+                    }
+                }
+                
+                return '';
+            }
+
+            // ========== 云端操作函数 ==========
+
+            // 更新云端连接状态
+            function updateCloudStatus(connected, message) {
+                isCloudConnected = connected;
+                cloudStatus.className = 'cloud-status ' + (connected ? 'connected' : 'disconnected');
+                cloudStatus.innerHTML = connected 
+                    ? '<i class="fas fa-cloud"></i> 云端已连接'
+                    : '<i class="fas fa-cloud-rain"></i> 云端离线 - 数据将本地存储';
+                if (message) {
+                    showToast(message);
+                }
+            }
+
+            // 检查云端连接
+            async function checkCloudConnection() {
+                if (isReconnecting) return;
+                
+                try {
+                    const { error } = await supabase
+                        .from('_test')
+                        .select('*')
+                        .limit(1)
+                        .maybeSingle();
+                    
+                    if (error && error.message && error.message.includes('relation') && error.message.includes('does not exist')) {
+                        updateCloudStatus(false, '请在Supabase控制台创建表');
+                    } else if (error) {
+                        console.error('连接错误:', error);
+                        updateCloudStatus(false);
+                    } else {
+                        updateCloudStatus(true);
+                    }
+                } catch (err) {
+                    console.error('云端连接失败:', err);
+                    updateCloudStatus(false);
+                }
+            }
+
+            // 定期检查连接
+            function startCloudCheck() {
+                checkCloudConnection();
+                cloudCheckInterval = setInterval(checkCloudConnection, 30000);
+            }
+
+            // 从云端加载数据
+            async function loadFromCloud() {
+                if (!isCloudConnected) {
+                    // 降级到本地存储
+                    pendingSignatures = JSON.parse(localStorage.getItem('pendingSignatures') || '[]');
+                    bugReports = JSON.parse(localStorage.getItem('bugReports') || '[]');
+                    approvedSignatures = JSON.parse(localStorage.getItem('approvedSignatures') || '[]');
+                    operationLogs = JSON.parse(localStorage.getItem('operationLogs') || '[]');
+                    return true;
+                }
+
+                try {
+                    // 加载待审核签名
+                    const { data: pendingData, error: pendingError } = await supabase
+                        .from('pending_signatures')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+
+                    if (pendingError) throw pendingError;
+                    pendingSignatures = pendingData || [];
+
+                    // 加载Bug反馈
+                    const { data: bugData, error: bugError } = await supabase
+                        .from('bug_reports')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+
+                    if (bugError) throw bugError;
+                    bugReports = bugData || [];
+
+                    // 加载已通过签名
+                    const { data: approvedData, error: approvedError } = await supabase
+                        .from('approved_signatures')
+                        .select('*')
+                        .order('created_at', { ascending: false });
+
+                    if (approvedError) throw approvedError;
+                    approvedSignatures = approvedData || [];
+
+                    // 加载操作日志
+                    const { data: logsData, error: logsError } = await supabase
+                        .from('operation_logs')
+                        .select('*')
+                        .order('created_at', { ascending: false })
+                        .limit(100);
+
+                    if (logsError) throw logsError;
+                    operationLogs = logsData || [];
+
+                    return true;
+                } catch (err) {
+                    console.error('加载云端数据失败:', err);
+                    
+                    // 降级到本地存储
+                    pendingSignatures = JSON.parse(localStorage.getItem('pendingSignatures') || '[]');
+                    bugReports = JSON.parse(localStorage.getItem('bugReports') || '[]');
+                    approvedSignatures = JSON.parse(localStorage.getItem('approvedSignatures') || '[]');
+                    operationLogs = JSON.parse(localStorage.getItem('operationLogs') || '[]');
+                    
+                    return false;
+                }
+            }
+
+            // 保存待审核签名到云端
+            async function savePendingSignatures() {
+                if (!isCloudConnected) {
+                    localStorage.setItem('pendingSignatures', JSON.stringify(pendingSignatures));
+                    return true;
+                }
+
+                try {
+                    await supabase.from('pending_signatures').delete().neq('id', '');
+                    
+                    if (pendingSignatures.length > 0) {
+                        const { error } = await supabase
+                            .from('pending_signatures')
+                            .insert(pendingSignatures.map(s => ({
+                                account: s.account,
+                                platform: s.platform,
+                                content: s.content,
+                                html: s.html,
+                                timestamp: s.timestamp,
+                                created_at: new Date().toISOString()
+                            })));
+
+                        if (error) throw error;
+                    }
+                    return true;
+                } catch (err) {
+                    console.error('保存待审核签名失败:', err);
+                    localStorage.setItem('pendingSignatures', JSON.stringify(pendingSignatures));
+                    return false;
+                }
+            }
+
+            // 保存Bug反馈到云端
+            async function saveBugReports() {
+                if (!isCloudConnected) {
+                    localStorage.setItem('bugReports', JSON.stringify(bugReports));
+                    return true;
+                }
+
+                try {
+                    await supabase.from('bug_reports').delete().neq('id', '');
+                    
+                    if (bugReports.length > 0) {
+                        const { error } = await supabase
+                            .from('bug_reports')
+                            .insert(bugReports.map(b => ({
+                                account: b.account,
+                                content: b.content,
+                                timestamp: b.timestamp,
+                                status: b.status,
+                                created_at: new Date().toISOString()
+                            })));
+
+                        if (error) throw error;
+                    }
+                    return true;
+                } catch (err) {
+                    console.error('保存Bug反馈失败:', err);
+                    localStorage.setItem('bugReports', JSON.stringify(bugReports));
+                    return false;
+                }
+            }
+
+            // 保存已通过签名到云端
+            async function saveApprovedSignatures() {
+                if (!isCloudConnected) {
+                    localStorage.setItem('approvedSignatures', JSON.stringify(approvedSignatures));
+                    return true;
+                }
+
+                try {
+                    await supabase.from('approved_signatures').delete().neq('id', '');
+                    
+                    if (approvedSignatures.length > 0) {
+                        const { error } = await supabase
+                            .from('approved_signatures')
+                            .insert(approvedSignatures.map(s => ({
+                                account: s.account,
+                                platform: s.platform,
+                                content: s.content,
+                                html: s.html,
+                                timestamp: s.timestamp,
+                                created_at: new Date().toISOString()
+                            })));
+
+                        if (error) throw error;
+                    }
+                    return true;
+                } catch (err) {
+                    console.error('保存已通过签名失败:', err);
+                    localStorage.setItem('approvedSignatures', JSON.stringify(approvedSignatures));
+                    return false;
+                }
+            }
+
+            // 添加日志到云端
+            async function addLog(action, details, status = 'info') {
+                const log = {
+                    time: new Date().toLocaleString(),
+                    action: action,
+                    details: details,
+                    status: status,
+                    created_at: new Date().toISOString()
+                };
+
+                operationLogs.unshift(log);
+                if (operationLogs.length > 100) {
+                    operationLogs = operationLogs.slice(0, 100);
+                }
+
+                if (!isCloudConnected) {
+                    localStorage.setItem('operationLogs', JSON.stringify(operationLogs));
+                    return true;
+                }
+
+                try {
+                    const { error } = await supabase
+                        .from('operation_logs')
+                        .insert(log);
+
+                    if (error) throw error;
+
+                    const { data } = await supabase
+                        .from('operation_logs')
+                        .select('id')
+                        .order('created_at', { ascending: false });
+
+                    if (data && data.length > 100) {
+                        const idsToDelete = data.slice(100).map(d => d.id);
+                        await supabase.from('operation_logs').delete().in('id', idsToDelete);
+                    }
+                    return true;
+                } catch (err) {
+                    console.error('保存日志失败:', err);
+                    localStorage.setItem('operationLogs', JSON.stringify(operationLogs));
+                    return false;
+                }
+            }
+
+            // 转换内容为HTML显示
+            function convertToHtml(content) {
+                if (!content) return '';
+                return content.replace(/<color=#([A-Fa-f0-9]{6})>/g, '<span style="color: #$1;">')
+                            .replace(/<\/color>/g, '</span>')
+                            .replace(/<size=(\d+)>/g, '<span style="font-size: $1px;">')
+                            .replace(/<\/size>/g, '</span>')
+                            .replace(/<b>/g, '<b>').replace(/<\/b>/g, '</b>')
+                            .replace(/<i>/g, '<i>').replace(/<\/i>/g, '</i>')
+                            .replace(/<u>/g, '<u>').replace(/<\/u>/g, '</u>');
+            }
+
+            function removeActiveClass() {}
+
+            function resetAll() {
+                innerDynamic.innerHTML = '';
+                backContainer.innerHTML = '';
+            }
+
+            // 复制功能
+            function copyToClipboard(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('复制成功');
+                }).catch(err => {
+                    alert('复制失败，请手动复制');
+                });
+            }
+
             function showToast(message) {
                 const toast = document.createElement('div');
                 toast.className = 'copy-toast';
@@ -885,218 +1890,366 @@
                 setTimeout(() => toast.remove(), 1500);
             }
 
-            function updateCloudStatus(connected, message) {
-                isCloudConnected = connected;
-                cloudStatus.className = 'cloud-status ' + (connected ? 'connected' : 'disconnected');
-                cloudStatus.innerHTML = connected 
-                    ? '<i class="fas fa-cloud"></i> 云端已连接'
-                    : '<i class="fas fa-cloud-rain"></i> 云端连接失败';
-                if (message) showToast(message);
-            }
-
-            async function checkCloudConnection() {
-                try {
-                    const { error } = await supabase.from('_test').select('*').limit(1);
-                    updateCloudStatus(!error);
-                } catch {
-                    updateCloudStatus(false);
-                }
-            }
-
-            function startCloudCheck() {
-                checkCloudConnection();
-                cloudCheckInterval = setInterval(checkCloudConnection, 30000);
-            }
-
-            // 数据加载函数
-            async function loadFromCloud() {
-                try {
-                    const [pendingRes, bugRes, approvedRes, logsRes] = await Promise.all([
-                        supabase.from('pending_signatures').select('*').order('created_at', { ascending: false }),
-                        supabase.from('bug_reports').select('*').order('created_at', { ascending: false }),
-                        supabase.from('approved_signatures').select('*').order('created_at', { ascending: false }),
-                        supabase.from('operation_logs').select('*').order('created_at', { ascending: false }).limit(100)
-                    ]);
-
-                    if (!pendingRes.error) pendingSignatures = pendingRes.data || [];
-                    if (!bugRes.error) bugReports = bugRes.data || [];
-                    if (!approvedRes.error) approvedSignatures = approvedRes.data || [];
-                    if (!logsRes.error) operationLogs = logsRes.data || [];
-
-                    return true;
-                } catch (err) {
-                    console.error('加载失败:', err);
-                    return false;
-                }
-            }
-
-            // 数据保存函数 - 简化版
-            async function saveToTable(tableName, data) {
-                try {
-                    // 先清空表
-                    await supabase.from(tableName).delete().neq('id', '');
+            // 创建返回按钮
+            function createBackButton() {
+                const backBtn = document.createElement('div');
+                backBtn.className = 'back-btn-modern';
+                backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> 返回上一级';
+                backBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    historyStack.pop();
                     
-                    // 再插入新数据
-                    if (data.length > 0) {
-                        const { error } = await supabase.from(tableName).insert(data);
-                        if (error) throw error;
+                    if (historyStack.length === 0) {
+                        showSupernaturalInitial(false);
+                        return;
                     }
-                    return true;
-                } catch (err) {
-                    console.error(`保存到${tableName}失败:`, err);
-                    return false;
-                }
-            }
-
-            async function savePendingSignatures() {
-                return saveToTable('pending_signatures', pendingSignatures);
-            }
-
-            async function saveBugReports() {
-                return saveToTable('bug_reports', bugReports);
-            }
-
-            async function saveApprovedSignatures() {
-                return saveToTable('approved_signatures', approvedSignatures);
-            }
-
-            async function addLog(action, details, status = 'info') {
-                const log = {
-                    time: new Date().toLocaleString('zh-CN'),
-                    action,
-                    details,
-                    status
-                };
-                operationLogs.unshift(log);
-                if (operationLogs.length > 100) operationLogs = operationLogs.slice(0, 100);
-                return saveToTable('operation_logs', operationLogs);
-            }
-
-            function convertToHtml(content) {
-                if (!content) return '';
-                return content
-                    .replace(/<color=#([A-Fa-f0-9]{6})>/g, '<span style="color: #$1;">')
-                    .replace(/<\/color>/g, '</span>')
-                    .replace(/<size=(\d+)>/g, '<span style="font-size: $1px;">')
-                    .replace(/<\/size>/g, '</span>')
-                    .replace(/<b>/g, '<b>').replace(/<\/b>/g, '</b>')
-                    .replace(/<i>/g, '<i>').replace(/<\/i>/g, '</i>')
-                    .replace(/<u>/g, '<u>').replace(/<\/u>/g, '</u>');
-            }
-
-            function resetAll() {
-                innerDynamic.innerHTML = '';
-                backContainer.innerHTML = '';
+                    
+                    const prevView = historyStack[historyStack.length - 1];
+                    
+                    switch(prevView) {
+                        case VIEWS.SUPERNATURAL_INITIAL:
+                            showSupernaturalInitial(false);
+                            break;
+                        case VIEWS.SECRET_GRID:
+                            showSecretGridOnly(false);
+                            break;
+                        case VIEWS.ITEM_LIST:
+                            showItemListOnly(false);
+                            break;
+                        case VIEWS.SKIN_CATEGORY:
+                            showSkinCategoryOnly(false);
+                            break;
+                        case VIEWS.PROP_CATEGORY:
+                            showPropCategory(false);
+                            break;
+                        case VIEWS.DECOR_CATEGORY:
+                            showDecorCategory(false);
+                            break;
+                        case VIEWS.DECOR_DETAIL:
+                            showDecorDetail(currentDecorCategory, false);
+                            break;
+                        case VIEWS.ROLE_CATEGORY:
+                            showRoleCategory(false);
+                            break;
+                        case VIEWS.ROLE_DETAIL:
+                            showRoleDetail(currentRoleCategory, false);
+                            break;
+                        case VIEWS.DANCE_SKIN_LIST:
+                            showDanceSkinList(false);
+                            break;
+                        case VIEWS.TEAM_ROW:
+                            showTeamRowOnly(false);
+                            break;
+                        case VIEWS.JINGJUE_DIFFICULTY:
+                            showJingjueDifficultyOnly(false);
+                            break;
+                        case VIEWS.KUNLUN_DIFFICULTY:
+                            showKunlunDifficultyOnly(false);
+                            break;
+                        case VIEWS.QINLING_DIFFICULTY:
+                            showQinlingDifficultyOnly(false);
+                            break;
+                        case VIEWS.SUBTEAM:
+                            showSubteamRow(false);
+                            break;
+                        case VIEWS.PROP_SKIN_DETAIL:
+                            showPropSkinDetail(currentPropCategory, false);
+                            break;
+                        case VIEWS.DIFFICULTY:
+                            showDifficultyOnly(false);
+                            break;
+                        case VIEWS.SIGNATURE_PAGE:
+                            showSignaturePage(false);
+                            break;
+                        case VIEWS.SUBMIT_FEEDBACK:
+                            showSubmitFeedback(false);
+                            break;
+                        case VIEWS.ADMIN_PAGE:
+                            showAdminPage(false);
+                            break;
+                        case VIEWS.SKIN_VALUE:
+                            if (historyStack.length > 1) {
+                                const secondLast = historyStack[historyStack.length - 2];
+                                if (secondLast === VIEWS.PROP_SKIN_DETAIL) {
+                                    showPropSkinDetail(currentPropCategory, false);
+                                } else if (secondLast === VIEWS.DECOR_DETAIL) {
+                                    showDecorDetail(currentDecorCategory, false);
+                                } else if (secondLast === VIEWS.ROLE_DETAIL) {
+                                    showRoleDetail(currentRoleCategory, false);
+                                } else if (secondLast === VIEWS.DANCE_SKIN_LIST) {
+                                    showDanceSkinList(false);
+                                } else if (secondLast === VIEWS.ITEM_LIST) {
+                                    showItemListOnly(false);
+                                } else {
+                                    showSupernaturalInitial(false);
+                                }
+                            } else {
+                                showSupernaturalInitial(false);
+                            }
+                            break;
+                        default:
+                            showSupernaturalInitial(false);
+                    }
+                    
+                    searchInput.value = '';
+                    setTimeout(() => {
+                        const contentArea = document.querySelector('.content-area');
+                        if (contentArea) contentArea.scrollTop = 0;
+                    }, 10);
+                });
+                return backBtn;
             }
 
             function refreshBackButton() {
                 backContainer.innerHTML = '';
                 if (historyStack.length >= 2) {
-                    const backBtn = document.createElement('div');
-                    backBtn.className = 'back-btn-modern';
-                    backBtn.innerHTML = '<i class="fas fa-arrow-left"></i> 返回上一级';
-                    backBtn.addEventListener('click', () => {
-                        historyStack.pop();
-                        const prevView = historyStack[historyStack.length - 1];
-                        if (prevView === VIEWS.SUPERNATURAL_INITIAL) showSupernaturalInitial(false);
-                        else if (prevView === VIEWS.SIGNATURE_PAGE) showSignaturePage(false);
-                        else if (prevView === VIEWS.SUBMIT_FEEDBACK) showSubmitFeedback(false);
-                        else if (prevView === VIEWS.ADMIN_PAGE) showAdminPage(false);
-                        else showSupernaturalInitial(false);
-                        searchInput.value = '';
-                    });
+                    const backBtn = createBackButton();
                     backContainer.appendChild(backBtn);
                 }
             }
 
-            // 页面显示函数
+            // 搜索功能
+            function performGlobalSearch() {
+                const searchTerm = searchInput.value.toLowerCase().trim();
+                const allCurrentCards = document.querySelectorAll('#innerDynamic .menu-card, #innerDynamic .category-card, #innerDynamic .item-card, #innerDynamic .signature-card, #innerDynamic .value-card-modern');
+                
+                if (searchTerm === '') {
+                    allCurrentCards.forEach(card => {
+                        if (card) {
+                            card.style.display = '';
+                            card.classList.remove('search-highlight');
+                        }
+                    });
+                    const existingTip = document.getElementById('searchNoResultTip');
+                    if (existingTip) existingTip.remove();
+                    const contentArea = document.querySelector('.content-area');
+                    if (contentArea) contentArea.scrollTop = 0;
+                    return;
+                }
+
+                let hasMatch = false;
+                
+                allCurrentCards.forEach(card => {
+                    if (!card) return;
+                    const cardText = card.textContent ? card.textContent.toLowerCase() : '';
+                    if (cardText.includes(searchTerm)) {
+                        card.style.display = '';
+                        card.classList.add('search-highlight');
+                        hasMatch = true;
+                    } else {
+                        card.style.display = 'none';
+                        card.classList.remove('search-highlight');
+                    }
+                });
+
+                const existingTip = document.getElementById('searchNoResultTip');
+                if (existingTip) existingTip.remove();
+                
+                if (!hasMatch && allCurrentCards.length > 0) {
+                    const matchedItems = globalButtonDB.filter(item => 
+                        typeof item === 'string' && item.toLowerCase().includes(searchTerm)
+                    );
+                    
+                    let tipMessage = `🔍 未找到"${searchInput.value}"`;
+                    if (matchedItems.length > 0) {
+                        tipMessage += `<br><br>可在以下层级查找：<br>`;
+                        matchedItems.slice(0, 5).forEach(item => {
+                            tipMessage += `· ${item}<br>`;
+                        });
+                        if (matchedItems.length > 5) {
+                            tipMessage += `... 还有${matchedItems.length - 5}个`;
+                        }
+                    }
+                    
+                    const tip = document.createElement('div');
+                    tip.id = 'searchNoResultTip';
+                    tip.style.cssText = `
+                        text-align: center;
+                        color: #9ca3af;
+                        padding: 2rem;
+                        font-size: 1rem;
+                        background: rgba(30,20,50,0.3);
+                        border-radius: 2rem;
+                        margin-top: 1rem;
+                        line-height: 1.6;
+                    `;
+                    tip.innerHTML = tipMessage;
+                    innerDynamic.appendChild(tip);
+                }
+                
+                const contentArea = document.querySelector('.content-area');
+                if (contentArea) contentArea.scrollTop = 0;
+            }
+
+            let searchTimeout;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(performGlobalSearch, 50);
+            });
+
+            // ========== 各层级展示函数 ==========
+
+            // 第0级：超自然初始界面
             function showSupernaturalInitial(pushToHistory = true) {
                 resetAll();
-                if (pushToHistory) historyStack.push(VIEWS.SUPERNATURAL_INITIAL);
+                
+                if (pushToHistory) {
+                    historyStack.push(VIEWS.SUPERNATURAL_INITIAL);
+                }
+                
                 statusTag.textContent = 'NXLD数值库';
-
+                
                 const menuGrid = document.createElement('div');
                 menuGrid.className = 'main-menu-grid';
                 
-                const pages = [
-                    { name: '模式数值', icon: 'fa-layer-group', class: '', action: () => showToast('开发中') },
-                    { name: '局内物品', icon: 'fa-box', class: '', action: () => showToast('开发中') },
-                    { name: '皮肤数值', icon: 'fa-palette', class: 'skin', action: () => showToast('开发中') },
-                    { name: '主页签名', icon: 'fa-signature', class: 'signature', action: () => showSignaturePage() }
-                ];
-
-                pages.forEach(page => {
-                    const card = document.createElement('div');
-                    card.className = `menu-card ${page.class}`;
-                    card.innerHTML = `
-                        <div class="menu-icon"><i class="fas ${page.icon}"></i></div>
-                        <span>${page.name}</span>
-                        <small>${page.name === '主页签名' ? '签名展示' : '功能开发中'}</small>
-                    `;
-                    card.addEventListener('click', page.action);
-                    menuGrid.appendChild(card);
+                const modeCard = document.createElement('div');
+                modeCard.className = 'menu-card';
+                modeCard.setAttribute('data-name', '模式数值');
+                modeCard.innerHTML = `
+                    <div class="menu-icon"><i class="fas fa-layer-group"></i></div>
+                    <span>模式数值</span>
+                    <small>地图与模式</small>
+                `;
+                modeCard.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showSecretGridOnly();
+                    searchInput.value = '';
+                });
+                
+                const itemCard = document.createElement('div');
+                itemCard.className = 'menu-card';
+                itemCard.setAttribute('data-name', '局内物品');
+                itemCard.innerHTML = `
+                    <div class="menu-icon"><i class="fas fa-box"></i></div>
+                    <span>局内物品</span>
+                    <small>道具与物品</small>
+                `;
+                itemCard.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showItemListOnly();
+                    searchInput.value = '';
                 });
 
+                const skinCard = document.createElement('div');
+                skinCard.className = 'menu-card skin';
+                skinCard.setAttribute('data-name', '皮肤数值');
+                skinCard.innerHTML = `
+                    <div class="menu-icon"><i class="fas fa-palette"></i></div>
+                    <span>皮肤数值</span>
+                    <small>装扮与外观</small>
+                `;
+                skinCard.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showSkinCategoryOnly();
+                    searchInput.value = '';
+                });
+
+                const signatureCard = document.createElement('div');
+                signatureCard.className = 'menu-card signature';
+                signatureCard.setAttribute('data-name', '主页签名');
+                signatureCard.innerHTML = `
+                    <div class="menu-icon"><i class="fas fa-signature"></i></div>
+                    <span>主页签名</span>
+                    <small>签名展示</small>
+                `;
+                signatureCard.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showSignaturePage();
+                    searchInput.value = '';
+                });
+                
+                menuGrid.appendChild(modeCard);
+                menuGrid.appendChild(itemCard);
+                menuGrid.appendChild(skinCard);
+                menuGrid.appendChild(signatureCard);
+                
                 innerDynamic.appendChild(menuGrid);
+                
                 refreshBackButton();
+                setTimeout(performGlobalSearch, 10);
             }
 
+            // ========== 签名页面 ==========
             function showSignaturePage(pushToHistory = true) {
                 resetAll();
-                if (pushToHistory) historyStack.push(VIEWS.SIGNATURE_PAGE);
-                statusTag.textContent = `签名合集 · 共${approvedSignatures.length}个`;
+                
+                if (pushToHistory) {
+                    historyStack.push(VIEWS.SIGNATURE_PAGE);
+                }
+                
+                const allSignatures = [...approvedSignatures];
 
-                const container = document.createElement('div');
-                const topHint = document.createElement('div');
-                topHint.className = 'top-hint';
-                topHint.innerHTML = '<i class="fas fa-info-circle"></i> 点击卡片可复制原内容';
-                container.appendChild(topHint);
-
-                const grid = document.createElement('div');
-                grid.className = 'signature-grid';
-
-                approvedSignatures.forEach(sig => {
-                    const card = document.createElement('div');
-                    card.className = 'signature-card';
+                function createSignatureCard(signature) {
+                    const cardContainer = document.createElement('div');
+                    cardContainer.className = 'signature-card-container';
                     
-                    const textDiv = document.createElement('div');
-                    textDiv.className = 'signature-text';
-                    textDiv.innerHTML = sig.html || convertToHtml(sig.content);
+                    const signatureCard = document.createElement('div');
+                    signatureCard.className = 'signature-card';
+                    signatureCard.setAttribute('data-name', `签名`);
                     
-                    const platformDiv = document.createElement('div');
-                    platformDiv.className = 'signature-platform';
-                    platformDiv.textContent = sig.platform === 'douyin' ? `dy:${sig.account}` : `QQ:${sig.account}`;
+                    const signatureDiv = document.createElement('div');
+                    signatureDiv.className = 'signature-text';
+                    signatureDiv.innerHTML = signature.html || convertToHtml(signature.content);
+                    
+                    const platformTag = document.createElement('div');
+                    platformTag.className = 'signature-platform';
+                    platformTag.textContent = signature.platform === 'douyin' ? `dy:${signature.account}` : `QQ:${signature.account}`;
                     
                     const hintDiv = document.createElement('div');
                     hintDiv.className = 'copy-hint';
-                    hintDiv.innerHTML = '<i class="fas fa-copy"></i> 点击复制';
+                    hintDiv.innerHTML = '<i class="fas fa-copy"></i> 点击复制原内容';
                     
-                    card.appendChild(textDiv);
-                    card.appendChild(platformDiv);
-                    card.appendChild(hintDiv);
+                    signatureCard.appendChild(signatureDiv);
+                    signatureCard.appendChild(platformTag);
+                    signatureCard.appendChild(hintDiv);
                     
-                    card.addEventListener('click', () => {
-                        navigator.clipboard.writeText(sig.content)
-                            .then(() => showToast('复制成功'))
-                            .catch(() => alert('复制失败'));
+                    signatureCard.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        copyToClipboard(signature.content);
                     });
                     
-                    grid.appendChild(card);
-                });
-
-                container.appendChild(grid);
-                innerDynamic.appendChild(container);
-                refreshBackButton();
-            }
-
-            function showSubmitFeedback(pushToHistory = true) {
-                resetAll();
-                if (pushToHistory) historyStack.push(VIEWS.SUBMIT_FEEDBACK);
-                statusTag.textContent = '提交反馈';
+                    cardContainer.appendChild(signatureCard);
+                    return cardContainer;
+                }
 
                 const container = document.createElement('div');
+                
+                const topHint = document.createElement('div');
+                topHint.className = 'top-hint';
+                topHint.innerHTML = '<i class="fas fa-info-circle"></i> 点击卡片可复制原内容 <i class="fas fa-qq"></i> <i class="fab fa-tiktok"></i>';
+                container.appendChild(topHint);
+                
+                const signatureGrid = document.createElement('div');
+                signatureGrid.className = 'signature-grid';
+                
+                allSignatures.forEach(sig => {
+                    signatureGrid.appendChild(createSignatureCard(sig));
+                });
+                
+                container.appendChild(signatureGrid);
+                
+                statusTag.textContent = `签名合集 · 共${allSignatures.length}个`;
+                
+                innerDynamic.appendChild(container);
+                refreshBackButton();
+                setTimeout(performGlobalSearch, 10);
+            }
+
+            // 提交反馈页面
+            function showSubmitFeedback(pushToHistory = true) {
+                resetAll();
+                
+                if (pushToHistory) {
+                    historyStack.push(VIEWS.SUBMIT_FEEDBACK);
+                }
+                
+                statusTag.textContent = '提交反馈';
+                
+                const container = document.createElement('div');
                 container.className = 'submit-form';
-                container.innerHTML = `
+                
+                const form = document.createElement('div');
+                form.innerHTML = `
                     <div class="form-group">
                         <label class="form-label">反馈类型</label>
                         <select class="form-select" id="feedbackType">
@@ -1106,7 +2259,8 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">你的账号</label>
-                        <input type="text" class="form-input" id="submitAccount" placeholder="请输入QQ号或抖音号">
+                        <input type="text" class="form-input" id="submitAccount" placeholder="请输入你的QQ号或抖音号">
+                        <small style="color: #9ca3af; display: block; margin-top: 0.3rem;">QQ号：5-20位数字；抖音号：4-20位字母/数字/下划线/点</small>
                     </div>
                     <div class="form-group" id="platformGroup">
                         <label class="form-label">平台选择</label>
@@ -1115,274 +2269,490 @@
                             <option value="douyin">抖音</option>
                         </select>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label" id="contentLabel">签名内容</label>
-                        <textarea class="form-input form-textarea" id="submitContent" placeholder="请输入内容..."></textarea>
+                    <div class="form-group" id="contentGroup">
+                        <label class="form-label" id="contentLabel">签名内容（支持HTML标签）</label>
+                        <textarea class="form-input form-textarea" id="submitContent" placeholder="请输入你的签名内容，例如：&lt;color=#FF0000&gt;我爱你&lt;/color&gt;"></textarea>
                     </div>
                     <button class="submit-button" id="doSubmitBtn">提交</button>
                     <div class="submit-info" id="submitInfo"></div>
                 `;
-
+                
+                container.appendChild(form);
+                
+                const querySection = document.createElement('div');
+                querySection.className = 'query-section';
+                querySection.innerHTML = `
+                    <div class="query-input-group">
+                        <input type="text" class="form-input" id="queryAccount" placeholder="输入账号查询提交状态" style="flex: 1;">
+                        <button class="query-button" id="queryBtn">查询</button>
+                    </div>
+                    <div class="query-result" id="queryResult"></div>
+                `;
+                
+                container.appendChild(querySection);
+                
                 innerDynamic.appendChild(container);
-
-                const feedbackType = document.getElementById('feedbackType');
-                const platformGroup = document.getElementById('platformGroup');
-                const contentLabel = document.getElementById('contentLabel');
-                const submitContent = document.getElementById('submitContent');
-
-                feedbackType.addEventListener('change', function() {
-                    if (this.value === 'bug') {
+                
+                document.getElementById('feedbackType').addEventListener('change', function(e) {
+                    const type = e.target.value;
+                    const platformGroup = document.getElementById('platformGroup');
+                    const contentGroup = document.getElementById('contentGroup');
+                    const contentLabel = document.getElementById('contentLabel');
+                    
+                    if (type === 'bug') {
                         platformGroup.style.display = 'none';
                         contentLabel.textContent = 'Bug描述';
-                        submitContent.placeholder = '请详细描述你遇到的Bug...';
+                        document.getElementById('submitContent').placeholder = '请详细描述你遇到的Bug...';
                     } else {
                         platformGroup.style.display = 'block';
-                        contentLabel.textContent = '签名内容';
-                        submitContent.placeholder = '请输入签名内容，支持HTML标签...';
+                        contentLabel.textContent = '签名内容（支持HTML标签）';
+                        document.getElementById('submitContent').placeholder = '请输入你的签名内容，例如：<color=#FF0000>我爱你</color>';
                     }
                 });
-
+                
                 document.getElementById('doSubmitBtn').addEventListener('click', async function() {
                     const btn = this;
-                    const type = feedbackType.value;
+                    const type = document.getElementById('feedbackType').value;
                     const account = document.getElementById('submitAccount').value.trim();
-                    const content = submitContent.value.trim();
+                    const content = document.getElementById('submitContent').value.trim();
                     const infoDiv = document.getElementById('submitInfo');
-
+                    
                     if (!account || !content) {
                         infoDiv.textContent = '请填写完整信息';
                         infoDiv.style.color = '#ef4444';
                         return;
                     }
-
+                    
+                    // 验证账号
+                    const validationMessage = getAccountValidationMessage(account);
+                    if (validationMessage) {
+                        infoDiv.textContent = validationMessage;
+                        infoDiv.style.color = '#ef4444';
+                        return;
+                    }
+                    
                     btn.disabled = true;
                     btn.innerHTML = '<span class="loading-spinner"></span> 提交中...';
-
+                    
                     try {
                         if (type === 'signature') {
                             const platform = document.getElementById('platformType').value;
-                            const newSig = {
-                                account,
-                                platform,
-                                content,
+                            
+                            const existing = pendingSignatures.find(s => s.account === account && s.content === content && s.platform === platform);
+                            if (existing) {
+                                infoDiv.textContent = '你已经提交过相同的签名了，请等待审核';
+                                infoDiv.style.color = '#f59e0b';
+                                return;
+                            }
+                            
+                            const newSignature = {
+                                account: account,
+                                platform: platform,
+                                content: content,
                                 html: convertToHtml(content),
-                                timestamp: new Date().toLocaleString('zh-CN')
+                                timestamp: new Date().toLocaleString()
                             };
-                            pendingSignatures.push(newSig);
+                            
+                            pendingSignatures.push(newSignature);
                             const saved = await savePendingSignatures();
                             
                             if (saved) {
-                                await addLog('提交签名', `${platform}:${account}`, 'info');
-                                infoDiv.textContent = '提交成功！请等待审核';
+                                await addLog('提交签名', `${platform === 'qq' ? 'QQ' : '抖音'}:${account} 提交了新签名`, 'info');
+                                infoDiv.textContent = '提交成功！请等待管理员审核。';
                                 infoDiv.style.color = '#10b981';
                                 document.getElementById('submitAccount').value = '';
-                                submitContent.value = '';
+                                document.getElementById('submitContent').value = '';
                             } else {
-                                infoDiv.textContent = '提交失败，请重试';
-                                infoDiv.style.color = '#ef4444';
+                                infoDiv.textContent = '提交成功（本地保存）！请等待管理员审核。';
+                                infoDiv.style.color = '#10b981';
+                                document.getElementById('submitAccount').value = '';
+                                document.getElementById('submitContent').value = '';
                             }
                         } else {
                             const newBug = {
-                                account,
-                                content,
-                                timestamp: new Date().toLocaleString('zh-CN'),
+                                account: account,
+                                content: content,
+                                timestamp: new Date().toLocaleString(),
                                 status: 'pending'
                             };
+                            
                             bugReports.push(newBug);
                             const saved = await saveBugReports();
                             
                             if (saved) {
-                                await addLog('Bug反馈', account, 'bug');
-                                infoDiv.textContent = 'Bug反馈已提交，感谢支持';
+                                await addLog('Bug反馈', `${account} 提交了Bug反馈`, 'bug');
+                                infoDiv.textContent = 'Bug反馈已提交，感谢你的支持！';
                                 infoDiv.style.color = '#10b981';
                                 document.getElementById('submitAccount').value = '';
-                                submitContent.value = '';
+                                document.getElementById('submitContent').value = '';
                             } else {
-                                infoDiv.textContent = '提交失败，请重试';
-                                infoDiv.style.color = '#ef4444';
+                                infoDiv.textContent = 'Bug反馈已提交（本地保存），感谢你的支持！';
+                                infoDiv.style.color = '#10b981';
+                                document.getElementById('submitAccount').value = '';
+                                document.getElementById('submitContent').value = '';
                             }
                         }
                     } catch (err) {
+                        console.error('提交失败:', err);
                         infoDiv.textContent = '提交失败，请重试';
                         infoDiv.style.color = '#ef4444';
                     } finally {
                         btn.disabled = false;
                         btn.innerHTML = '提交';
+                        setTimeout(() => checkCloudConnection(), 1000);
                     }
                 });
-
+                
+                document.getElementById('queryBtn').addEventListener('click', function() {
+                    const account = document.getElementById('queryAccount').value.trim();
+                    const resultDiv = document.getElementById('queryResult');
+                    
+                    if (!account) {
+                        resultDiv.innerHTML = '<div style="color: #ef4444; padding: 1rem; text-align: center;">请输入账号</div>';
+                        return;
+                    }
+                    
+                    const pending = pendingSignatures.filter(s => s.account === account);
+                    const approved = approvedSignatures.filter(s => s.account === account);
+                    const bugs = bugReports.filter(b => b.account === account);
+                    
+                    let html = '';
+                    
+                    if (pending.length > 0) {
+                        html += '<div style="margin-bottom: 1rem;"><h4 style="color: #f59e0b; margin-bottom: 0.5rem;">待审核签名</h4>';
+                        pending.forEach(s => {
+                            html += `
+                                <div class="query-item">
+                                    <div class="query-item-info">
+                                        <div class="signature-preview">${s.html || convertToHtml(s.content)}</div>
+                                        <div class="query-item-qq">${s.platform === 'qq' ? 'QQ' : '抖音'}:${s.account}</div>
+                                    </div>
+                                    <span class="query-item-status pending">待审核</span>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    if (approved.length > 0) {
+                        html += '<div><h4 style="color: #10b981; margin-bottom: 0.5rem;">已通过签名</h4>';
+                        approved.forEach(s => {
+                            html += `
+                                <div class="query-item">
+                                    <div class="query-item-info">
+                                        <div class="signature-preview">${s.html || convertToHtml(s.content)}</div>
+                                        <div class="query-item-qq">${s.platform === 'qq' ? 'QQ' : '抖音'}:${s.account}</div>
+                                    </div>
+                                    <span class="query-item-status">已通过</span>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    if (bugs.length > 0) {
+                        html += '<div><h4 style="color: #ef4444; margin-bottom: 0.5rem;">Bug反馈</h4>';
+                        bugs.forEach(b => {
+                            html += `
+                                <div class="query-item">
+                                    <div class="query-item-info">
+                                        <div>${b.content.substring(0, 50)}${b.content.length > 50 ? '...' : ''}</div>
+                                        <div class="query-item-qq">提交时间: ${b.timestamp}</div>
+                                    </div>
+                                    <span class="query-item-status bug">${b.status === 'pending' ? '待处理' : '已处理'}</span>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                    }
+                    
+                    if (!html) {
+                        html = '<div style="color: #9ca3af; padding: 1rem; text-align: center;">没有找到相关提交记录</div>';
+                    }
+                    
+                    resultDiv.innerHTML = html;
+                });
+                
                 refreshBackButton();
             }
 
+            // 管理员页面
             function showAdminPage(pushToHistory = true) {
                 resetAll();
-                if (pushToHistory) historyStack.push(VIEWS.ADMIN_PAGE);
+                
+                if (pushToHistory) {
+                    historyStack.push(VIEWS.ADMIN_PAGE);
+                }
+                
                 statusTag.textContent = '管理员面板';
-
+                
                 const container = document.createElement('div');
-
+                
                 if (currentAdminLevel !== 'guest') {
-                    renderAdminPanel();
+                    showAdminPanel();
                 } else {
-                    container.innerHTML = `
-                        <div class="submit-form">
-                            <div class="form-group">
-                                <label class="form-label">管理员密码</label>
-                                <input type="password" class="form-input" id="adminPassword" placeholder="请输入密码">
-                            </div>
-                            <button class="submit-button" id="adminLoginBtn">登录</button>
-                            <div class="submit-info" id="adminLoginInfo"></div>
+                    const passwordDiv = document.createElement('div');
+                    passwordDiv.className = 'submit-form';
+                    passwordDiv.innerHTML = `
+                        <div class="form-group">
+                            <label class="form-label">管理员密码</label>
+                            <input type="password" class="form-input" id="adminPassword" placeholder="请输入管理员密码">
                         </div>
+                        <button class="submit-button" id="adminLoginBtn">登录</button>
+                        <div class="submit-info" id="adminLoginInfo"></div>
                     `;
+                    
+                    container.appendChild(passwordDiv);
+                    
                     innerDynamic.appendChild(container);
-
+                    
                     document.getElementById('adminLoginBtn').addEventListener('click', function() {
-                        const pwd = document.getElementById('adminPassword').value;
-                        if (pwd === 'NXLD_RX' || pwd === 'NXLD_MZRW') {
-                            currentAdminLevel = pwd === 'NXLD_MZRW' ? 'super' : 'admin';
-                            renderAdminPanel();
+                        const password = document.getElementById('adminPassword').value;
+                        
+                        if (password === 'NXLD_RX') {
+                            currentAdminLevel = 'admin';
+                            showAdminPanel();
+                            document.getElementById('adminLoginInfo').textContent = '登录成功（普通管理员）';
+                            document.getElementById('adminLoginInfo').style.color = '#10b981';
+                        } else if (password === 'NXLD_MZRW') {
+                            currentAdminLevel = 'super';
+                            showAdminPanel();
+                            document.getElementById('adminLoginInfo').textContent = '登录成功（超级管理员）';
+                            document.getElementById('adminLoginInfo').style.color = '#10b981';
                         } else {
                             document.getElementById('adminLoginInfo').textContent = '密码错误';
                             document.getElementById('adminLoginInfo').style.color = '#ef4444';
                         }
                     });
                 }
-
-                function renderAdminPanel() {
+                
+                async function showAdminPanel() {
                     container.innerHTML = '';
-
-                    // Bug反馈区域
-                    if (bugReports.length > 0) {
-                        const bugSection = document.createElement('div');
-                        bugSection.className = 'submit-form';
-                        bugSection.style.marginBottom = '2rem';
-                        bugSection.innerHTML = '<h3 style="color:#ef4444; margin-bottom:1rem;">Bug反馈</h3>';
-                        
-                        bugReports.forEach((bug, i) => {
-                            const div = document.createElement('div');
-                            div.style.cssText = 'background:rgba(255,255,255,0.03); border-radius:1rem; padding:1rem; margin-bottom:1rem;';
-                            div.innerHTML = `
-                                <div><span style="color:#818cf8;">账号:</span> ${bug.account}</div>
-                                <div style="margin:0.5rem 0; color:#f0f2ff;">${bug.content}</div>
-                                <div style="color:#9ca3af; font-size:0.8rem;">${bug.timestamp}</div>
-                                <button class="query-button" style="background:#10b981; margin-top:0.5rem;" data-index="${i}">标记已处理</button>
-                            `;
-                            div.querySelector('button').addEventListener('click', async () => {
-                                bugReports.splice(i, 1);
-                                if (await saveBugReports()) {
-                                    await addLog('处理Bug', '已处理', 'bug');
-                                    renderAdminPanel();
-                                    showToast('已处理');
-                                }
-                            });
-                            bugSection.appendChild(div);
-                        });
-                        container.appendChild(bugSection);
-                    }
-
-                    // 待审核签名区域
-                    if (pendingSignatures.length > 0) {
-                        const pendingSection = document.createElement('div');
-                        pendingSection.className = 'submit-form';
-                        pendingSection.style.marginBottom = '2rem';
-                        pendingSection.innerHTML = '<h3 style="color:#f59e0b; margin-bottom:1rem;">待审核签名</h3>';
-                        
-                        pendingSignatures.forEach((sig, i) => {
-                            const div = document.createElement('div');
-                            div.style.cssText = 'background:rgba(255,255,255,0.03); border-radius:1rem; padding:1rem; margin-bottom:1rem;';
-                            div.innerHTML = `
-                                <div><span style="color:#818cf8;">账号:</span> ${sig.account} (${sig.platform === 'qq' ? 'QQ' : '抖音'})</div>
-                                <div style="margin:0.5rem 0; color:#f0f2ff;" class="signature-preview">${sig.html || convertToHtml(sig.content)}</div>
-                                <div style="color:#9ca3af; font-size:0.8rem;">${sig.timestamp}</div>
-                                <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
-                                    <button class="query-button" style="background:#10b981; flex:1;" data-approve="${i}">通过</button>
-                                    <button class="query-button" style="background:#ef4444; flex:1;" data-reject="${i}">拒绝</button>
+                    
+                    const panel = document.createElement('div');
+                    
+                    const levelBadge = document.createElement('div');
+                    levelBadge.style.textAlign = 'center';
+                    levelBadge.style.marginBottom = '1rem';
+                    levelBadge.style.padding = '0.5rem';
+                    levelBadge.style.borderRadius = '2rem';
+                    levelBadge.style.background = currentAdminLevel === 'super' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(16, 185, 129, 0.2)';
+                    levelBadge.style.color = currentAdminLevel === 'super' ? '#a78bfa' : '#10b981';
+                    levelBadge.innerHTML = currentAdminLevel === 'super' ? 
+                        '<i class="fas fa-crown"></i> 超级管理员模式' : 
+                        '<i class="fas fa-user"></i> 普通管理员模式';
+                    panel.appendChild(levelBadge);
+                    
+                    const refreshBtn = document.createElement('button');
+                    refreshBtn.className = 'query-button';
+                    refreshBtn.style.marginBottom = '1rem';
+                    refreshBtn.style.width = '100%';
+                    refreshBtn.innerHTML = '<i class="fas fa-sync"></i> 刷新数据';
+                    refreshBtn.addEventListener('click', async function() {
+                        refreshBtn.disabled = true;
+                        refreshBtn.innerHTML = '<span class="loading-spinner"></span> 刷新中...';
+                        await loadFromCloud();
+                        showAdminPanel();
+                    });
+                    panel.appendChild(refreshBtn);
+                    
+                    const bugSection = document.createElement('div');
+                    bugSection.className = 'submit-form';
+                    bugSection.style.marginBottom = '2rem';
+                    
+                    let bugHtml = '<h3 style="color: #ef4444; margin-bottom: 1rem;">Bug反馈</h3>';
+                    
+                    if (bugReports.length === 0) {
+                        bugHtml += '<div style="color: #9ca3af; text-align: center; padding: 2rem;">暂无Bug反馈</div>';
+                    } else {
+                        bugReports.forEach((bug, index) => {
+                            bugHtml += `
+                                <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
+                                    <div style="margin-bottom: 0.5rem;"><span style="color: #818cf8;">账号:</span> ${bug.account}</div>
+                                    <div style="margin-bottom: 0.5rem; color: #f0f2ff;">${bug.content}</div>
+                                    <div style="margin-bottom: 0.5rem; color: #9ca3af; font-size: 0.8rem;">提交时间: ${bug.timestamp}</div>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="query-button" style="background: #10b981;" onclick="window.resolveBug(${index})">标记已处理</button>
+                                    </div>
                                 </div>
                             `;
-                            
-                            div.querySelector('[data-approve]').addEventListener('click', async () => {
-                                const sig = pendingSignatures[i];
-                                approvedSignatures.push({
-                                    account: sig.account,
-                                    platform: sig.platform,
-                                    content: sig.content,
-                                    html: sig.html,
-                                    timestamp: new Date().toLocaleString('zh-CN')
-                                });
-                                pendingSignatures.splice(i, 1);
-                                
-                                if (await savePendingSignatures() && await saveApprovedSignatures()) {
-                                    await addLog('通过签名', `${sig.account}`, 'approved');
-                                    renderAdminPanel();
-                                    showToast('已通过');
-                                }
-                            });
-                            
-                            div.querySelector('[data-reject]').addEventListener('click', async () => {
-                                pendingSignatures.splice(i, 1);
-                                if (await savePendingSignatures()) {
-                                    await addLog('拒绝签名', '', 'rejected');
-                                    renderAdminPanel();
-                                    showToast('已拒绝');
-                                }
-                            });
-                            
-                            pendingSection.appendChild(div);
                         });
-                        container.appendChild(pendingSection);
                     }
-
-                    // 已通过签名区域
-                    if (approvedSignatures.length > 0) {
-                        const approvedSection = document.createElement('div');
-                        approvedSection.className = 'submit-form';
-                        approvedSection.innerHTML = '<h3 style="color:#10b981; margin-bottom:1rem;">已通过签名管理</h3>';
-                        
-                        approvedSignatures.forEach((sig, i) => {
-                            const div = document.createElement('div');
-                            div.style.cssText = 'background:rgba(255,255,255,0.03); border-radius:1rem; padding:1rem; margin-bottom:1rem;';
-                            div.innerHTML = `
-                                <div><span style="color:#818cf8;">账号:</span> ${sig.account} (${sig.platform === 'qq' ? 'QQ' : '抖音'})</div>
-                                <div style="margin:0.5rem 0; color:#f0f2ff;" class="signature-preview">${sig.html || convertToHtml(sig.content)}</div>
-                                <button class="query-button" style="background:#ef4444;" data-index="${i}">删除</button>
+                    
+                    bugSection.innerHTML = bugHtml;
+                    panel.appendChild(bugSection);
+                    
+                    const pendingSection = document.createElement('div');
+                    pendingSection.className = 'submit-form';
+                    pendingSection.style.marginBottom = '2rem';
+                    
+                    let pendingHtml = '<h3 style="color: #f59e0b; margin-bottom: 1rem;">待审核签名</h3>';
+                    
+                    if (pendingSignatures.length === 0) {
+                        pendingHtml += '<div style="color: #9ca3af; text-align: center; padding: 2rem;">暂无待审核签名</div>';
+                    } else {
+                        pendingSignatures.forEach((sig, index) => {
+                            pendingHtml += `
+                                <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
+                                    <div style="margin-bottom: 0.5rem;"><span style="color: #818cf8;">账号:</span> ${sig.account} (${sig.platform === 'qq' ? 'QQ' : '抖音'})</div>
+                                    <div style="margin-bottom: 0.5rem; color: #f0f2ff;" class="signature-preview">${sig.html || convertToHtml(sig.content)}</div>
+                                    <div style="margin-bottom: 0.5rem; color: #9ca3af; font-size: 0.8rem;">提交时间: ${sig.timestamp}</div>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="query-button" style="background: #10b981;" onclick="window.approveSignature(${index})">通过</button>
+                                        <button class="query-button" style="background: #ef4444;" onclick="window.rejectSignature(${index})">拒绝</button>
+                                    </div>
+                                </div>
                             `;
-                            div.querySelector('button').addEventListener('click', async () => {
-                                approvedSignatures.splice(i, 1);
-                                if (await saveApprovedSignatures()) {
-                                    await addLog('删除签名', '', 'deleted');
-                                    renderAdminPanel();
-                                    showToast('已删除');
-                                }
-                            });
-                            approvedSection.appendChild(div);
                         });
-                        container.appendChild(approvedSection);
                     }
-
-                    // 日志区域
-                    if (operationLogs.length > 0) {
-                        const logSection = document.createElement('div');
-                        logSection.className = 'submit-form';
-                        logSection.style.marginTop = '2rem';
-                        logSection.innerHTML = '<h3 style="color:#818cf8; margin-bottom:1rem;">操作日志</h3><div class="log-container"></div>';
+                    
+                    pendingSection.innerHTML = pendingHtml;
+                    panel.appendChild(pendingSection);
+                    
+                    const approvedSection = document.createElement('div');
+                    approvedSection.className = 'submit-form';
+                    
+                    let approvedHtml = '<h3 style="color: #10b981; margin-bottom: 1rem;">已通过签名管理</h3>';
+                    
+                    if (approvedSignatures.length === 0) {
+                        approvedHtml += '<div style="color: #9ca3af; text-align: center; padding: 2rem;">暂无用户通过的签名</div>';
+                    } else {
+                        approvedSignatures.forEach((sig, index) => {
+                            approvedHtml += `
+                                <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
+                                    <div style="margin-bottom: 0.5rem;"><span style="color: #818cf8;">账号:</span> ${sig.account} (${sig.platform === 'qq' ? 'QQ' : '抖音'})</div>
+                                    <div style="margin-bottom: 0.5rem; color: #f0f2ff;" class="signature-preview">${sig.html || convertToHtml(sig.content)}</div>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="query-button" style="background: #ef4444;" onclick="window.deleteApprovedSignature(${index})">删除</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    approvedSection.innerHTML = approvedHtml;
+                    panel.appendChild(approvedSection);
+                    
+                    const logSection = document.createElement('div');
+                    logSection.className = 'submit-form';
+                    logSection.style.marginTop = '2rem';
+                    
+                    let logHtml = '<h3 style="color: #818cf8; margin-bottom: 1rem;">操作日志</h3>';
+                    logHtml += '<div class="log-container">';
+                    
+                    if (operationLogs.length === 0) {
+                        logHtml += '<div style="color: #9ca3af; text-align: center; padding: 1rem;">暂无操作日志</div>';
+                    } else {
+                        operationLogs.forEach(log => {
+                            let logClass = 'log-content';
+                            if (log.action.includes('通过')) logClass += ' approved';
+                            else if (log.action.includes('拒绝')) logClass += ' rejected';
+                            else if (log.action.includes('删除')) logClass += ' deleted';
+                            else if (log.action.includes('Bug')) logClass += ' bug';
+                            
+                            logHtml += `
+                                <div class="log-item">
+                                    <span class="log-time">[${log.time}]</span>
+                                    <span class="${logClass}">${log.action}: ${log.details}</span>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    logHtml += '</div>';
+                    logSection.innerHTML = logHtml;
+                    panel.appendChild(logSection);
+                    
+                    container.innerHTML = '';
+                    container.appendChild(panel);
+                    
+                    window.resolveBug = async (index) => {
+                        const bug = bugReports[index];
+                        bugReports.splice(index, 1);
                         
-                        const logContainer = logSection.querySelector('.log-container');
-                        operationLogs.slice(0, 50).forEach(log => {
-                            const item = document.createElement('div');
-                            item.className = 'log-item';
-                            item.innerHTML = `<span class="log-time">[${log.time}]</span> <span class="log-content ${log.status}">${log.action}: ${log.details || ''}</span>`;
-                            logContainer.appendChild(item);
-                        });
-                        container.appendChild(logSection);
-                    }
-
-                    innerDynamic.appendChild(container);
-                    refreshBackButton();
+                        await saveBugReports();
+                        await addLog('处理Bug', `${bug.account} 的Bug反馈已处理`, 'bug');
+                        
+                        await loadFromCloud();
+                        showAdminPanel();
+                        showToast('Bug已标记为已处理');
+                    };
+                    
+                    window.approveSignature = async (index) => {
+                        const sig = pendingSignatures[index];
+                        
+                        // 再次验证账号是否合法
+                        if (!isValidAccount(sig.account)) {
+                            showToast('账号不合法，无法通过');
+                            return;
+                        }
+                        
+                        const newApproved = {
+                            account: sig.account,
+                            platform: sig.platform,
+                            content: sig.content,
+                            html: sig.html,
+                            timestamp: new Date().toLocaleString()
+                        };
+                        
+                        approvedSignatures.push(newApproved);
+                        pendingSignatures.splice(index, 1);
+                        
+                        await savePendingSignatures();
+                        await saveApprovedSignatures();
+                        await addLog('通过签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名已通过`, 'approved');
+                        
+                        await loadFromCloud();
+                        showAdminPanel();
+                        showToast('签名已通过');
+                    };
+                    
+                    window.rejectSignature = async (index) => {
+                        const sig = pendingSignatures[index];
+                        pendingSignatures.splice(index, 1);
+                        
+                        await savePendingSignatures();
+                        await addLog('拒绝签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被拒绝`, 'rejected');
+                        
+                        await loadFromCloud();
+                        showAdminPanel();
+                        showToast('签名已拒绝');
+                    };
+                    
+                    window.deleteApprovedSignature = async (index) => {
+                        const sig = approvedSignatures[index];
+                        approvedSignatures.splice(index, 1);
+                        
+                        await saveApprovedSignatures();
+                        await addLog('删除签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被删除`, 'deleted');
+                        
+                        await loadFromCloud();
+                        showAdminPanel();
+                        showToast('签名已删除');
+                    };
                 }
+                
+                refreshBackButton();
             }
 
-            // 事件绑定
-            supernaturalBtn.addEventListener('click', () => {
+            function showSkinCategoryOnly(pushToHistory) { showToast('皮肤分类功能开发中'); }
+            function showPropCategory(pushToHistory) { showToast('道具分类功能开发中'); }
+            function showRoleCategory(pushToHistory) { showToast('角色分类功能开发中'); }
+            function showRoleDetail(category, pushToHistory) { showToast('角色详情功能开发中'); }
+            function showDecorCategory(pushToHistory) { showToast('装饰分类功能开发中'); }
+            function showDecorDetail(category, pushToHistory) { showToast('装饰详情功能开发中'); }
+            function showPropSkinDetail(category, pushToHistory) { showToast('道具皮肤详情功能开发中'); }
+            function showDanceSkinList(pushToHistory) { showToast('动作舞蹈功能开发中'); }
+            function showItemListOnly(pushToHistory) { showToast('局内物品功能开发中'); }
+            function showSecretGridOnly(pushToHistory) { showToast('模式数值功能开发中'); }
+            function showTeamRowOnly(pushToHistory) { showToast('古蜀遗迹功能开发中'); }
+            function showDifficultyOnly(pushToHistory) { showToast('难度选择功能开发中'); }
+            function showJingjueDifficultyOnly(pushToHistory) { showToast('精绝古城功能开发中'); }
+            function showKunlunDifficultyOnly(pushToHistory) { showToast('昆仑秘境功能开发中'); }
+            function showQinlingDifficultyOnly(pushToHistory) { showToast('秦陵龙宫功能开发中'); }
+            function showSubteamRow(pushToHistory) { showToast('双队/四队功能开发中'); }
+
+            supernaturalBtn.addEventListener('click', function() {
                 if (historyStack.length === 0 || historyStack[historyStack.length - 1] !== VIEWS.SUPERNATURAL_INITIAL) {
                     historyStack = [];
                     showSupernaturalInitial();
@@ -1390,38 +2760,55 @@
                 }
             });
 
-            agreementBtn.addEventListener('click', () => agreementModal.classList.add('show'));
-            closeAgreement.addEventListener('click', () => agreementModal.classList.remove('show'));
-            agreementModal.addEventListener('click', (e) => {
-                if (e.target === agreementModal) agreementModal.classList.remove('show');
+            agreementBtn.addEventListener('click', function() {
+                agreementModal.classList.add('show');
             });
 
-            thanksBtn.addEventListener('click', () => thanksModal.classList.add('show'));
-            closeThanks.addEventListener('click', () => thanksModal.classList.remove('show'));
-            thanksModal.addEventListener('click', (e) => {
-                if (e.target === thanksModal) thanksModal.classList.remove('show');
+            closeAgreement.addEventListener('click', function() {
+                agreementModal.classList.remove('show');
             });
 
-            submitSignatureBtn.addEventListener('click', () => {
+            agreementModal.addEventListener('click', function(e) {
+                if (e.target === agreementModal) {
+                    agreementModal.classList.remove('show');
+                }
+            });
+
+            thanksBtn.addEventListener('click', function() {
+                thanksModal.classList.add('show');
+            });
+
+            closeThanks.addEventListener('click', function() {
+                thanksModal.classList.remove('show');
+            });
+
+            thanksModal.addEventListener('click', function(e) {
+                if (e.target === thanksModal) {
+                    thanksModal.classList.remove('show');
+                }
+            });
+
+            submitSignatureBtn.addEventListener('click', function() {
                 showSubmitFeedback();
                 searchInput.value = '';
             });
 
-            adminBtn.addEventListener('click', () => {
+            adminBtn.addEventListener('click', function() {
                 currentAdminLevel = 'guest';
                 showAdminPage();
                 searchInput.value = '';
             });
 
-            // 初始化
-            window.addEventListener('load', async () => {
+            window.addEventListener('load', async function() {
                 startCloudCheck();
                 await loadFromCloud();
                 showSupernaturalInitial();
             });
 
-            window.addEventListener('beforeunload', () => {
-                if (cloudCheckInterval) clearInterval(cloudCheckInterval);
+            window.addEventListener('beforeunload', function() {
+                if (cloudCheckInterval) {
+                    clearInterval(cloudCheckInterval);
+                }
             });
         })();
     </script>
