@@ -1521,13 +1521,12 @@
             // 云端连接状态
             let isCloudConnected = false;
             let cloudCheckInterval = null;
-            let isReconnecting = false;
 
             // 云端数据缓存
-            let pendingSignatures = [];      // 待审核签名投稿
-            let bugReports = [];              // Bug反馈
-            let approvedSignatures = [];      // 已通过签名
-            let operationLogs = [];            // 操作日志
+            let pendingSignatures = [];
+            let bugReports = [];
+            let approvedSignatures = [];
+            let operationLogs = [];
 
             // 界面ID常量
             const VIEWS = {
@@ -1596,7 +1595,7 @@
                 cloudStatus.className = 'cloud-status ' + (connected ? 'connected' : 'disconnected');
                 cloudStatus.innerHTML = connected 
                     ? '<i class="fas fa-cloud"></i> 云端已连接'
-                    : '<i class="fas fa-cloud-rain"></i> 云端离线 - 数据将本地存储';
+                    : '<i class="fas fa-cloud-rain"></i> 云端连接失败 - 请检查网络';
                 if (message) {
                     showToast(message);
                 }
@@ -1604,8 +1603,6 @@
 
             // 检查云端连接
             async function checkCloudConnection() {
-                if (isReconnecting) return;
-                
                 try {
                     const { error } = await supabase
                         .from('_test')
@@ -1614,7 +1611,7 @@
                         .maybeSingle();
                     
                     if (error && error.message && error.message.includes('relation') && error.message.includes('does not exist')) {
-                        updateCloudStatus(false, '请在Supabase控制台创建表');
+                        updateCloudStatus(false, '请先在Supabase创建表');
                     } else if (error) {
                         console.error('连接错误:', error);
                         updateCloudStatus(false);
@@ -1635,15 +1632,6 @@
 
             // 从云端加载数据
             async function loadFromCloud() {
-                if (!isCloudConnected) {
-                    // 降级到本地存储
-                    pendingSignatures = JSON.parse(localStorage.getItem('pendingSignatures') || '[]');
-                    bugReports = JSON.parse(localStorage.getItem('bugReports') || '[]');
-                    approvedSignatures = JSON.parse(localStorage.getItem('approvedSignatures') || '[]');
-                    operationLogs = JSON.parse(localStorage.getItem('operationLogs') || '[]');
-                    return true;
-                }
-
                 try {
                     // 加载待审核签名
                     const { data: pendingData, error: pendingError } = await supabase
@@ -1685,110 +1673,108 @@
                     return true;
                 } catch (err) {
                     console.error('加载云端数据失败:', err);
-                    
-                    // 降级到本地存储
-                    pendingSignatures = JSON.parse(localStorage.getItem('pendingSignatures') || '[]');
-                    bugReports = JSON.parse(localStorage.getItem('bugReports') || '[]');
-                    approvedSignatures = JSON.parse(localStorage.getItem('approvedSignatures') || '[]');
-                    operationLogs = JSON.parse(localStorage.getItem('operationLogs') || '[]');
-                    
+                    showToast('加载数据失败，请刷新重试');
                     return false;
                 }
             }
 
-            // 保存待审核签名到云端 - 修复：使用upsert避免删除后重新插入的问题
+            // 保存待审核签名到云端
             async function savePendingSignatures() {
-                if (!isCloudConnected) {
-                    localStorage.setItem('pendingSignatures', JSON.stringify(pendingSignatures));
-                    return true;
-                }
-
                 try {
-                    // 使用upsert而不是先删除再插入
+                    // 先删除所有现有数据
+                    const { error: deleteError } = await supabase
+                        .from('pending_signatures')
+                        .delete()
+                        .neq('id', '');
+                    
+                    if (deleteError) throw deleteError;
+                    
+                    // 插入新数据
                     if (pendingSignatures.length > 0) {
-                        const { error } = await supabase
+                        const { error: insertError } = await supabase
                             .from('pending_signatures')
-                            .upsert(pendingSignatures.map(s => ({
+                            .insert(pendingSignatures.map(s => ({
                                 account: s.account,
                                 platform: s.platform,
                                 content: s.content,
                                 html: s.html,
-                                timestamp: s.timestamp,
-                                created_at: new Date().toISOString()
-                            })), { onConflict: 'id' });
+                                timestamp: s.timestamp
+                            })));
 
-                        if (error) throw error;
-                    } else {
-                        // 如果为空，删除所有
-                        await supabase.from('pending_signatures').delete().neq('id', '');
+                        if (insertError) throw insertError;
                     }
+                    
                     return true;
                 } catch (err) {
                     console.error('保存待审核签名失败:', err);
-                    localStorage.setItem('pendingSignatures', JSON.stringify(pendingSignatures));
+                    showToast('保存失败，请重试');
                     return false;
                 }
             }
 
-            // 保存Bug反馈到云端 - 修复
+            // 保存Bug反馈到云端
             async function saveBugReports() {
-                if (!isCloudConnected) {
-                    localStorage.setItem('bugReports', JSON.stringify(bugReports));
-                    return true;
-                }
-
                 try {
+                    // 先删除所有现有数据
+                    const { error: deleteError } = await supabase
+                        .from('bug_reports')
+                        .delete()
+                        .neq('id', '');
+                    
+                    if (deleteError) throw deleteError;
+                    
+                    // 插入新数据
                     if (bugReports.length > 0) {
-                        const { error } = await supabase
+                        const { error: insertError } = await supabase
                             .from('bug_reports')
-                            .upsert(bugReports.map(b => ({
+                            .insert(bugReports.map(b => ({
                                 account: b.account,
                                 content: b.content,
                                 timestamp: b.timestamp,
-                                status: b.status,
-                                created_at: new Date().toISOString()
-                            })), { onConflict: 'id' });
+                                status: b.status
+                            })));
 
-                        if (error) throw error;
-                    } else {
-                        await supabase.from('bug_reports').delete().neq('id', '');
+                        if (insertError) throw insertError;
                     }
+                    
                     return true;
                 } catch (err) {
                     console.error('保存Bug反馈失败:', err);
-                    localStorage.setItem('bugReports', JSON.stringify(bugReports));
+                    showToast('保存失败，请重试');
                     return false;
                 }
             }
 
-            // 保存已通过签名到云端 - 修复
+            // 保存已通过签名到云端
             async function saveApprovedSignatures() {
-                if (!isCloudConnected) {
-                    localStorage.setItem('approvedSignatures', JSON.stringify(approvedSignatures));
-                    return true;
-                }
-
                 try {
+                    // 先删除所有现有数据
+                    const { error: deleteError } = await supabase
+                        .from('approved_signatures')
+                        .delete()
+                        .neq('id', '');
+                    
+                    if (deleteError) throw deleteError;
+                    
+                    // 插入新数据
                     if (approvedSignatures.length > 0) {
-                        const { error } = await supabase
+                        const { error: insertError } = await supabase
                             .from('approved_signatures')
-                            .upsert(approvedSignatures.map(s => ({
+                            .insert(approvedSignatures.map(s => ({
                                 account: s.account,
                                 platform: s.platform,
                                 content: s.content,
                                 html: s.html,
-                                timestamp: s.timestamp,
-                                created_at: new Date().toISOString()
-                            })), { onConflict: 'id' });
+                                timestamp: s.timestamp
+                            })));
 
-                        if (error) throw error;
-                    } else {
-                        await supabase.from('approved_signatures').delete().neq('id', '');
+                        if (insertError) throw insertError;
                     }
+                    
                     return true;
                 } catch (err) {
                     console.error('保存已通过签名失败:', err);
-                    localStorage.setItem('approvedSignatures', JSON.stringify(approvedSignatures));
+                    showToast('保存失败，请重试');
                     return false;
                 }
             }
@@ -1799,18 +1785,12 @@
                     time: new Date().toLocaleString(),
                     action: action,
                     details: details,
-                    status: status,
-                    created_at: new Date().toISOString()
+                    status: status
                 };
 
                 operationLogs.unshift(log);
                 if (operationLogs.length > 100) {
                     operationLogs = operationLogs.slice(0, 100);
-                }
-
-                if (!isCloudConnected) {
-                    localStorage.setItem('operationLogs', JSON.stringify(operationLogs));
-                    return true;
                 }
 
                 try {
@@ -1833,7 +1813,6 @@
                     return true;
                 } catch (err) {
                     console.error('保存日志失败:', err);
-                    localStorage.setItem('operationLogs', JSON.stringify(operationLogs));
                     return false;
                 }
             }
@@ -1849,8 +1828,6 @@
                             .replace(/<i>/g, '<i>').replace(/<\/i>/g, '</i>')
                             .replace(/<u>/g, '<u>').replace(/<\/u>/g, '</u>');
             }
-
-            function removeActiveClass() {}
 
             function resetAll() {
                 innerDynamic.innerHTML = '';
@@ -2161,7 +2138,6 @@
                     historyStack.push(VIEWS.SIGNATURE_PAGE);
                 }
                 
-                // 合并固定签名和已通过的签名
                 const allSignatures = [...approvedSignatures];
 
                 function createSignatureCard(signature) {
@@ -2344,10 +2320,8 @@
                                 document.getElementById('submitAccount').value = '';
                                 document.getElementById('submitContent').value = '';
                             } else {
-                                infoDiv.textContent = '提交成功（本地保存）！请等待管理员审核。';
-                                infoDiv.style.color = '#10b981';
-                                document.getElementById('submitAccount').value = '';
-                                document.getElementById('submitContent').value = '';
+                                infoDiv.textContent = '提交失败，请重试';
+                                infoDiv.style.color = '#ef4444';
                             }
                         } else {
                             // Bug反馈
@@ -2368,10 +2342,8 @@
                                 document.getElementById('submitAccount').value = '';
                                 document.getElementById('submitContent').value = '';
                             } else {
-                                infoDiv.textContent = 'Bug反馈已提交（本地保存），感谢你的支持！';
-                                infoDiv.style.color = '#10b981';
-                                document.getElementById('submitAccount').value = '';
-                                document.getElementById('submitContent').value = '';
+                                infoDiv.textContent = '提交失败，请重试';
+                                infoDiv.style.color = '#ef4444';
                             }
                         }
                     } catch (err) {
@@ -2573,7 +2545,7 @@
                     } else {
                         pendingSignatures.forEach((sig, index) => {
                             pendingHtml += `
-                                <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;" id="pending-${index}">
+                                <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
                                     <div style="margin-bottom: 0.5rem;"><span style="color: #818cf8;">账号:</span> ${sig.account} (${sig.platform === 'qq' ? 'QQ' : '抖音'})</div>
                                     <div style="margin-bottom: 0.5rem; color: #f0f2ff;" class="signature-preview">${sig.html || convertToHtml(sig.content)}</div>
                                     <div style="margin-bottom: 0.5rem; color: #9ca3af; font-size: 0.8rem;">提交时间: ${sig.timestamp}</div>
@@ -2600,7 +2572,7 @@
                     } else {
                         approvedSignatures.forEach((sig, index) => {
                             approvedHtml += `
-                                <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;" id="approved-${index}">
+                                <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
                                     <div style="margin-bottom: 0.5rem;"><span style="color: #818cf8;">账号:</span> ${sig.account} (${sig.platform === 'qq' ? 'QQ' : '抖音'})</div>
                                     <div style="margin-bottom: 0.5rem; color: #f0f2ff;" class="signature-preview">${sig.html || convertToHtml(sig.content)}</div>
                                     <div style="display: flex; gap: 0.5rem;">
@@ -2650,20 +2622,19 @@
                     
                     // 添加全局函数供按钮调用 - 立即删除并更新UI
                     window.resolveBug = async (index) => {
-                        // 先从DOM中移除
-                        const bugElement = document.querySelector(`#bug-${index}`);
-                        if (bugElement) bugElement.remove();
-                        
                         // 从数据中移除
                         bugReports.splice(index, 1);
                         
                         // 保存到云端
-                        await saveBugReports();
-                        await addLog('处理Bug', `Bug反馈已处理`, 'bug');
-                        
-                        // 刷新面板
-                        showAdminPanel();
-                        showToast('Bug已标记为已处理');
+                        const saved = await saveBugReports();
+                        if (saved) {
+                            await addLog('处理Bug', `Bug反馈已处理`, 'bug');
+                            // 刷新面板
+                            showAdminPanel();
+                            showToast('Bug已标记为已处理');
+                        } else {
+                            showToast('操作失败，请重试');
+                        }
                     };
                     
                     window.approveSignature = async (index) => {
@@ -2683,13 +2654,17 @@
                         approvedSignatures.push(newApproved);
                         
                         // 保存到云端
-                        await savePendingSignatures();
-                        await saveApprovedSignatures();
-                        await addLog('通过签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名已通过`, 'approved');
+                        const pendingSaved = await savePendingSignatures();
+                        const approvedSaved = await saveApprovedSignatures();
                         
-                        // 刷新面板
-                        showAdminPanel();
-                        showToast('签名已通过');
+                        if (pendingSaved && approvedSaved) {
+                            await addLog('通过签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名已通过`, 'approved');
+                            // 刷新面板
+                            showAdminPanel();
+                            showToast('签名已通过');
+                        } else {
+                            showToast('操作失败，请重试');
+                        }
                     };
                     
                     window.rejectSignature = async (index) => {
@@ -2697,12 +2672,15 @@
                         pendingSignatures.splice(index, 1);
                         
                         // 保存到云端
-                        await savePendingSignatures();
-                        await addLog('拒绝签名', `签名被拒绝`, 'rejected');
-                        
-                        // 刷新面板
-                        showAdminPanel();
-                        showToast('签名已拒绝');
+                        const saved = await savePendingSignatures();
+                        if (saved) {
+                            await addLog('拒绝签名', `签名被拒绝`, 'rejected');
+                            // 刷新面板
+                            showAdminPanel();
+                            showToast('签名已拒绝');
+                        } else {
+                            showToast('操作失败，请重试');
+                        }
                     };
                     
                     window.deleteApprovedSignature = async (index) => {
@@ -2710,12 +2688,15 @@
                         approvedSignatures.splice(index, 1);
                         
                         // 保存到云端
-                        await saveApprovedSignatures();
-                        await addLog('删除签名', `签名被删除`, 'deleted');
-                        
-                        // 刷新面板
-                        showAdminPanel();
-                        showToast('签名已删除');
+                        const saved = await saveApprovedSignatures();
+                        if (saved) {
+                            await addLog('删除签名', `签名被删除`, 'deleted');
+                            // 刷新面板
+                            showAdminPanel();
+                            showToast('签名已删除');
+                        } else {
+                            showToast('操作失败，请重试');
+                        }
                     };
                 }
                 
