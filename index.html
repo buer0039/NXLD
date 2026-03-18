@@ -2665,7 +2665,7 @@
                     container.innerHTML = '';
                     container.appendChild(panel);
                     
-                    // 添加全局函数供按钮调用 - 修复刷新显示问题
+                    // 添加全局函数供按钮调用 - 立即刷新
                     window.resolveBug = async (index) => {
                         const bug = bugReports[index];
                         bugReports.splice(index, 1);
@@ -2673,8 +2673,7 @@
                         await saveBugReports();
                         await addLog('处理Bug', `${bug.account} 的Bug反馈已处理`, 'bug');
                         
-                        // 重新加载数据并刷新面板
-                        await loadFromCloud();
+                        // 立即刷新面板
                         showAdminPanel();
                         showToast('Bug已标记为已处理');
                     };
@@ -2696,8 +2695,7 @@
                         await saveApprovedSignatures();
                         await addLog('通过签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名已通过`, 'approved');
                         
-                        // 重新加载数据并刷新面板
-                        await loadFromCloud();
+                        // 立即刷新面板
                         showAdminPanel();
                         showToast('签名已通过');
                     };
@@ -2709,8 +2707,7 @@
                         await savePendingSignatures();
                         await addLog('拒绝签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被拒绝`, 'rejected');
                         
-                        // 重新加载数据并刷新面板
-                        await loadFromCloud();
+                        // 立即刷新面板
                         showAdminPanel();
                         showToast('签名已拒绝');
                     };
@@ -2722,8 +2719,7 @@
                         await saveApprovedSignatures();
                         await addLog('删除签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被删除`, 'deleted');
                         
-                        // 重新加载数据并刷新面板
-                        await loadFromCloud();
+                        // 立即刷新面板
                         showAdminPanel();
                         showToast('签名已删除');
                     };
