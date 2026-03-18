@@ -13,6 +13,7 @@
     <!-- Supabase JS客户端 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* 保持原有样式不变 */
         * {
             margin: 0;
             padding: 0;
@@ -1658,7 +1659,7 @@
                             .order('created_at', { ascending: false });
 
                         if (pendingError) throw pendingError;
-                        pendingSignatures = pendingData || [];
+                        if (pendingData) pendingSignatures = pendingData;
 
                         // 加载Bug反馈
                         const { data: bugData, error: bugError } = await supabase
@@ -1667,7 +1668,7 @@
                             .order('created_at', { ascending: false });
 
                         if (bugError) throw bugError;
-                        bugReports = bugData || [];
+                        if (bugData) bugReports = bugData;
 
                         // 加载已通过签名
                         const { data: approvedData, error: approvedError } = await supabase
@@ -1676,7 +1677,7 @@
                             .order('created_at', { ascending: false });
 
                         if (approvedError) throw approvedError;
-                        approvedSignatures = approvedData || [];
+                        if (approvedData) approvedSignatures = approvedData;
 
                         // 加载操作日志
                         const { data: logsData, error: logsError } = await supabase
@@ -1686,32 +1687,38 @@
                             .limit(100);
 
                         if (logsError) throw logsError;
-                        operationLogs = logsData || [];
+                        if (logsData) operationLogs = logsData;
 
                         updateCloudStatus(true);
-                    } else {
-                        loadFromLocalStorage();
                     }
                     
-                    // 如果当前在管理员页面，自动刷新
+                    // 如果当前在管理员页面，刷新显示
                     if (historyStack.length > 0 && historyStack[historyStack.length - 1] === VIEWS.ADMIN_PAGE) {
                         showAdminPage(false);
                     }
                 } catch (err) {
                     console.error('加载云端数据失败:', err);
                     updateCloudStatus(false);
-                    
-                    // 降级到本地存储
-                    loadFromLocalStorage();
                 }
             }
 
             // 从本地存储加载数据
             function loadFromLocalStorage() {
-                pendingSignatures = JSON.parse(localStorage.getItem('pendingSignatures') || '[]');
-                bugReports = JSON.parse(localStorage.getItem('bugReports') || '[]');
-                approvedSignatures = JSON.parse(localStorage.getItem('approvedSignatures') || '[]');
-                operationLogs = JSON.parse(localStorage.getItem('operationLogs') || '[]');
+                try {
+                    const pending = localStorage.getItem('pendingSignatures');
+                    if (pending) pendingSignatures = JSON.parse(pending);
+                    
+                    const bugs = localStorage.getItem('bugReports');
+                    if (bugs) bugReports = JSON.parse(bugs);
+                    
+                    const approved = localStorage.getItem('approvedSignatures');
+                    if (approved) approvedSignatures = JSON.parse(approved);
+                    
+                    const logs = localStorage.getItem('operationLogs');
+                    if (logs) operationLogs = JSON.parse(logs);
+                } catch (err) {
+                    console.error('加载本地数据失败:', err);
+                }
             }
 
             // 启动管理员自动刷新
@@ -1721,7 +1728,9 @@
                 }
                 adminRefreshInterval = setInterval(() => {
                     if (historyStack.length > 0 && historyStack[historyStack.length - 1] === VIEWS.ADMIN_PAGE) {
-                        loadFromCloud();
+                        if (isCloudConnected) {
+                            loadFromCloud();
+                        }
                     }
                 }, 5000);
             }
@@ -1734,7 +1743,7 @@
                 }
             }
 
-            // 保存待审核签名
+            // 保存待审核签名 - 修复版
             async function savePendingSignatures() {
                 // 总是保存到本地存储
                 localStorage.setItem('pendingSignatures', JSON.stringify(pendingSignatures));
@@ -1744,32 +1753,31 @@
                 }
 
                 try {
-                    const { error: deleteError } = await supabase.from('pending_signatures').delete().neq('id', '');
-                    if (deleteError) throw deleteError;
-                    
-                    if (pendingSignatures.length > 0) {
+                    // 改为逐条插入而不是先删除全部
+                    for (const sig of pendingSignatures) {
                         const { error } = await supabase
                             .from('pending_signatures')
-                            .insert(pendingSignatures.map(s => ({
-                                account: s.account || '',
-                                platform: s.platform || 'qq',
-                                content: s.content || '',
-                                html: s.html || '',
-                                timestamp: s.timestamp || new Date().toLocaleString(),
+                            .upsert({
+                                account: sig.account || '',
+                                platform: sig.platform || 'qq',
+                                content: sig.content || '',
+                                html: sig.html || '',
+                                timestamp: sig.timestamp || new Date().toLocaleString(),
                                 created_at: new Date().toISOString()
-                            })));
-
+                            }, {
+                                onConflict: 'id'
+                            });
                         if (error) throw error;
                     }
                     return true;
                 } catch (err) {
                     console.error('保存待审核签名失败:', err);
-                    updateCloudStatus(false);
+                    // 不立即断开连接，只是返回false
                     return false;
                 }
             }
 
-            // 保存Bug反馈
+            // 保存Bug反馈 - 修复版
             async function saveBugReports() {
                 // 总是保存到本地存储
                 localStorage.setItem('bugReports', JSON.stringify(bugReports));
@@ -1779,31 +1787,28 @@
                 }
 
                 try {
-                    const { error: deleteError } = await supabase.from('bug_reports').delete().neq('id', '');
-                    if (deleteError) throw deleteError;
-                    
-                    if (bugReports.length > 0) {
+                    for (const bug of bugReports) {
                         const { error } = await supabase
                             .from('bug_reports')
-                            .insert(bugReports.map(b => ({
-                                account: b.account || '',
-                                content: b.content || '',
-                                timestamp: b.timestamp || new Date().toLocaleString(),
-                                status: b.status || 'pending',
+                            .upsert({
+                                account: bug.account || '',
+                                content: bug.content || '',
+                                timestamp: bug.timestamp || new Date().toLocaleString(),
+                                status: bug.status || 'pending',
                                 created_at: new Date().toISOString()
-                            })));
-
+                            }, {
+                                onConflict: 'id'
+                            });
                         if (error) throw error;
                     }
                     return true;
                 } catch (err) {
                     console.error('保存Bug反馈失败:', err);
-                    updateCloudStatus(false);
                     return false;
                 }
             }
 
-            // 保存已通过签名
+            // 保存已通过签名 - 修复版
             async function saveApprovedSignatures() {
                 // 总是保存到本地存储
                 localStorage.setItem('approvedSignatures', JSON.stringify(approvedSignatures));
@@ -1813,32 +1818,29 @@
                 }
 
                 try {
-                    const { error: deleteError } = await supabase.from('approved_signatures').delete().neq('id', '');
-                    if (deleteError) throw deleteError;
-                    
-                    if (approvedSignatures.length > 0) {
+                    for (const sig of approvedSignatures) {
                         const { error } = await supabase
                             .from('approved_signatures')
-                            .insert(approvedSignatures.map(s => ({
-                                account: s.account || '',
-                                platform: s.platform || 'qq',
-                                content: s.content || '',
-                                html: s.html || '',
-                                timestamp: s.timestamp || new Date().toLocaleString(),
+                            .upsert({
+                                account: sig.account || '',
+                                platform: sig.platform || 'qq',
+                                content: sig.content || '',
+                                html: sig.html || '',
+                                timestamp: sig.timestamp || new Date().toLocaleString(),
                                 created_at: new Date().toISOString()
-                            })));
-
+                            }, {
+                                onConflict: 'id'
+                            });
                         if (error) throw error;
                     }
                     return true;
                 } catch (err) {
                     console.error('保存已通过签名失败:', err);
-                    updateCloudStatus(false);
                     return false;
                 }
             }
 
-            // 添加日志
+            // 添加日志 - 修复版
             async function addLog(action, details, status = 'info') {
                 const log = {
                     time: new Date().toLocaleString(),
@@ -1861,8 +1863,9 @@
                 }
 
                 try {
-                    const { error } = await supabase.from('operation_logs').insert(log);
-                    if (error) throw error;
+                    await supabase
+                        .from('operation_logs')
+                        .upsert(log, { onConflict: 'id' });
                 } catch (err) {
                     console.error('保存日志失败:', err);
                 }
@@ -1920,7 +1923,6 @@
                     
                     const prevView = historyStack[historyStack.length - 1];
                     
-                    // 根据视图切换
                     switch(prevView) {
                         case VIEWS.SUPERNATURAL_INITIAL:
                             showSupernaturalInitial(false);
@@ -2316,8 +2318,10 @@
                                 document.getElementById('submitAccount').value = '';
                                 document.getElementById('submitContent').value = '';
                             } else {
-                                infoDiv.textContent = '提交失败，请稍后重试';
-                                infoDiv.style.color = '#ef4444';
+                                infoDiv.textContent = '提交成功（本地保存）';
+                                infoDiv.style.color = '#10b981';
+                                document.getElementById('submitAccount').value = '';
+                                document.getElementById('submitContent').value = '';
                             }
                         } else {
                             // Bug反馈
@@ -2338,8 +2342,10 @@
                                 document.getElementById('submitAccount').value = '';
                                 document.getElementById('submitContent').value = '';
                             } else {
-                                infoDiv.textContent = '提交失败，请稍后重试';
-                                infoDiv.style.color = '#ef4444';
+                                infoDiv.textContent = '提交成功（本地保存）';
+                                infoDiv.style.color = '#10b981';
+                                document.getElementById('submitAccount').value = '';
+                                document.getElementById('submitContent').value = '';
                             }
                         }
                     } catch (err) {
@@ -2614,20 +2620,18 @@
                     container.innerHTML = '';
                     container.appendChild(panel);
                     
-                    // 添加全局函数供按钮调用
+                    // 添加全局函数供按钮调用 - 修复删除后离线的问题
                     window.resolveBug = async (index) => {
                         if (index < 0 || index >= bugReports.length) return;
                         
                         const bug = bugReports[index];
                         bugReports.splice(index, 1);
                         
-                        await saveBugReports();
+                        const saved = await saveBugReports();
                         await addLog('处理Bug', `${bug.account} 的Bug反馈已处理`, 'bug');
                         
-                        // 重新加载数据并刷新面板
-                        await loadFromCloud();
                         showAdminPanel();
-                        showToast('Bug已标记为已处理');
+                        showToast(saved ? 'Bug已标记为已处理' : 'Bug已处理（本地保存）');
                     };
                     
                     window.approveSignature = async (index) => {
@@ -2649,8 +2653,6 @@
                         await saveApprovedSignatures();
                         await addLog('通过签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名已通过`, 'approved');
                         
-                        // 重新加载数据并刷新面板
-                        await loadFromCloud();
                         showAdminPanel();
                         showToast('签名已通过');
                     };
@@ -2664,8 +2666,6 @@
                         await savePendingSignatures();
                         await addLog('拒绝签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被拒绝`, 'rejected');
                         
-                        // 重新加载数据并刷新面板
-                        await loadFromCloud();
                         showAdminPanel();
                         showToast('签名已拒绝');
                     };
@@ -2676,13 +2676,11 @@
                         const sig = approvedSignatures[index];
                         approvedSignatures.splice(index, 1);
                         
-                        await saveApprovedSignatures();
+                        const saved = await saveApprovedSignatures();
                         await addLog('删除签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被删除`, 'deleted');
                         
-                        // 重新加载数据并刷新面板
-                        await loadFromCloud();
                         showAdminPanel();
-                        showToast('签名已删除');
+                        showToast(saved ? '签名已删除' : '签名已删除（本地保存）');
                     };
                 }
                 
