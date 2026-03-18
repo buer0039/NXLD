@@ -1480,7 +1480,11 @@
             const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
             
             // 初始化Supabase客户端
-            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                auth: {
+                    persistSession: false
+                }
+            });
 
             // 获取DOM元素
             const supernaturalBtn = document.getElementById('supernaturalBtn');
@@ -1516,6 +1520,8 @@
             // 云端连接状态
             let isCloudConnected = false;
             let cloudCheckInterval = null;
+            let connectionRetryCount = 0;
+            const MAX_RETRY = 3;
 
             // 云端数据缓存
             let pendingSignatures = [];      // 待审核签名投稿
@@ -1590,10 +1596,13 @@
             // 更新云端连接状态
             function updateCloudStatus(connected, message) {
                 isCloudConnected = connected;
+                if (connected) {
+                    connectionRetryCount = 0;
+                }
                 cloudStatus.className = 'cloud-status ' + (connected ? 'connected' : 'disconnected');
                 cloudStatus.innerHTML = connected 
                     ? '<i class="fas fa-cloud"></i> 云端已连接'
-                    : '<i class="fas fa-cloud-rain"></i> 云端离线 - 数据将本地存储';
+                    : '<i class="fas fa-cloud-rain"></i> 云端离线 - 使用本地存储';
                 if (message) {
                     showToast(message);
                 }
@@ -1602,7 +1611,6 @@
             // 检查云端连接
             async function checkCloudConnection() {
                 try {
-                    // 先尝试查询测试表
                     const { error } = await supabase
                         .from('_test')
                         .select('*')
@@ -1613,13 +1621,23 @@
                         updateCloudStatus(false, '请在Supabase控制台创建表');
                     } else if (error) {
                         console.error('连接错误:', error);
-                        updateCloudStatus(false, '云端连接失败');
+                        connectionRetryCount++;
+                        if (connectionRetryCount >= MAX_RETRY) {
+                            updateCloudStatus(false, '云端连接失败，使用本地存储');
+                        } else {
+                            updateCloudStatus(false);
+                        }
                     } else {
                         updateCloudStatus(true);
                     }
                 } catch (err) {
                     console.error('云端连接失败:', err);
-                    updateCloudStatus(false, '云端连接失败，使用本地存储');
+                    connectionRetryCount++;
+                    if (connectionRetryCount >= MAX_RETRY) {
+                        updateCloudStatus(false, '云端连接失败，使用本地存储');
+                    } else {
+                        updateCloudStatus(false);
+                    }
                 }
             }
 
@@ -1632,44 +1650,48 @@
             // 从云端加载数据
             async function loadFromCloud() {
                 try {
-                    // 加载待审核签名
-                    const { data: pendingData, error: pendingError } = await supabase
-                        .from('pending_signatures')
-                        .select('*')
-                        .order('created_at', { ascending: false });
+                    if (isCloudConnected) {
+                        // 加载待审核签名
+                        const { data: pendingData, error: pendingError } = await supabase
+                            .from('pending_signatures')
+                            .select('*')
+                            .order('created_at', { ascending: false });
 
-                    if (pendingError) throw pendingError;
-                    pendingSignatures = pendingData || [];
+                        if (pendingError) throw pendingError;
+                        pendingSignatures = pendingData || [];
 
-                    // 加载Bug反馈
-                    const { data: bugData, error: bugError } = await supabase
-                        .from('bug_reports')
-                        .select('*')
-                        .order('created_at', { ascending: false });
+                        // 加载Bug反馈
+                        const { data: bugData, error: bugError } = await supabase
+                            .from('bug_reports')
+                            .select('*')
+                            .order('created_at', { ascending: false });
 
-                    if (bugError) throw bugError;
-                    bugReports = bugData || [];
+                        if (bugError) throw bugError;
+                        bugReports = bugData || [];
 
-                    // 加载已通过签名
-                    const { data: approvedData, error: approvedError } = await supabase
-                        .from('approved_signatures')
-                        .select('*')
-                        .order('created_at', { ascending: false });
+                        // 加载已通过签名
+                        const { data: approvedData, error: approvedError } = await supabase
+                            .from('approved_signatures')
+                            .select('*')
+                            .order('created_at', { ascending: false });
 
-                    if (approvedError) throw approvedError;
-                    approvedSignatures = approvedData || [];
+                        if (approvedError) throw approvedError;
+                        approvedSignatures = approvedData || [];
 
-                    // 加载操作日志
-                    const { data: logsData, error: logsError } = await supabase
-                        .from('operation_logs')
-                        .select('*')
-                        .order('created_at', { ascending: false })
-                        .limit(100);
+                        // 加载操作日志
+                        const { data: logsData, error: logsError } = await supabase
+                            .from('operation_logs')
+                            .select('*')
+                            .order('created_at', { ascending: false })
+                            .limit(100);
 
-                    if (logsError) throw logsError;
-                    operationLogs = logsData || [];
+                        if (logsError) throw logsError;
+                        operationLogs = logsData || [];
 
-                    updateCloudStatus(true);
+                        updateCloudStatus(true);
+                    } else {
+                        loadFromLocalStorage();
+                    }
                     
                     // 如果当前在管理员页面，自动刷新
                     if (historyStack.length > 0 && historyStack[historyStack.length - 1] === VIEWS.ADMIN_PAGE) {
@@ -1677,14 +1699,19 @@
                     }
                 } catch (err) {
                     console.error('加载云端数据失败:', err);
-                    updateCloudStatus(false, '加载云端数据失败，使用本地缓存');
+                    updateCloudStatus(false);
                     
                     // 降级到本地存储
-                    pendingSignatures = JSON.parse(localStorage.getItem('pendingSignatures') || '[]');
-                    bugReports = JSON.parse(localStorage.getItem('bugReports') || '[]');
-                    approvedSignatures = JSON.parse(localStorage.getItem('approvedSignatures') || '[]');
-                    operationLogs = JSON.parse(localStorage.getItem('operationLogs') || '[]');
+                    loadFromLocalStorage();
                 }
+            }
+
+            // 从本地存储加载数据
+            function loadFromLocalStorage() {
+                pendingSignatures = JSON.parse(localStorage.getItem('pendingSignatures') || '[]');
+                bugReports = JSON.parse(localStorage.getItem('bugReports') || '[]');
+                approvedSignatures = JSON.parse(localStorage.getItem('approvedSignatures') || '[]');
+                operationLogs = JSON.parse(localStorage.getItem('operationLogs') || '[]');
             }
 
             // 启动管理员自动刷新
@@ -1696,7 +1723,7 @@
                     if (historyStack.length > 0 && historyStack[historyStack.length - 1] === VIEWS.ADMIN_PAGE) {
                         loadFromCloud();
                     }
-                }, 5000); // 每5秒刷新一次
+                }, 5000);
             }
 
             // 停止管理员自动刷新
@@ -1707,24 +1734,28 @@
                 }
             }
 
-            // 保存待审核签名到云端
+            // 保存待审核签名
             async function savePendingSignatures() {
+                // 总是保存到本地存储
+                localStorage.setItem('pendingSignatures', JSON.stringify(pendingSignatures));
+                
                 if (!isCloudConnected) {
-                    localStorage.setItem('pendingSignatures', JSON.stringify(pendingSignatures));
                     return true;
                 }
 
                 try {
-                    // 先删除所有现有数据
                     const { error: deleteError } = await supabase.from('pending_signatures').delete().neq('id', '');
                     if (deleteError) throw deleteError;
                     
-                    // 插入新数据
                     if (pendingSignatures.length > 0) {
                         const { error } = await supabase
                             .from('pending_signatures')
                             .insert(pendingSignatures.map(s => ({
-                                ...s,
+                                account: s.account || '',
+                                platform: s.platform || 'qq',
+                                content: s.content || '',
+                                html: s.html || '',
+                                timestamp: s.timestamp || new Date().toLocaleString(),
                                 created_at: new Date().toISOString()
                             })));
 
@@ -1733,30 +1764,32 @@
                     return true;
                 } catch (err) {
                     console.error('保存待审核签名失败:', err);
-                    localStorage.setItem('pendingSignatures', JSON.stringify(pendingSignatures));
                     updateCloudStatus(false);
                     return false;
                 }
             }
 
-            // 保存Bug反馈到云端
+            // 保存Bug反馈
             async function saveBugReports() {
+                // 总是保存到本地存储
+                localStorage.setItem('bugReports', JSON.stringify(bugReports));
+                
                 if (!isCloudConnected) {
-                    localStorage.setItem('bugReports', JSON.stringify(bugReports));
                     return true;
                 }
 
                 try {
-                    // 先删除所有现有数据
                     const { error: deleteError } = await supabase.from('bug_reports').delete().neq('id', '');
                     if (deleteError) throw deleteError;
                     
-                    // 插入新数据
                     if (bugReports.length > 0) {
                         const { error } = await supabase
                             .from('bug_reports')
                             .insert(bugReports.map(b => ({
-                                ...b,
+                                account: b.account || '',
+                                content: b.content || '',
+                                timestamp: b.timestamp || new Date().toLocaleString(),
+                                status: b.status || 'pending',
                                 created_at: new Date().toISOString()
                             })));
 
@@ -1765,16 +1798,17 @@
                     return true;
                 } catch (err) {
                     console.error('保存Bug反馈失败:', err);
-                    localStorage.setItem('bugReports', JSON.stringify(bugReports));
                     updateCloudStatus(false);
                     return false;
                 }
             }
 
-            // 保存已通过签名到云端
+            // 保存已通过签名
             async function saveApprovedSignatures() {
+                // 总是保存到本地存储
+                localStorage.setItem('approvedSignatures', JSON.stringify(approvedSignatures));
+                
                 if (!isCloudConnected) {
-                    localStorage.setItem('approvedSignatures', JSON.stringify(approvedSignatures));
                     return true;
                 }
 
@@ -1786,7 +1820,11 @@
                         const { error } = await supabase
                             .from('approved_signatures')
                             .insert(approvedSignatures.map(s => ({
-                                ...s,
+                                account: s.account || '',
+                                platform: s.platform || 'qq',
+                                content: s.content || '',
+                                html: s.html || '',
+                                timestamp: s.timestamp || new Date().toLocaleString(),
                                 created_at: new Date().toISOString()
                             })));
 
@@ -1795,13 +1833,12 @@
                     return true;
                 } catch (err) {
                     console.error('保存已通过签名失败:', err);
-                    localStorage.setItem('approvedSignatures', JSON.stringify(approvedSignatures));
                     updateCloudStatus(false);
                     return false;
                 }
             }
 
-            // 添加日志到云端
+            // 添加日志
             async function addLog(action, details, status = 'info') {
                 const log = {
                     time: new Date().toLocaleString(),
@@ -1816,20 +1853,18 @@
                     operationLogs = operationLogs.slice(0, 100);
                 }
 
+                // 总是保存到本地存储
+                localStorage.setItem('operationLogs', JSON.stringify(operationLogs));
+
                 if (!isCloudConnected) {
-                    localStorage.setItem('operationLogs', JSON.stringify(operationLogs));
                     return;
                 }
 
                 try {
-                    const { error } = await supabase
-                        .from('operation_logs')
-                        .insert(log);
-
+                    const { error } = await supabase.from('operation_logs').insert(log);
                     if (error) throw error;
                 } catch (err) {
                     console.error('保存日志失败:', err);
-                    localStorage.setItem('operationLogs', JSON.stringify(operationLogs));
                 }
             }
 
@@ -1885,57 +1920,10 @@
                     
                     const prevView = historyStack[historyStack.length - 1];
                     
+                    // 根据视图切换
                     switch(prevView) {
                         case VIEWS.SUPERNATURAL_INITIAL:
                             showSupernaturalInitial(false);
-                            break;
-                        case VIEWS.SECRET_GRID:
-                            showSecretGridOnly(false);
-                            break;
-                        case VIEWS.ITEM_LIST:
-                            showItemListOnly(false);
-                            break;
-                        case VIEWS.SKIN_CATEGORY:
-                            showSkinCategoryOnly(false);
-                            break;
-                        case VIEWS.PROP_CATEGORY:
-                            showPropCategory(false);
-                            break;
-                        case VIEWS.DECOR_CATEGORY:
-                            showDecorCategory(false);
-                            break;
-                        case VIEWS.DECOR_DETAIL:
-                            showDecorDetail(currentDecorCategory, false);
-                            break;
-                        case VIEWS.ROLE_CATEGORY:
-                            showRoleCategory(false);
-                            break;
-                        case VIEWS.ROLE_DETAIL:
-                            showRoleDetail(currentRoleCategory, false);
-                            break;
-                        case VIEWS.DANCE_SKIN_LIST:
-                            showDanceSkinList(false);
-                            break;
-                        case VIEWS.TEAM_ROW:
-                            showTeamRowOnly(false);
-                            break;
-                        case VIEWS.JINGJUE_DIFFICULTY:
-                            showJingjueDifficultyOnly(false);
-                            break;
-                        case VIEWS.KUNLUN_DIFFICULTY:
-                            showKunlunDifficultyOnly(false);
-                            break;
-                        case VIEWS.QINLING_DIFFICULTY:
-                            showQinlingDifficultyOnly(false);
-                            break;
-                        case VIEWS.SUBTEAM:
-                            showSubteamRow(false);
-                            break;
-                        case VIEWS.PROP_SKIN_DETAIL:
-                            showPropSkinDetail(currentPropCategory, false);
-                            break;
-                        case VIEWS.DIFFICULTY:
-                            showDifficultyOnly(false);
                             break;
                         case VIEWS.SIGNATURE_PAGE:
                             showSignaturePage(false);
@@ -1945,26 +1933,6 @@
                             break;
                         case VIEWS.ADMIN_PAGE:
                             showAdminPage(false);
-                            break;
-                        case VIEWS.SKIN_VALUE:
-                            if (historyStack.length > 1) {
-                                const secondLast = historyStack[historyStack.length - 2];
-                                if (secondLast === VIEWS.PROP_SKIN_DETAIL) {
-                                    showPropSkinDetail(currentPropCategory, false);
-                                } else if (secondLast === VIEWS.DECOR_DETAIL) {
-                                    showDecorDetail(currentDecorCategory, false);
-                                } else if (secondLast === VIEWS.ROLE_DETAIL) {
-                                    showRoleDetail(currentRoleCategory, false);
-                                } else if (secondLast === VIEWS.DANCE_SKIN_LIST) {
-                                    showDanceSkinList(false);
-                                } else if (secondLast === VIEWS.ITEM_LIST) {
-                                    showItemListOnly(false);
-                                } else {
-                                    showSupernaturalInitial(false);
-                                }
-                            } else {
-                                showSupernaturalInitial(false);
-                            }
                             break;
                         default:
                             showSupernaturalInitial(false);
@@ -2074,6 +2042,7 @@
                 
                 if (pushToHistory) {
                     historyStack.push(VIEWS.SUPERNATURAL_INITIAL);
+                    stopAdminAutoRefresh();
                 }
                 
                 statusTag.textContent = 'NXLD数值库';
@@ -2091,7 +2060,7 @@
                 `;
                 modeCard.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    showSecretGridOnly();
+                    showToast('功能开发中');
                     searchInput.value = '';
                 });
                 
@@ -2105,7 +2074,7 @@
                 `;
                 itemCard.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    showItemListOnly();
+                    showToast('功能开发中');
                     searchInput.value = '';
                 });
 
@@ -2119,7 +2088,7 @@
                 `;
                 skinCard.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    showSkinCategoryOnly();
+                    showToast('功能开发中');
                     searchInput.value = '';
                 });
 
@@ -2154,9 +2123,9 @@
                 
                 if (pushToHistory) {
                     historyStack.push(VIEWS.SIGNATURE_PAGE);
+                    stopAdminAutoRefresh();
                 }
                 
-                // 合并固定签名和已通过的签名
                 const allSignatures = [...approvedSignatures];
 
                 function createSignatureCard(signature) {
@@ -2221,6 +2190,7 @@
                 
                 if (pushToHistory) {
                     historyStack.push(VIEWS.SUBMIT_FEEDBACK);
+                    stopAdminAutoRefresh();
                 }
                 
                 statusTag.textContent = '提交反馈';
@@ -2299,7 +2269,7 @@
                     const content = document.getElementById('submitContent').value.trim();
                     const infoDiv = document.getElementById('submitInfo');
                     
-                    // 验证账号不为空且不是null/undefined
+                    // 验证账号
                     if (!account || account === 'null' || account === 'undefined' || account.length === 0) {
                         infoDiv.textContent = '请输入有效的账号';
                         infoDiv.style.color = '#ef4444';
@@ -2341,7 +2311,7 @@
                             
                             if (saved) {
                                 await addLog('提交签名', `${platform === 'qq' ? 'QQ' : '抖音'}:${account} 提交了新签名`, 'info');
-                                infoDiv.textContent = '提交成功！请等待管理员审核。';
+                                infoDiv.textContent = '提交成功！数据已保存到本地' + (isCloudConnected ? '和云端' : '');
                                 infoDiv.style.color = '#10b981';
                                 document.getElementById('submitAccount').value = '';
                                 document.getElementById('submitContent').value = '';
@@ -2465,7 +2435,6 @@
                 
                 if (pushToHistory) {
                     historyStack.push(VIEWS.ADMIN_PAGE);
-                    // 进入管理员页面时启动自动刷新
                     startAdminAutoRefresh();
                 }
                 
@@ -2513,7 +2482,7 @@
                     });
                 }
                 
-                async function showAdminPanel() {
+                function showAdminPanel() {
                     container.innerHTML = '';
                     
                     const panel = document.createElement('div');
@@ -2645,17 +2614,15 @@
                     container.innerHTML = '';
                     container.appendChild(panel);
                     
-                    // 添加全局函数供按钮调用 - 修复操作后全消失的bug
+                    // 添加全局函数供按钮调用
                     window.resolveBug = async (index) => {
                         if (index < 0 || index >= bugReports.length) return;
                         
                         const bug = bugReports[index];
                         bugReports.splice(index, 1);
                         
-                        const saved = await saveBugReports();
-                        if (saved) {
-                            await addLog('处理Bug', `${bug.account} 的Bug反馈已处理`, 'bug');
-                        }
+                        await saveBugReports();
+                        await addLog('处理Bug', `${bug.account} 的Bug反馈已处理`, 'bug');
                         
                         // 重新加载数据并刷新面板
                         await loadFromCloud();
@@ -2678,12 +2645,9 @@
                         approvedSignatures.push(newApproved);
                         pendingSignatures.splice(index, 1);
                         
-                        const savedPending = await savePendingSignatures();
-                        const savedApproved = await saveApprovedSignatures();
-                        
-                        if (savedPending && savedApproved) {
-                            await addLog('通过签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名已通过`, 'approved');
-                        }
+                        await savePendingSignatures();
+                        await saveApprovedSignatures();
+                        await addLog('通过签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名已通过`, 'approved');
                         
                         // 重新加载数据并刷新面板
                         await loadFromCloud();
@@ -2697,10 +2661,8 @@
                         const sig = pendingSignatures[index];
                         pendingSignatures.splice(index, 1);
                         
-                        const saved = await savePendingSignatures();
-                        if (saved) {
-                            await addLog('拒绝签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被拒绝`, 'rejected');
-                        }
+                        await savePendingSignatures();
+                        await addLog('拒绝签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被拒绝`, 'rejected');
                         
                         // 重新加载数据并刷新面板
                         await loadFromCloud();
@@ -2714,10 +2676,8 @@
                         const sig = approvedSignatures[index];
                         approvedSignatures.splice(index, 1);
                         
-                        const saved = await saveApprovedSignatures();
-                        if (saved) {
-                            await addLog('删除签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被删除`, 'deleted');
-                        }
+                        await saveApprovedSignatures();
+                        await addLog('删除签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被删除`, 'deleted');
                         
                         // 重新加载数据并刷新面板
                         await loadFromCloud();
@@ -2728,24 +2688,6 @@
                 
                 refreshBackButton();
             }
-
-            // 原有功能函数占位（保持不变）
-            function showSkinCategoryOnly(pushToHistory) { showToast('皮肤分类功能开发中'); }
-            function showPropCategory(pushToHistory) { showToast('道具分类功能开发中'); }
-            function showRoleCategory(pushToHistory) { showToast('角色分类功能开发中'); }
-            function showRoleDetail(category, pushToHistory) { showToast('角色详情功能开发中'); }
-            function showDecorCategory(pushToHistory) { showToast('装饰分类功能开发中'); }
-            function showDecorDetail(category, pushToHistory) { showToast('装饰详情功能开发中'); }
-            function showPropSkinDetail(category, pushToHistory) { showToast('道具皮肤详情功能开发中'); }
-            function showDanceSkinList(pushToHistory) { showToast('动作舞蹈功能开发中'); }
-            function showItemListOnly(pushToHistory) { showToast('局内物品功能开发中'); }
-            function showSecretGridOnly(pushToHistory) { showToast('模式数值功能开发中'); }
-            function showTeamRowOnly(pushToHistory) { showToast('古蜀遗迹功能开发中'); }
-            function showDifficultyOnly(pushToHistory) { showToast('难度选择功能开发中'); }
-            function showJingjueDifficultyOnly(pushToHistory) { showToast('精绝古城功能开发中'); }
-            function showKunlunDifficultyOnly(pushToHistory) { showToast('昆仑秘境功能开发中'); }
-            function showQinlingDifficultyOnly(pushToHistory) { showToast('秦陵龙宫功能开发中'); }
-            function showSubteamRow(pushToHistory) { showToast('双队/四队功能开发中'); }
 
             // 按钮事件
             supernaturalBtn.addEventListener('click', function() {
@@ -2800,7 +2742,8 @@
             // 初始化
             window.addEventListener('load', async function() {
                 startCloudCheck();
-                await loadFromCloud();
+                loadFromLocalStorage(); // 先加载本地数据
+                await loadFromCloud();   // 尝试从云端加载
                 showSupernaturalInitial();
             });
 
