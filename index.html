@@ -1607,7 +1607,6 @@
                 if (isReconnecting) return;
                 
                 try {
-                    // 使用更简单的查询检查连接
                     const { error } = await supabase
                         .from('_test')
                         .select('*')
@@ -1697,7 +1696,7 @@
                 }
             }
 
-            // 保存待审核签名到云端
+            // 保存待审核签名到云端 - 修复：使用upsert避免删除后重新插入的问题
             async function savePendingSignatures() {
                 if (!isCloudConnected) {
                     localStorage.setItem('pendingSignatures', JSON.stringify(pendingSignatures));
@@ -1705,23 +1704,23 @@
                 }
 
                 try {
-                    // 先删除所有现有数据
-                    await supabase.from('pending_signatures').delete().neq('id', '');
-                    
-                    // 插入新数据
+                    // 使用upsert而不是先删除再插入
                     if (pendingSignatures.length > 0) {
                         const { error } = await supabase
                             .from('pending_signatures')
-                            .insert(pendingSignatures.map(s => ({
+                            .upsert(pendingSignatures.map(s => ({
                                 account: s.account,
                                 platform: s.platform,
                                 content: s.content,
                                 html: s.html,
                                 timestamp: s.timestamp,
                                 created_at: new Date().toISOString()
-                            })));
+                            })), { onConflict: 'id' });
 
                         if (error) throw error;
+                    } else {
+                        // 如果为空，删除所有
+                        await supabase.from('pending_signatures').delete().neq('id', '');
                     }
                     return true;
                 } catch (err) {
@@ -1731,7 +1730,7 @@
                 }
             }
 
-            // 保存Bug反馈到云端
+            // 保存Bug反馈到云端 - 修复
             async function saveBugReports() {
                 if (!isCloudConnected) {
                     localStorage.setItem('bugReports', JSON.stringify(bugReports));
@@ -1739,22 +1738,20 @@
                 }
 
                 try {
-                    // 先删除所有现有数据
-                    await supabase.from('bug_reports').delete().neq('id', '');
-                    
-                    // 插入新数据
                     if (bugReports.length > 0) {
                         const { error } = await supabase
                             .from('bug_reports')
-                            .insert(bugReports.map(b => ({
+                            .upsert(bugReports.map(b => ({
                                 account: b.account,
                                 content: b.content,
                                 timestamp: b.timestamp,
                                 status: b.status,
                                 created_at: new Date().toISOString()
-                            })));
+                            })), { onConflict: 'id' });
 
                         if (error) throw error;
+                    } else {
+                        await supabase.from('bug_reports').delete().neq('id', '');
                     }
                     return true;
                 } catch (err) {
@@ -1764,7 +1761,7 @@
                 }
             }
 
-            // 保存已通过签名到云端
+            // 保存已通过签名到云端 - 修复
             async function saveApprovedSignatures() {
                 if (!isCloudConnected) {
                     localStorage.setItem('approvedSignatures', JSON.stringify(approvedSignatures));
@@ -1772,21 +1769,21 @@
                 }
 
                 try {
-                    await supabase.from('approved_signatures').delete().neq('id', '');
-                    
                     if (approvedSignatures.length > 0) {
                         const { error } = await supabase
                             .from('approved_signatures')
-                            .insert(approvedSignatures.map(s => ({
+                            .upsert(approvedSignatures.map(s => ({
                                 account: s.account,
                                 platform: s.platform,
                                 content: s.content,
                                 html: s.html,
                                 timestamp: s.timestamp,
                                 created_at: new Date().toISOString()
-                            })));
+                            })), { onConflict: 'id' });
 
                         if (error) throw error;
+                    } else {
+                        await supabase.from('approved_signatures').delete().neq('id', '');
                     }
                     return true;
                 } catch (err) {
@@ -2537,20 +2534,6 @@
                         '<i class="fas fa-user"></i> 普通管理员模式';
                     panel.appendChild(levelBadge);
                     
-                    // 刷新按钮
-                    const refreshBtn = document.createElement('button');
-                    refreshBtn.className = 'query-button';
-                    refreshBtn.style.marginBottom = '1rem';
-                    refreshBtn.style.width = '100%';
-                    refreshBtn.innerHTML = '<i class="fas fa-sync"></i> 刷新数据';
-                    refreshBtn.addEventListener('click', async function() {
-                        refreshBtn.disabled = true;
-                        refreshBtn.innerHTML = '<span class="loading-spinner"></span> 刷新中...';
-                        await loadFromCloud();
-                        showAdminPanel();
-                    });
-                    panel.appendChild(refreshBtn);
-                    
                     // Bug反馈区域
                     const bugSection = document.createElement('div');
                     bugSection.className = 'submit-form';
@@ -2590,7 +2573,7 @@
                     } else {
                         pendingSignatures.forEach((sig, index) => {
                             pendingHtml += `
-                                <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
+                                <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;" id="pending-${index}">
                                     <div style="margin-bottom: 0.5rem;"><span style="color: #818cf8;">账号:</span> ${sig.account} (${sig.platform === 'qq' ? 'QQ' : '抖音'})</div>
                                     <div style="margin-bottom: 0.5rem; color: #f0f2ff;" class="signature-preview">${sig.html || convertToHtml(sig.content)}</div>
                                     <div style="margin-bottom: 0.5rem; color: #9ca3af; font-size: 0.8rem;">提交时间: ${sig.timestamp}</div>
@@ -2617,7 +2600,7 @@
                     } else {
                         approvedSignatures.forEach((sig, index) => {
                             approvedHtml += `
-                                <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
+                                <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;" id="approved-${index}">
                                     <div style="margin-bottom: 0.5rem;"><span style="color: #818cf8;">账号:</span> ${sig.account} (${sig.platform === 'qq' ? 'QQ' : '抖音'})</div>
                                     <div style="margin-bottom: 0.5rem; color: #f0f2ff;" class="signature-preview">${sig.html || convertToHtml(sig.content)}</div>
                                     <div style="display: flex; gap: 0.5rem;">
@@ -2665,21 +2648,31 @@
                     container.innerHTML = '';
                     container.appendChild(panel);
                     
-                    // 添加全局函数供按钮调用 - 立即刷新
+                    // 添加全局函数供按钮调用 - 立即删除并更新UI
                     window.resolveBug = async (index) => {
-                        const bug = bugReports[index];
+                        // 先从DOM中移除
+                        const bugElement = document.querySelector(`#bug-${index}`);
+                        if (bugElement) bugElement.remove();
+                        
+                        // 从数据中移除
                         bugReports.splice(index, 1);
                         
+                        // 保存到云端
                         await saveBugReports();
-                        await addLog('处理Bug', `${bug.account} 的Bug反馈已处理`, 'bug');
+                        await addLog('处理Bug', `Bug反馈已处理`, 'bug');
                         
-                        // 立即刷新面板
+                        // 刷新面板
                         showAdminPanel();
                         showToast('Bug已标记为已处理');
                     };
                     
                     window.approveSignature = async (index) => {
                         const sig = pendingSignatures[index];
+                        
+                        // 从待审核中移除
+                        pendingSignatures.splice(index, 1);
+                        
+                        // 添加到已通过
                         const newApproved = {
                             account: sig.account,
                             platform: sig.platform,
@@ -2687,39 +2680,40 @@
                             html: sig.html,
                             timestamp: new Date().toLocaleString()
                         };
-                        
                         approvedSignatures.push(newApproved);
-                        pendingSignatures.splice(index, 1);
                         
+                        // 保存到云端
                         await savePendingSignatures();
                         await saveApprovedSignatures();
                         await addLog('通过签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名已通过`, 'approved');
                         
-                        // 立即刷新面板
+                        // 刷新面板
                         showAdminPanel();
                         showToast('签名已通过');
                     };
                     
                     window.rejectSignature = async (index) => {
-                        const sig = pendingSignatures[index];
+                        // 从数据中移除
                         pendingSignatures.splice(index, 1);
                         
+                        // 保存到云端
                         await savePendingSignatures();
-                        await addLog('拒绝签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被拒绝`, 'rejected');
+                        await addLog('拒绝签名', `签名被拒绝`, 'rejected');
                         
-                        // 立即刷新面板
+                        // 刷新面板
                         showAdminPanel();
                         showToast('签名已拒绝');
                     };
                     
                     window.deleteApprovedSignature = async (index) => {
-                        const sig = approvedSignatures[index];
+                        // 从数据中移除
                         approvedSignatures.splice(index, 1);
                         
+                        // 保存到云端
                         await saveApprovedSignatures();
-                        await addLog('删除签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被删除`, 'deleted');
+                        await addLog('删除签名', `签名被删除`, 'deleted');
                         
-                        // 立即刷新面板
+                        // 刷新面板
                         showAdminPanel();
                         showToast('签名已删除');
                     };
