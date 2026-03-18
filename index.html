@@ -1802,13 +1802,13 @@
 
                     // 保持云端日志不超过100条
                     const { data } = await supabase
-                        .from('operation_logs')
+                        .from('operationLogs')
                         .select('id')
                         .order('created_at', { ascending: false });
 
                     if (data && data.length > 100) {
                         const idsToDelete = data.slice(100).map(d => d.id);
-                        await supabase.from('operation_logs').delete().in('id', idsToDelete);
+                        await supabase.from('operationLogs').delete().in('id', idsToDelete);
                     }
                 } catch (err) {
                     console.error('保存日志失败:', err);
@@ -2493,18 +2493,6 @@
                         '<i class="fas fa-user"></i> 普通管理员模式';
                     panel.appendChild(levelBadge);
                     
-                    // 刷新按钮
-                    const refreshBtn = document.createElement('button');
-                    refreshBtn.className = 'download-html-btn';
-                    refreshBtn.innerHTML = '<i class="fas fa-sync"></i> 刷新数据';
-                    refreshBtn.addEventListener('click', async function() {
-                        refreshBtn.disabled = true;
-                        refreshBtn.innerHTML = '<span class="loading-spinner"></span> 刷新中...';
-                        await loadFromCloud();
-                        showAdminPanel();
-                    });
-                    panel.appendChild(refreshBtn);
-                    
                     // Bug反馈区域
                     const bugSection = document.createElement('div');
                     bugSection.className = 'submit-form';
@@ -2619,7 +2607,7 @@
                     container.innerHTML = '';
                     container.appendChild(panel);
                     
-                    // 添加全局函数供按钮调用
+                    // 添加全局函数供按钮调用 - 修复刷新显示问题
                     window.resolveBug = async (index) => {
                         const bug = bugReports[index];
                         bugReports.splice(index, 1);
@@ -2627,6 +2615,8 @@
                         await saveBugReports();
                         await addLog('处理Bug', `${bug.account} 的Bug反馈已处理`, 'bug');
                         
+                        // 重新加载数据并刷新面板
+                        await loadFromCloud();
                         showAdminPanel();
                         showToast('Bug已标记为已处理');
                     };
@@ -2648,6 +2638,8 @@
                         await saveApprovedSignatures();
                         await addLog('通过签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名已通过`, 'approved');
                         
+                        // 重新加载数据并刷新面板
+                        await loadFromCloud();
                         showAdminPanel();
                         showToast('签名已通过');
                     };
@@ -2659,6 +2651,8 @@
                         await savePendingSignatures();
                         await addLog('拒绝签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被拒绝`, 'rejected');
                         
+                        // 重新加载数据并刷新面板
+                        await loadFromCloud();
                         showAdminPanel();
                         showToast('签名已拒绝');
                     };
@@ -2670,6 +2664,8 @@
                         await saveApprovedSignatures();
                         await addLog('删除签名', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.account} 的签名被删除`, 'deleted');
                         
+                        // 重新加载数据并刷新面板
+                        await loadFromCloud();
                         showAdminPanel();
                         showToast('签名已删除');
                     };
