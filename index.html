@@ -1789,13 +1789,13 @@
             // 检查重复签名
             function checkDuplicate(content) {
                 const fixedDuplicate = fixedSignatures.find(s => s.content === content);
-                if (fixedDuplicate) return { duplicate: true, type: 'fixed', qq: fixedDuplicate.qq };
+                if (fixedDuplicate) return { duplicate: true, type: 'fixed', qq: fixedDuplicate.qq, platform: fixedDuplicate.platform || 'qq' };
                 
                 const approvedDuplicate = approvedSignatures.find(s => s.content === content);
-                if (approvedDuplicate) return { duplicate: true, type: 'approved', qq: approvedDuplicate.qq };
+                if (approvedDuplicate) return { duplicate: true, type: 'approved', qq: approvedDuplicate.qq, platform: approvedDuplicate.platform || 'qq' };
                 
                 const pendingDuplicate = pendingSignatures.find(s => s.content === content);
-                if (pendingDuplicate) return { duplicate: true, type: 'pending', qq: pendingDuplicate.qq };
+                if (pendingDuplicate) return { duplicate: true, type: 'pending', qq: pendingDuplicate.qq, platform: pendingDuplicate.platform || 'qq' };
                 
                 return { duplicate: false };
             }
@@ -1820,7 +1820,58 @@
                     .subscribe();
             }
 
-            // 管理员面板 - 新UI布局
+            // 复制功能 - 修复版
+            function copyToClipboard(text) {
+                // 创建临时textarea元素
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                textarea.style.left = '-9999px';
+                textarea.style.top = '0';
+                document.body.appendChild(textarea);
+                
+                // 针对移动设备的优化
+                textarea.setAttribute('readonly', '');
+                textarea.contentEditable = true;
+                textarea.style.webkitUserSelect = 'auto';
+                
+                try {
+                    // 尝试使用现代方法
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(text).then(() => {
+                            showToast('复制成功');
+                        }).catch(() => {
+                            // 失败时使用传统方法
+                            textarea.select();
+                            textarea.setSelectionRange(0, text.length);
+                            const successful = document.execCommand('copy');
+                            if (successful) {
+                                showToast('复制成功');
+                            } else {
+                                showToast('复制失败，请手动复制');
+                            }
+                        });
+                    } else {
+                        // 使用传统方法
+                        textarea.select();
+                        textarea.setSelectionRange(0, text.length);
+                        const successful = document.execCommand('copy');
+                        if (successful) {
+                            showToast('复制成功');
+                        } else {
+                            showToast('复制失败，请手动复制');
+                        }
+                    }
+                } catch (err) {
+                    console.error('复制失败:', err);
+                    showToast('复制失败，请手动复制');
+                } finally {
+                    document.body.removeChild(textarea);
+                }
+            }
+
+            // 管理员面板
             async function showAdminPanel() {
                 await loadFromSupabase();
                 
@@ -1899,8 +1950,9 @@
                                 displayInfo = `<div style="color: #f59e0b; margin-top: 0.3rem;">Bug反馈: ${sig.content}</div>`;
                             }
                             
-                            const platformDisplay = sig.platform === 'qq' ? 'QQ' : '抖音';
-                            const authorDisplay = sig.platform === 'qq' ? sig.qq : `dy:${sig.qq}`;
+                            const platform = sig.platform || 'qq';
+                            const platformDisplay = platform === 'qq' ? 'QQ' : 'dy';
+                            const authorDisplay = platform === 'qq' ? `QQ：${sig.qq}` : `dy：${sig.qq}`;
                             
                             pendingHtml += `
                                 <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
@@ -1935,8 +1987,9 @@
                         approvedHtml += '<div style="max-height: 500px; overflow-y: auto;">';
                         approvedItems.forEach((sig) => {
                             const previewContent = convertToHtml(sig.content);
-                            const platformDisplay = sig.platform === 'qq' ? 'QQ' : '抖音';
-                            const authorDisplay = sig.platform === 'qq' ? sig.qq : `dy:${sig.qq}`;
+                            const platform = sig.platform || 'qq';
+                            const platformDisplay = platform === 'qq' ? 'QQ' : 'dy';
+                            const authorDisplay = platform === 'qq' ? `QQ：${sig.qq}` : `dy：${sig.qq}`;
                             
                             approvedHtml += `
                                 <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
@@ -2026,7 +2079,8 @@
                     
                     if (success) {
                         const sig = pendingSignatures.find(s => s.id === id);
-                        await addLog('通过', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.qq} 的${sig.submit_type === 'signature' ? '签名' : sig.submit_type === 'report' ? '举报' : '反馈'}已通过`, 'approved');
+                        const platform = sig.platform || 'qq';
+                        await addLog('通过', `${platform === 'qq' ? 'QQ' : 'dy'}:${sig.qq} 的${sig.submit_type === 'signature' ? '签名' : sig.submit_type === 'report' ? '举报' : '反馈'}已通过`, 'approved');
                         showToast('已通过');
                         await loadFromSupabase();
                         showAdminPanel();
@@ -2044,7 +2098,8 @@
                     
                     if (success) {
                         const sig = pendingSignatures.find(s => s.id === id);
-                        await addLog('拒绝', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.qq} 的${sig.submit_type === 'signature' ? '签名' : sig.submit_type === 'report' ? '举报' : '反馈'}被拒绝`, 'rejected');
+                        const platform = sig.platform || 'qq';
+                        await addLog('拒绝', `${platform === 'qq' ? 'QQ' : 'dy'}:${sig.qq} 的${sig.submit_type === 'signature' ? '签名' : sig.submit_type === 'report' ? '举报' : '反馈'}被拒绝`, 'rejected');
                         showToast('已拒绝');
                         await loadFromSupabase();
                         showAdminPanel();
@@ -2065,7 +2120,7 @@
                 };
             }
 
-            // 签名页面
+            // 签名页面 - 修复QQ显示和复制
             async function showSignaturePage(pushToHistory = true) {
                 resetAll();
                 
@@ -2075,13 +2130,18 @@
                 
                 await loadFromSupabase();
                 
-                const allSignatures = [...fixedSignatures, ...approvedSignatures.filter(s => s.submit_type === 'signature')].map(s => ({
-                    raw: s.content,
-                    qq: s.platform === 'qq' ? s.qq : `dy:${s.qq}`,
-                    displayName: s.platform === 'qq' ? s.qq : `dy:${s.qq}`,
-                    html: convertToHtml(s.content),
-                    type: s.type
-                }));
+                const allSignatures = [...fixedSignatures, ...approvedSignatures.filter(s => s.submit_type === 'signature')].map(s => {
+                    // 确保platform有值
+                    const platform = s.platform || 'qq';
+                    return {
+                        raw: s.content,
+                        qq: s.qq,
+                        platform: platform,
+                        displayName: platform === 'qq' ? `QQ：${s.qq}` : `dy：${s.qq}`,
+                        html: convertToHtml(s.content),
+                        type: s.type
+                    };
+                });
 
                 function createSignatureCard(rawContent, displayHtml, displayName, index) {
                     const cardContainer = document.createElement('div');
@@ -2107,8 +2167,10 @@
                     signatureCard.appendChild(qqTag);
                     signatureCard.appendChild(hintDiv);
                     
-                    signatureCard.addEventListener('click', (e) => {
+                    // 直接绑定点击事件
+                    signatureCard.addEventListener('click', function(e) {
                         e.stopPropagation();
+                        e.preventDefault(); // 防止默认行为
                         copyToClipboard(rawContent);
                     });
                     
@@ -2325,9 +2387,10 @@
                         const duplicate = checkDuplicate(content);
                         if (duplicate.duplicate) {
                             let msg = '';
-                            if (duplicate.type === 'fixed') msg = `该签名已存在于固定签名中 (原作者: ${duplicate.qq})`;
-                            else if (duplicate.type === 'approved') msg = `该签名已通过审核 (原作者: ${duplicate.qq})`;
-                            else if (duplicate.type === 'pending') msg = `该签名正在审核中 (提交者: ${duplicate.qq})`;
+                            const platform = duplicate.platform === 'qq' ? 'QQ' : 'dy';
+                            if (duplicate.type === 'fixed') msg = `该签名已存在于固定签名中 (原作者: ${platform}：${duplicate.qq})`;
+                            else if (duplicate.type === 'approved') msg = `该签名已通过审核 (原作者: ${platform}：${duplicate.qq})`;
+                            else if (duplicate.type === 'pending') msg = `该签名正在审核中 (提交者: ${platform}：${duplicate.qq})`;
                             
                             infoDiv.textContent = msg;
                             infoDiv.style.color = '#f59e0b';
@@ -2362,7 +2425,7 @@
                     const success = await saveToSupabase(newSubmission);
                     
                     if (success) {
-                        await addLog('提交', `${currentPlatform === 'qq' ? 'QQ' : '抖音'}:${account} 提交了${currentType === 'signature' ? '签名' : currentType === 'report' ? '举报' : 'Bug反馈'}`, 'info');
+                        await addLog('提交', `${currentPlatform === 'qq' ? 'QQ' : 'dy'}:${account} 提交了${currentType === 'signature' ? '签名' : currentType === 'report' ? '举报' : 'Bug反馈'}`, 'info');
                         
                         let successMsg = '';
                         if (currentType === 'signature') successMsg = '签名提交成功！管理员审核后将显示';
@@ -2400,12 +2463,13 @@
                     if (userSubmissions.length > 0) {
                         userSubmissions.forEach(s => {
                             const typeText = s.submit_type === 'signature' ? '签名投稿' : s.submit_type === 'report' ? '倒卖举报' : 'Bug反馈';
-                            const platformText = s.platform === 'qq' ? 'QQ' : '抖音';
+                            const platform = s.platform || 'qq';
+                            const platformText = platform === 'qq' ? 'QQ' : 'dy';
                             
                             html += `
                                 <div class="query-item">
                                     <div class="query-item-info">
-                                        <div>${typeText} - ${platformText}:${s.qq}</div>
+                                        <div>${typeText} - ${platformText}：${s.qq}</div>
                                         <div class="query-item-qq">提交时间: ${new Date(s.submit_time).toLocaleString()}</div>
                                         ${s.submit_type === 'signature' ? `<div style="font-size:0.7rem; color:#9ca3af; margin-top:0.2rem;">${s.content.substring(0,50)}${s.content.length>50?'...':''}</div>` : ''}
                                     </div>
@@ -2498,14 +2562,6 @@
             function resetAll() {
                 innerDynamic.innerHTML = '';
                 backContainer.innerHTML = '';
-            }
-            
-            function copyToClipboard(text) {
-                navigator.clipboard.writeText(text).then(() => {
-                    showToast('复制成功');
-                }).catch(err => {
-                    alert('复制失败，请手动复制');
-                });
             }
             
             function showToast(message) {
