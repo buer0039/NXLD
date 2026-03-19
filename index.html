@@ -105,34 +105,34 @@
 
         .header-actions {
             display: flex;
-            gap: 1rem;
+            gap: 0.5rem;
             align-items: center;
             flex-wrap: wrap;
         }
 
         .search-wrapper {
             position: relative;
-            width: 300px;
+            width: 250px;
         }
 
         .search-wrapper i {
             position: absolute;
-            left: 1.2rem;
+            left: 1rem;
             top: 50%;
             transform: translateY(-50%);
             color: #6b7280;
-            font-size: 1rem;
+            font-size: 0.9rem;
             pointer-events: none;
         }
 
         .search-box-modern {
             width: 100%;
-            padding: 1rem 1rem 1rem 3rem;
+            padding: 0.8rem 0.8rem 0.8rem 2.5rem;
             border-radius: 2rem;
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.05);
             color: #f0f2ff;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             transition: all 0.2s;
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
@@ -149,20 +149,23 @@
             font-weight: 300;
         }
 
+        .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn, .year-badge {
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
         .agreement-btn {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 2rem;
-            padding: 0.6rem 1.2rem;
-            font-size: 0.9rem;
             color: #9ca3af;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             cursor: pointer;
             transition: all 0.2s;
             backdrop-filter: blur(5px);
-            white-space: nowrap;
         }
 
         .agreement-btn:hover {
@@ -173,22 +176,19 @@
 
         .agreement-btn i {
             color: #818cf8;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
         }
 
         .submit-signature-btn {
             background: linear-gradient(135deg, #10b981, #059669);
             border: none;
             border-radius: 2rem;
-            padding: 0.6rem 1.2rem;
-            font-size: 0.9rem;
             color: white;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             cursor: pointer;
             transition: all 0.2s;
-            white-space: nowrap;
         }
 
         .submit-signature-btn:hover {
@@ -200,16 +200,13 @@
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 2rem;
-            padding: 0.6rem 1.2rem;
-            font-size: 0.9rem;
             color: #9ca3af;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             cursor: pointer;
             transition: all 0.2s;
             backdrop-filter: blur(5px);
-            white-space: nowrap;
         }
 
         .admin-btn:hover {
@@ -220,23 +217,20 @@
 
         .admin-btn i {
             color: #f59e0b;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
         }
 
         .thanks-btn {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 2rem;
-            padding: 0.6rem 1.2rem;
-            font-size: 0.9rem;
             color: #9ca3af;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             cursor: pointer;
             transition: all 0.2s;
             backdrop-filter: blur(5px);
-            white-space: nowrap;
         }
 
         .thanks-btn:hover {
@@ -247,19 +241,17 @@
 
         .thanks-btn i {
             color: #fbbf24;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
         }
 
         .year-badge {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 2rem;
-            padding: 0.6rem 1.5rem;
-            font-size: 0.9rem;
             color: #9ca3af;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
         }
 
         .year-badge i {
@@ -735,7 +727,6 @@
             border-radius: 1rem;
         }
 
-        /* 类型选择样式 */
         .type-selector {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -785,7 +776,6 @@
             margin-top: 0.2rem;
         }
 
-        /* 图片上传区域 */
         .image-upload-area {
             border: 2px dashed rgba(129, 140, 248, 0.3);
             border-radius: 1.5rem;
@@ -854,7 +844,6 @@
             cursor: pointer;
         }
 
-        /* 平台选择 */
         .platform-selector {
             display: flex;
             gap: 1rem;
@@ -1310,7 +1299,7 @@
             .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn { 
                 flex: 1; 
                 justify-content: center;
-                min-width: 120px;
+                min-width: 100px;
             }
             
             .year-badge {
@@ -1430,13 +1419,30 @@
             to { transform: rotate(360deg); }
         }
 
-        .bug-report-badge {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 1rem;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 0.5rem;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+
+        .fixed-badge {
+            background: rgba(129, 140, 248, 0.2);
+            color: #818cf8;
             padding: 0.2rem 0.5rem;
             border-radius: 1rem;
-            font-size: 0.7rem;
-            margin-left: 0.5rem;
+            font-size: 0.6rem;
+            margin-left: 0.3rem;
         }
     </style>
 </head>
@@ -1475,7 +1481,7 @@
                 </div>
                 <div class="year-badge">
                     <i class="far fa-copyright"></i>
-                    2026 NXLD
+                    2026
                 </div>
             </div>
         </div>
@@ -1579,22 +1585,6 @@
             let fixedSignatures = [];
             let operationLogs = [];
 
-            // 固定签名数据
-            const fixedSignaturesData = [
-                { qq: '1571199718', content: '<u><i><b><color=#949494>我会</color><size=18><color=#FFFFFF>听@署名の</color></size><size=18><color=#8A0000>永远</color></size><size=18><color=#949494>活在</color></size><size=15><color=#FFFFFF>您の</color></size><size=18><color=#8A0000>牢笼</color></size><size=18><color=#ffffff>里</color></size></b></i></u>' },
-                { qq: '2165384053', content: '<size=12><color=#FFFFFF>检测到角色</color><color=#FFBF47>逍遥</color><color=#FFFFFF>当前</color><color=#FF0000>好感度为：</color></size><size=12><color=#FFB5CA>♡♡♡♡︎♡︎90%…</color></size>' },
-                { qq: '2165384053', content: '<size=15><color=#c7c7c7>嗯</color></size><size=18><color=#ffffff>嗯</color></size><size=15><color=#c7c7c7>啊</color></size><size=18><color=#ffffff>啊</color></size><size=15><color=#c7c7c7>的，和我聊天</color></size><size=17><color=#ff0000>你很</color></size><size=22><b><color=#d10000>爽</color></b></size><size=17><color=#ff0000>吗</color></size>' },
-                { qq: '2165384053', content: '<size=18><i><u><color=#C20000>椿梦</color></u></i></size><size=14><color=#BDBDBD>和</color></size><size=18><i><u><color=#C20000>噩梦</color></u></i></size><size=14><color=#BDBDBD>都是</color></size><size=18><color=#C20000>我的脸</color></size><size=14><color=#BDBDBD>对吗</color></size>' }
-            ];
-
-            // 转换固定签名为带HTML的格式
-            fixedSignatures = fixedSignaturesData.map(s => ({
-                raw: s.content,
-                qq: s.qq,
-                displayName: s.qq,
-                html: convertToHtml(s.content)
-            }));
-
             // 设置云同步状态
             function setCloudStatus(status, message) {
                 cloudText.textContent = message;
@@ -1624,7 +1614,6 @@
                 try {
                     setCloudStatus('syncing', '加载数据...');
                     
-                    // 加载所有用户提交的数据
                     const { data: signatures, error } = await supabase
                         .from('nxld_data')
                         .select('*')
@@ -1633,10 +1622,10 @@
                     if (error) throw error;
                     
                     // 分类数据
-                    pendingSignatures = signatures.filter(s => s.status === 'pending');
-                    approvedSignatures = signatures.filter(s => s.status === 'approved');
+                    fixedSignatures = signatures.filter(s => s.type === 'fixed');
+                    pendingSignatures = signatures.filter(s => s.status === 'pending' && s.type === 'user');
+                    approvedSignatures = signatures.filter(s => s.status === 'approved' && s.type === 'user');
                     
-                    // 加载操作日志
                     const { data: logs, error: logError } = await supabase
                         .from('nxld_data')
                         .select('*')
@@ -1743,15 +1732,12 @@
 
             // 检查重复签名
             function checkDuplicate(content) {
-                // 检查固定签名
-                const fixedDuplicate = fixedSignatures.find(s => s.raw === content);
+                const fixedDuplicate = fixedSignatures.find(s => s.content === content);
                 if (fixedDuplicate) return { duplicate: true, type: 'fixed', qq: fixedDuplicate.qq };
                 
-                // 检查已通过的签名
                 const approvedDuplicate = approvedSignatures.find(s => s.content === content);
                 if (approvedDuplicate) return { duplicate: true, type: 'approved', qq: approvedDuplicate.qq };
                 
-                // 检查待审核的签名
                 const pendingDuplicate = pendingSignatures.find(s => s.content === content);
                 if (pendingDuplicate) return { duplicate: true, type: 'pending', qq: pendingDuplicate.qq };
                 
@@ -1784,7 +1770,6 @@
                 
                 const container = document.createElement('div');
                 
-                // 显示当前管理员级别
                 const levelBadge = document.createElement('div');
                 levelBadge.style.textAlign = 'center';
                 levelBadge.style.marginBottom = '1rem';
@@ -1793,11 +1778,10 @@
                 levelBadge.style.background = currentAdminLevel === 'super' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(16, 185, 129, 0.2)';
                 levelBadge.style.color = currentAdminLevel === 'super' ? '#a78bfa' : '#10b981';
                 levelBadge.innerHTML = currentAdminLevel === 'super' ? 
-                    '<i class="fas fa-crown"></i> 超级管理员模式' : 
+                    '<i class="fas fa-crown"></i> 超级管理员模式（可删除所有）' : 
                     '<i class="fas fa-user"></i> 普通管理员模式';
                 container.appendChild(levelBadge);
                 
-                // 超级管理员专属功能 - 只保留强制刷新
                 if (currentAdminLevel === 'super') {
                     const syncBtn = document.createElement('button');
                     syncBtn.className = 'download-html-btn';
@@ -1811,6 +1795,34 @@
                     container.appendChild(syncBtn);
                 }
                 
+                // 固定签名管理
+                const fixedSection = document.createElement('div');
+                fixedSection.className = 'submit-form';
+                fixedSection.style.marginBottom = '2rem';
+                
+                let fixedHtml = '<h3 style="color: #818cf8; margin-bottom: 1rem;">固定签名 <span class="fixed-badge">内置</span></h3>';
+                
+                fixedHtml += '<div style="max-height: 400px; overflow-y: auto;">';
+                fixedSignatures.forEach((sig) => {
+                    const previewContent = convertToHtml(sig.content);
+                    fixedHtml += `
+                        <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
+                            <div style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                                <span style="color: #818cf8;">${sig.platform === 'qq' ? 'QQ' : '抖音'}:</span> ${sig.qq}
+                                ${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteFixedSignature(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}
+                            </div>
+                            <div style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.5rem;">
+                                <span style="color: #818cf8;">预览:</span>
+                                <div style="margin-top: 0.3rem;">${previewContent}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                fixedHtml += '</div>';
+                
+                fixedSection.innerHTML = fixedHtml;
+                container.appendChild(fixedSection);
+                
                 // 待审核项目
                 const pendingSection = document.createElement('div');
                 pendingSection.className = 'submit-form';
@@ -1822,7 +1834,7 @@
                     pendingHtml += '<div style="color: #9ca3af; text-align: center; padding: 2rem;">暂无待审核</div>';
                 } else {
                     pendingHtml += '<div style="max-height: 400px; overflow-y: auto;">';
-                    pendingSignatures.forEach((sig, index) => {
+                    pendingSignatures.forEach((sig) => {
                         let previewContent = '';
                         let displayInfo = '';
                         
@@ -1833,21 +1845,16 @@
                             displayInfo = `<div style="color: #ef4444; margin-top: 0.3rem;">倒卖举报 - 证据图片: ${sig.images ? sig.images.length : 0}张</div>`;
                         } else if (sig.submit_type === 'bug') {
                             displayInfo = `<div style="color: #f59e0b; margin-top: 0.3rem;">Bug反馈: ${sig.content}</div>`;
-                            if (currentAdminLevel !== 'super') {
-                                return; // 普通管理员不显示bug反馈
-                            }
                         }
-                        
-                        if (!displayInfo) return;
                         
                         const platformDisplay = sig.platform === 'qq' ? 'QQ' : '抖音';
                         const authorDisplay = sig.platform === 'qq' ? sig.qq : `dy:${sig.qq}`;
                         
                         pendingHtml += `
                             <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
-                                <div style="margin-bottom: 0.5rem;">
-                                    <span style="color: #818cf8;">${platformDisplay}:</span> ${authorDisplay}
-                                    ${sig.submit_type === 'bug' ? '<span class="bug-report-badge"><i class="fas fa-bug"></i> Bug</span>' : ''}
+                                <div style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                                    <span><span style="color: #818cf8;">${platformDisplay}:</span> ${authorDisplay}</span>
+                                    ${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}
                                 </div>
                                 <div style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.5rem;">
                                     <span style="color: #818cf8;">内容:</span>
@@ -1878,14 +1885,17 @@
                     approvedHtml += '<div style="color: #9ca3af; text-align: center; padding: 2rem;">暂无通过的签名</div>';
                 } else {
                     approvedHtml += '<div style="max-height: 400px; overflow-y: auto;">';
-                    approvedItems.forEach((sig, index) => {
+                    approvedItems.forEach((sig) => {
                         const previewContent = convertToHtml(sig.content);
                         const platformDisplay = sig.platform === 'qq' ? 'QQ' : '抖音';
                         const authorDisplay = sig.platform === 'qq' ? sig.qq : `dy:${sig.qq}`;
                         
                         approvedHtml += `
                             <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
-                                <div style="margin-bottom: 0.5rem;"><span style="color: #818cf8;">${platformDisplay}:</span> ${authorDisplay}</div>
+                                <div style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                                    <span><span style="color: #818cf8;">${platformDisplay}:</span> ${authorDisplay}</span>
+                                    ${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}
+                                </div>
                                 <div style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.5rem;">
                                     <span style="color: #818cf8;">预览:</span>
                                     <div style="margin-top: 0.3rem;">${previewContent}</div>
@@ -1902,7 +1912,6 @@
                 approvedSection.innerHTML = approvedHtml;
                 container.appendChild(approvedSection);
                 
-                // 操作日志
                 const logSection = document.createElement('div');
                 logSection.className = 'submit-form';
                 logSection.style.marginTop = '2rem';
@@ -1981,8 +1990,34 @@
                     
                     if (success) {
                         const sig = approvedSignatures.find(s => s.id === id);
-                        await addLog('删除', `QQ:${sig.qq} 的签名被删除`, 'deleted');
+                        await addLog('删除', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.qq} 的签名被删除`, 'deleted');
                         showToast('已删除');
+                        await loadFromSupabase();
+                        showAdminPanel();
+                    }
+                };
+                
+                window.deleteAnyItem = async (id) => {
+                    if (!confirm('确定要删除这项内容吗？')) return;
+                    
+                    const success = await deleteFromSupabase(id);
+                    
+                    if (success) {
+                        await addLog('删除', `超级管理员删除了ID为${id}的内容`, 'deleted');
+                        showToast('已删除');
+                        await loadFromSupabase();
+                        showAdminPanel();
+                    }
+                };
+                
+                window.deleteFixedSignature = async (id) => {
+                    if (!confirm('确定要删除这个固定签名吗？')) return;
+                    
+                    const success = await deleteFromSupabase(id);
+                    
+                    if (success) {
+                        await addLog('删除', `超级管理员删除了固定签名ID:${id}`, 'deleted');
+                        showToast('固定签名已删除');
                         await loadFromSupabase();
                         showAdminPanel();
                     }
@@ -1999,15 +2034,15 @@
                 
                 await loadFromSupabase();
                 
-                // 合并固定签名和已通过的签名
-                const allSignatures = [...fixedSignatures, ...approvedSignatures.filter(s => s.submit_type === 'signature').map(s => ({
+                const allSignatures = [...fixedSignatures, ...approvedSignatures.filter(s => s.submit_type === 'signature')].map(s => ({
                     raw: s.content,
                     qq: s.platform === 'qq' ? s.qq : `dy:${s.qq}`,
                     displayName: s.platform === 'qq' ? s.qq : `dy:${s.qq}`,
-                    html: convertToHtml(s.content)
-                }))];
+                    html: convertToHtml(s.content),
+                    type: s.type
+                }));
 
-                function createSignatureCard(rawContent, displayHtml, displayName, index) {
+                function createSignatureCard(rawContent, displayHtml, displayName, index, isFixed) {
                     const cardContainer = document.createElement('div');
                     cardContainer.className = 'signature-card-container';
                     
@@ -2021,7 +2056,7 @@
                     
                     const qqTag = document.createElement('div');
                     qqTag.className = 'signature-qq';
-                    qqTag.textContent = `${displayName}`;
+                    qqTag.innerHTML = `${displayName} ${isFixed ? '<span class="fixed-badge">固定</span>' : ''}`;
                     
                     const hintDiv = document.createElement('div');
                     hintDiv.className = 'copy-hint';
@@ -2051,7 +2086,7 @@
                 signatureGrid.className = 'signature-grid';
                 
                 allSignatures.forEach((sig, index) => {
-                    signatureGrid.appendChild(createSignatureCard(sig.raw, sig.html, sig.displayName, index + 1));
+                    signatureGrid.appendChild(createSignatureCard(sig.raw, sig.html, sig.displayName, index + 1, sig.type === 'fixed'));
                 });
                 
                 container.appendChild(signatureGrid);
@@ -2076,7 +2111,6 @@
                 const container = document.createElement('div');
                 container.className = 'submit-form';
                 
-                // 类型选择
                 const typeSelector = document.createElement('div');
                 typeSelector.className = 'type-selector';
                 typeSelector.innerHTML = `
@@ -2093,11 +2127,10 @@
                     <div class="type-option" data-type="bug">
                         <div class="type-icon"><i class="fas fa-bug"></i></div>
                         <div class="type-name">Bug反馈</div>
-                        <div class="type-desc">反馈问题（仅超级管理员可见）</div>
+                        <div class="type-desc">反馈问题</div>
                     </div>
                 `;
                 
-                // 平台选择
                 const platformSelector = document.createElement('div');
                 platformSelector.className = 'platform-selector';
                 platformSelector.innerHTML = `
@@ -2111,7 +2144,6 @@
                     </div>
                 `;
                 
-                // 表单
                 const form = document.createElement('div');
                 form.innerHTML = `
                     <div class="form-group">
@@ -2139,7 +2171,6 @@
                 container.appendChild(platformSelector);
                 container.appendChild(form);
                 
-                // 查询部分
                 const querySection = document.createElement('div');
                 querySection.className = 'query-section';
                 querySection.innerHTML = `
@@ -2154,7 +2185,6 @@
                 
                 innerDynamic.appendChild(container);
                 
-                // 类型选择事件
                 const typeOptions = document.querySelectorAll('.type-option');
                 let currentType = 'signature';
                 let uploadedImages = [];
@@ -2165,7 +2195,6 @@
                         this.classList.add('selected');
                         currentType = this.dataset.type;
                         
-                        // 更新UI
                         const contentGroup = document.getElementById('contentGroup');
                         const imageUploadGroup = document.getElementById('imageUploadGroup');
                         const contentLabel = document.getElementById('contentLabel');
@@ -2190,7 +2219,6 @@
                     });
                 });
                 
-                // 平台选择事件
                 const platformOptions = document.querySelectorAll('.platform-option');
                 let currentPlatform = 'qq';
                 
@@ -2205,7 +2233,6 @@
                     });
                 });
                 
-                // 图片上传
                 const imageUploadArea = document.getElementById('imageUploadArea');
                 const fileInput = document.getElementById('fileInput');
                 const imagePreview = document.getElementById('imagePreview');
@@ -2236,7 +2263,6 @@
                     });
                 });
                 
-                // 提交事件
                 document.getElementById('doSubmitBtn').addEventListener('click', async function() {
                     const account = document.getElementById('submitAccount').value.trim();
                     const content = document.getElementById('submitContent').value.trim();
@@ -2255,7 +2281,6 @@
                             return;
                         }
                         
-                        // 重复检测
                         const duplicate = checkDuplicate(content);
                         if (duplicate.duplicate) {
                             let msg = '';
@@ -2281,7 +2306,6 @@
                         return;
                     }
                     
-                    // 保存到数据库
                     const newSubmission = {
                         qq: account,
                         content: content || '无内容',
@@ -2319,7 +2343,6 @@
                     }
                 });
                 
-                // 查询事件
                 document.getElementById('queryBtn').addEventListener('click', function() {
                     const account = document.getElementById('queryAccount').value.trim();
                     const resultDiv = document.getElementById('queryResult');
@@ -2638,7 +2661,6 @@
                 setTimeout(performGlobalSearch, 10);
             }
 
-            // 界面ID常量
             const VIEWS = {
                 SUPERNATURAL_INITIAL: 'supernaturalInitial',
                 SIGNATURE_PAGE: 'signaturePage',
@@ -2646,7 +2668,6 @@
                 ADMIN_PAGE: 'adminPage'
             };
 
-            // 按钮事件
             supernaturalBtn.addEventListener('click', function() {
                 if (historyStack.length === 0 || historyStack[historyStack.length - 1] !== VIEWS.SUPERNATURAL_INITIAL) {
                     historyStack = [];
@@ -2694,7 +2715,6 @@
                 searchInput.value = '';
             });
 
-            // 初始化
             window.addEventListener('load', async function() {
                 setCloudStatus('syncing', '连接数据库...');
                 await loadFromSupabase();
