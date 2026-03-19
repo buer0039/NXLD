@@ -13,7 +13,7 @@
     <!-- Supabase JavaScript 库 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 所有样式保持不变，只新增类型选择相关样式 */
+        /* 所有样式保持不变 */
         * {
             margin: 0;
             padding: 0;
@@ -112,7 +112,7 @@
 
         .search-wrapper {
             position: relative;
-            width: 250px;
+            width: 300px;
         }
 
         .search-wrapper i {
@@ -147,11 +147,12 @@
         .search-box-modern::placeholder {
             color: #6b7280;
             font-weight: 300;
+            font-size: 0.85rem;
         }
 
         .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn, .year-badge {
-            padding: 0.6rem 1rem;
-            font-size: 0.85rem;
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
             white-space: nowrap;
         }
 
@@ -176,7 +177,7 @@
 
         .agreement-btn i {
             color: #818cf8;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
         }
 
         .submit-signature-btn {
@@ -217,7 +218,7 @@
 
         .admin-btn i {
             color: #f59e0b;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
         }
 
         .thanks-btn {
@@ -241,7 +242,7 @@
 
         .thanks-btn i {
             color: #fbbf24;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
         }
 
         .year-badge {
@@ -1235,7 +1236,7 @@
             position: fixed;
             bottom: 15px;
             right: 20px;
-            color: rgba(156, 163, 175, 0.4);
+            color: rgba(156, 163, 175, 0.6);
             font-size: 0.8rem;
             font-weight: 400;
             letter-spacing: 2px;
@@ -1299,7 +1300,7 @@
             .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn { 
                 flex: 1; 
                 justify-content: center;
-                min-width: 100px;
+                min-width: 120px;
             }
             
             .year-badge {
@@ -1419,23 +1420,6 @@
             to { transform: rotate(360deg); }
         }
 
-        .delete-btn {
-            background: #ef4444;
-            color: white;
-            border: none;
-            border-radius: 1rem;
-            padding: 0.3rem 0.8rem;
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-left: 0.5rem;
-        }
-
-        .delete-btn:hover {
-            background: #dc2626;
-            transform: scale(1.05);
-        }
-
         .fixed-badge {
             background: rgba(129, 140, 248, 0.2);
             color: #818cf8;
@@ -1461,27 +1445,27 @@
             <div class="header-actions">
                 <div class="search-wrapper">
                     <i class="fas fa-search"></i>
-                    <input type="text" class="search-box-modern" id="searchInput" placeholder="搜索...">
+                    <input type="text" class="search-box-modern" id="searchInput" placeholder="搜索内容「只支持对应分类搜索」">
                 </div>
                 <div class="submit-signature-btn" id="submitSignatureBtn">
                     <i class="fas fa-pen"></i>
-                    提交
+                    提交投稿
                 </div>
                 <div class="agreement-btn" id="agreementBtn">
                     <i class="fas fa-scale-balanced"></i>
-                    协议
+                    知情协议
                 </div>
                 <div class="admin-btn" id="adminBtn">
                     <i class="fas fa-crown"></i>
-                    管理
+                    管理员系统
                 </div>
                 <div class="thanks-btn" id="thanksBtn">
                     <i class="fas fa-heart"></i>
-                    致谢
+                    致谢名单
                 </div>
                 <div class="year-badge">
                     <i class="far fa-copyright"></i>
-                    2026
+                    2026 NXLD
                 </div>
             </div>
         </div>
@@ -1505,7 +1489,7 @@
         </div>
     </div>
 
-    <div class="copyright-modern">NXLD</div>
+    <div class="copyright-modern">© 2026 NXLD</div>
     <div class="cloud-status" id="cloudStatus">
         <i class="fas fa-cloud" id="cloudIcon"></i>
         <span id="cloudText">同步中...</span>
@@ -1694,7 +1678,7 @@
                 }
             }
 
-            // 删除数据
+            // 删除数据（仅限管理员删除自己审核的内容）
             async function deleteFromSupabase(id) {
                 try {
                     setCloudStatus('syncing', '删除中...');
@@ -1778,7 +1762,7 @@
                 levelBadge.style.background = currentAdminLevel === 'super' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(16, 185, 129, 0.2)';
                 levelBadge.style.color = currentAdminLevel === 'super' ? '#a78bfa' : '#10b981';
                 levelBadge.innerHTML = currentAdminLevel === 'super' ? 
-                    '<i class="fas fa-crown"></i> 超级管理员模式（可删除所有）' : 
+                    '<i class="fas fa-crown"></i> 超级管理员模式' : 
                     '<i class="fas fa-user"></i> 普通管理员模式';
                 container.appendChild(levelBadge);
                 
@@ -1795,21 +1779,20 @@
                     container.appendChild(syncBtn);
                 }
                 
-                // 固定签名管理
+                // 固定签名展示（不可删除）
                 const fixedSection = document.createElement('div');
                 fixedSection.className = 'submit-form';
                 fixedSection.style.marginBottom = '2rem';
                 
-                let fixedHtml = '<h3 style="color: #818cf8; margin-bottom: 1rem;">固定签名 <span class="fixed-badge">内置</span></h3>';
+                let fixedHtml = '<h3 style="color: #818cf8; margin-bottom: 1rem;">固定签名</h3>';
                 
                 fixedHtml += '<div style="max-height: 400px; overflow-y: auto;">';
                 fixedSignatures.forEach((sig) => {
                     const previewContent = convertToHtml(sig.content);
                     fixedHtml += `
                         <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
-                            <div style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                            <div style="margin-bottom: 0.5rem;">
                                 <span style="color: #818cf8;">${sig.platform === 'qq' ? 'QQ' : '抖音'}:</span> ${sig.qq}
-                                ${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteFixedSignature(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}
                             </div>
                             <div style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.5rem;">
                                 <span style="color: #818cf8;">预览:</span>
@@ -1852,9 +1835,8 @@
                         
                         pendingHtml += `
                             <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
-                                <div style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                                <div style="margin-bottom: 0.5rem;">
                                     <span><span style="color: #818cf8;">${platformDisplay}:</span> ${authorDisplay}</span>
-                                    ${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}
                                 </div>
                                 <div style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.5rem;">
                                     <span style="color: #818cf8;">内容:</span>
@@ -1892,9 +1874,8 @@
                         
                         approvedHtml += `
                             <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
-                                <div style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                                <div style="margin-bottom: 0.5rem;">
                                     <span><span style="color: #818cf8;">${platformDisplay}:</span> ${authorDisplay}</span>
-                                    ${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}
                                 </div>
                                 <div style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.5rem;">
                                     <span style="color: #818cf8;">预览:</span>
@@ -1996,32 +1977,6 @@
                         showAdminPanel();
                     }
                 };
-                
-                window.deleteAnyItem = async (id) => {
-                    if (!confirm('确定要删除这项内容吗？')) return;
-                    
-                    const success = await deleteFromSupabase(id);
-                    
-                    if (success) {
-                        await addLog('删除', `超级管理员删除了ID为${id}的内容`, 'deleted');
-                        showToast('已删除');
-                        await loadFromSupabase();
-                        showAdminPanel();
-                    }
-                };
-                
-                window.deleteFixedSignature = async (id) => {
-                    if (!confirm('确定要删除这个固定签名吗？')) return;
-                    
-                    const success = await deleteFromSupabase(id);
-                    
-                    if (success) {
-                        await addLog('删除', `超级管理员删除了固定签名ID:${id}`, 'deleted');
-                        showToast('固定签名已删除');
-                        await loadFromSupabase();
-                        showAdminPanel();
-                    }
-                };
             }
 
             // 签名页面
@@ -2042,7 +1997,7 @@
                     type: s.type
                 }));
 
-                function createSignatureCard(rawContent, displayHtml, displayName, index, isFixed) {
+                function createSignatureCard(rawContent, displayHtml, displayName, index) {
                     const cardContainer = document.createElement('div');
                     cardContainer.className = 'signature-card-container';
                     
@@ -2056,7 +2011,7 @@
                     
                     const qqTag = document.createElement('div');
                     qqTag.className = 'signature-qq';
-                    qqTag.innerHTML = `${displayName} ${isFixed ? '<span class="fixed-badge">固定</span>' : ''}`;
+                    qqTag.textContent = displayName;
                     
                     const hintDiv = document.createElement('div');
                     hintDiv.className = 'copy-hint';
@@ -2086,7 +2041,7 @@
                 signatureGrid.className = 'signature-grid';
                 
                 allSignatures.forEach((sig, index) => {
-                    signatureGrid.appendChild(createSignatureCard(sig.raw, sig.html, sig.displayName, index + 1, sig.type === 'fixed'));
+                    signatureGrid.appendChild(createSignatureCard(sig.raw, sig.html, sig.displayName, index + 1));
                 });
                 
                 container.appendChild(signatureGrid);
@@ -2106,7 +2061,7 @@
                     historyStack.push(VIEWS.SUBMIT_SIGNATURE);
                 }
                 
-                statusTag.textContent = '提交';
+                statusTag.textContent = '提交投稿';
                 
                 const container = document.createElement('div');
                 container.className = 'submit-form';
@@ -2390,7 +2345,7 @@
                     historyStack.push(VIEWS.ADMIN_PAGE);
                 }
                 
-                statusTag.textContent = '管理员面板';
+                statusTag.textContent = '管理员系统';
                 
                 const container = document.createElement('div');
                 
