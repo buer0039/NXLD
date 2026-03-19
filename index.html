@@ -1595,147 +1595,218 @@
     </div>
 
     <script>
-        // ==================== 防调试保护 ====================
+        // ==================== 增强型防调试保护 ====================
         (function() {
             'use strict';
             
-            // 检测调试工具的标志
-            const debuggers = [
-                function() { return window.console && (console.firebug || console.table && /firebug/i.test(console.table.toString())); },
-                function() { return /Chrome-Lighthouse|HeadlessChrome/.test(navigator.userAgent); },
-                function() { return window.navigator.webdriver === true; },
-                function() { return window.document.documentElement.getAttribute('webdriver') === 'true'; },
-                function() { return window._phantom || window.__phantomas; },
-                function() { return window.domAutomation || window.domAutomationController; },
-                function() { return window.callPhantom || window._Selenium_IDE_Recorder; },
-                function() { return /Headless/.test(window.navigator.userAgent); }
-            ];
+            // 定义防调试函数（使用函数表达式避免被识别）
+            const antiDebug = function() {
+                // 检测调试工具的标志
+                const debuggers = [
+                    function() { return window.console && (console.firebug || console.table && /firebug/i.test(console.table.toString())); },
+                    function() { return /Chrome-Lighthouse|HeadlessChrome/.test(navigator.userAgent); },
+                    function() { return window.navigator.webdriver === true; },
+                    function() { return window.document.documentElement.getAttribute('webdriver') === 'true'; },
+                    function() { return window._phantom || window.__phantomas; },
+                    function() { return window.domAutomation || window.domAutomationController; },
+                    function() { return window.callPhantom || window._Selenium_IDE_Recorder; },
+                    function() { return /Headless/.test(window.navigator.userAgent); }
+                ];
 
-            // 检测是否有调试器打开
-            function checkDebugger() {
-                const start = new Date();
-                debugger;
-                const end = new Date();
-                return (end - start) > 100; // 如果debugger导致明显延迟，说明调试器可能打开
-            }
+                // 检测是否有调试器打开
+                const checkDebugger = function() {
+                    const start = new Date();
+                    debugger;
+                    const end = new Date();
+                    return (end - start) > 100;
+                };
 
-            // 递归检测
-            function recursiveCheck(count) {
-                if (count > 10) return;
-                debugger;
-                setTimeout(() => recursiveCheck(count + 1), 100);
-            }
+                // 递归检测（使用setInterval替代递归避免调用栈检测）
+                setInterval(function() {
+                    debugger;
+                }, 50);
 
-            // 禁用开发者工具快捷键
-            document.addEventListener('keydown', function(e) {
-                // F12
-                if (e.key === 'F12') {
+                // 禁用开发者工具快捷键
+                document.addEventListener('keydown', function(e) {
+                    // F12
+                    if (e.key === 'F12' || e.keyCode === 123) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    // Ctrl+Shift+I / Cmd+Opt+I
+                    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.keyCode === 73)) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    // Ctrl+Shift+J / Cmd+Opt+J
+                    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'J' || e.keyCode === 74)) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    // Ctrl+Shift+C / Cmd+Opt+C
+                    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'C' || e.keyCode === 67)) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    // Ctrl+U (查看源码)
+                    if ((e.ctrlKey || e.metaKey) && (e.key === 'u' || e.keyCode === 85)) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    // Ctrl+S (保存)
+                    if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.keyCode === 83)) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    // Ctrl+Shift+K (控制台)
+                    if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'K' || e.keyCode === 75)) {
+                        e.preventDefault();
+                        return false;
+                    }
+                    
+                    // F5 (刷新) - 不禁用，允许正常刷新
+                    
+                    // Ctrl+R (刷新) - 不禁用，允许正常刷新
+                });
+
+                // 禁用右键菜单
+                document.addEventListener('contextmenu', function(e) {
                     e.preventDefault();
                     return false;
-                }
-                
-                // Ctrl+Shift+I / Cmd+Opt+I
-                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'I') {
+                });
+
+                // 禁用选择
+                document.addEventListener('selectstart', function(e) {
                     e.preventDefault();
                     return false;
-                }
-                
-                // Ctrl+Shift+J / Cmd+Opt+J
-                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'J') {
+                });
+
+                // 禁用复制
+                document.addEventListener('copy', function(e) {
                     e.preventDefault();
                     return false;
-                }
-                
-                // Ctrl+Shift+C / Cmd+Opt+C
-                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+                });
+
+                // 禁用剪切
+                document.addEventListener('cut', function(e) {
                     e.preventDefault();
                     return false;
-                }
-                
-                // Ctrl+U (查看源码)
-                if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+                });
+
+                // 禁用粘贴
+                document.addEventListener('paste', function(e) {
                     e.preventDefault();
                     return false;
+                });
+
+                // 覆盖console方法
+                if (window.console) {
+                    const noop = function() {};
+                    window.console.log = noop;
+                    window.console.info = noop;
+                    window.console.warn = noop;
+                    window.console.error = noop;
+                    window.console.debug = noop;
+                    window.console.table = noop;
+                    window.console.dir = noop;
                 }
-                
-                // Ctrl+S (保存)
-                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                    e.preventDefault();
-                    return false;
+
+                // 检测是否通过iframe等方式嵌入
+                if (window.self !== window.top) {
+                    window.top.location = window.self.location;
                 }
-            });
 
-            // 禁用右键菜单
-            document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                return false;
-            });
-
-            // 禁用选择
-            document.addEventListener('selectstart', function(e) {
-                e.preventDefault();
-                return false;
-            });
-
-            // 检测控制台输出
-            const originalConsoleLog = console.log;
-            console.log = function() {
-                // 可以在这里添加自定义处理，或者完全禁用
-                // originalConsoleLog.apply(console, arguments); // 如果需要保留日志，取消这行注释
-            };
-
-            // 定时检测调试器
-            setInterval(function() {
-                const isDebuggerOpen = checkDebugger();
-                if (isDebuggerOpen) {
-                    // 如果检测到调试器，可以重定向或显示警告
-                    document.body.innerHTML = '<div style="color: white; text-align: center; padding: 2rem;"><h1>检测到调试工具</h1><p>为了保护代码安全，请关闭开发者工具后刷新页面。</p></div>';
-                    // 或者无限循环
-                    while(true) {}
-                }
-            }, 1000);
-
-            // 检测是否通过iframe等方式嵌入
-            if (window.self !== window.top) {
-                window.top.location = window.self.location;
-            }
-
-            // 禁用DevTools协议
-            Object.defineProperty(window, 'devtools', {
-                get: function() {
-                    throw new Error('Access denied');
-                }
-            });
-
-            // 覆盖toString方法
-            const originalToString = Function.prototype.toString;
-            Function.prototype.toString = function() {
-                if (this === debuggers) {
-                    return 'function() { /* protected */ }';
-                }
-                return originalToString.call(this);
-            };
-
-            // 递归检测调用栈
-            (function protect() {
+                // 禁用DevTools协议
                 try {
-                    (function e() {
-                        (function e() {
-                            eval('(function() { try { (function() { (function(){ debugger; })(); })(); } catch(e) {} })();');
-                        })();
-                    })();
+                    Object.defineProperty(window, 'devtools', {
+                        get: function() {
+                            throw new Error('Access denied');
+                        }
+                    });
                 } catch(e) {}
-                setTimeout(protect, 50);
-            })();
 
-            // 检测是否在无头浏览器中运行
-            if (window.navigator.webdriver === true || 
-                window._phantom || 
-                window.__phantomas || 
-                window.callPhantom || 
-                /Headless/.test(window.navigator.userAgent)) {
-                window.location.href = 'about:blank';
-            }
+                // 覆盖toString方法
+                try {
+                    const originalToString = Function.prototype.toString;
+                    Function.prototype.toString = function() {
+                        if (this === debuggers || this === checkDebugger || this === antiDebug) {
+                            return 'function() { /* protected */ }';
+                        }
+                        return originalToString.call(this);
+                    };
+                } catch(e) {}
+
+                // 定时检测调试器
+                setInterval(function() {
+                    const isDebuggerOpen = checkDebugger();
+                    if (isDebuggerOpen) {
+                        // 如果检测到调试器，清除页面内容
+                        document.body.innerHTML = '<div style="color: white; text-align: center; padding: 2rem; background: #0c0f1e; min-height: 100vh;"><h1>检测到调试工具</h1><p>为了保护代码安全，请关闭开发者工具后刷新页面。</p><button onclick="location.reload()" style="padding: 10px 20px; background: #4f46e5; color: white; border: none; border-radius: 2rem; cursor: pointer; margin-top: 20px;">刷新页面</button></div>';
+                    }
+                }, 1000);
+
+                // 检测是否在无头浏览器中运行
+                if (window.navigator.webdriver === true || 
+                    window._phantom || 
+                    window.__phantomas || 
+                    window.callPhantom || 
+                    /Headless/.test(window.navigator.userAgent)) {
+                    window.location.href = 'about:blank';
+                }
+
+                // 监听窗口大小变化（检测开发者工具）
+                let devtoolsOpen = false;
+                const threshold = 160;
+                const emitEvent = function(isOpen) {
+                    if (isOpen !== devtoolsOpen) {
+                        devtoolsOpen = isOpen;
+                        if (devtoolsOpen) {
+                            document.body.innerHTML = '<div style="color: white; text-align: center; padding: 2rem; background: #0c0f1e; min-height: 100vh;"><h1>检测到开发者工具</h1><p>请关闭后刷新页面继续使用</p><button onclick="location.reload()" style="padding: 10px 20px; background: #4f46e5; color: white; border: none; border-radius: 2rem; cursor: pointer; margin-top: 20px;">刷新页面</button></div>';
+                        }
+                    }
+                };
+
+                setInterval(function() {
+                    const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+                    const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+                    if (widthThreshold || heightThreshold) {
+                        emitEvent(true);
+                    } else {
+                        emitEvent(false);
+                    }
+                }, 500);
+            };
+
+            // 立即执行防调试
+            antiDebug();
+
+            // 在页面卸载前继续执行
+            window.addEventListener('load', antiDebug);
+            window.addEventListener('pageshow', antiDebug);
+            window.addEventListener('focus', antiDebug);
+            
+            // 使用MutationObserver监控DOM变化，防止被移除
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'childList') {
+                        // 如果检测到脚本被移除，重新执行
+                        if (!document.querySelector('script[data-protect]')) {
+                            antiDebug();
+                        }
+                    }
+                });
+            });
+
+            observer.observe(document.documentElement, {
+                childList: true,
+                subtree: true
+            });
         })();
         // ==================== 防调试保护结束 ====================
 
@@ -1970,7 +2041,7 @@
                 
                 const container = document.createElement('div');
                 
-                // 管理员级别标识
+                // 管理员级别标识（去掉括号内的说明文字）
                 const levelBadge = document.createElement('div');
                 levelBadge.style.textAlign = 'center';
                 levelBadge.style.marginBottom = '1.5rem';
@@ -1979,8 +2050,8 @@
                 levelBadge.style.background = currentAdminLevel === 'super' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(16, 185, 129, 0.2)';
                 levelBadge.style.color = currentAdminLevel === 'super' ? '#a78bfa' : '#10b981';
                 levelBadge.innerHTML = currentAdminLevel === 'super' ? 
-                    '<i class="fas fa-crown"></i> 超级管理员模式（可删除）' : 
-                    '<i class="fas fa-user"></i> 普通管理员模式（仅可审核）';
+                    '<i class="fas fa-crown"></i> 超级管理员' : 
+                    '<i class="fas fa-user"></i> 普通管理员';
                 container.appendChild(levelBadge);
                 
                 // 统计卡片
@@ -2031,6 +2102,11 @@
                     } else {
                         pendingHtml += '<div style="max-height: 500px; overflow-y: auto;">';
                         pendingSignatures.forEach((sig) => {
+                            // 只显示签名投稿给普通管理员
+                            if (currentAdminLevel !== 'super' && (sig.submit_type === 'report' || sig.submit_type === 'bug')) {
+                                return;
+                            }
+                            
                             let previewContent = '';
                             let displayInfo = '';
                             
