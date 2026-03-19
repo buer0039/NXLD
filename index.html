@@ -1420,13 +1420,77 @@
             to { transform: rotate(360deg); }
         }
 
-        .fixed-badge {
-            background: rgba(129, 140, 248, 0.2);
-            color: #818cf8;
-            padding: 0.2rem 0.5rem;
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
             border-radius: 1rem;
-            font-size: 0.6rem;
-            margin-left: 0.3rem;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 0.5rem;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1.5rem;
+            padding: 1.2rem;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #818cf8;
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #9ca3af;
+        }
+
+        .tab-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #9ca3af;
+            padding: 0.6rem 1.2rem;
+            border-radius: 2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #d1d5db;
+        }
+
+        .tab-btn.active {
+            background: rgba(129, 140, 248, 0.1);
+            color: #818cf8;
         }
     </style>
 </head>
@@ -1569,6 +1633,9 @@
             let fixedSignatures = [];
             let operationLogs = [];
 
+            // 当前选中的标签页
+            let currentTab = 'pending';
+
             // 设置云同步状态
             function setCloudStatus(status, message) {
                 cloudText.textContent = message;
@@ -1678,8 +1745,13 @@
                 }
             }
 
-            // 删除数据（仅限管理员删除自己审核的内容）
+            // 删除数据（仅超级管理员可用）
             async function deleteFromSupabase(id) {
+                if (currentAdminLevel !== 'super') {
+                    showToast('只有超级管理员可以删除');
+                    return false;
+                }
+                
                 try {
                     setCloudStatus('syncing', '删除中...');
                     
@@ -1748,27 +1820,175 @@
                     .subscribe();
             }
 
-            // 管理员面板
+            // 管理员面板 - 新UI布局
             async function showAdminPanel() {
                 await loadFromSupabase();
                 
                 const container = document.createElement('div');
                 
+                // 管理员级别标识
                 const levelBadge = document.createElement('div');
                 levelBadge.style.textAlign = 'center';
-                levelBadge.style.marginBottom = '1rem';
+                levelBadge.style.marginBottom = '1.5rem';
                 levelBadge.style.padding = '0.5rem';
                 levelBadge.style.borderRadius = '2rem';
                 levelBadge.style.background = currentAdminLevel === 'super' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(16, 185, 129, 0.2)';
                 levelBadge.style.color = currentAdminLevel === 'super' ? '#a78bfa' : '#10b981';
                 levelBadge.innerHTML = currentAdminLevel === 'super' ? 
-                    '<i class="fas fa-crown"></i> 超级管理员模式' : 
-                    '<i class="fas fa-user"></i> 普通管理员模式';
+                    '<i class="fas fa-crown"></i> 超级管理员模式（可删除）' : 
+                    '<i class="fas fa-user"></i> 普通管理员模式（仅可审核）';
                 container.appendChild(levelBadge);
                 
+                // 统计卡片
+                const statsContainer = document.createElement('div');
+                statsContainer.className = 'admin-stats';
+                
+                const pendingCount = pendingSignatures.length;
+                const approvedCount = approvedSignatures.length;
+                const totalCount = pendingCount + approvedCount;
+                
+                statsContainer.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-number">${totalCount}</div>
+                        <div class="stat-label">总提交</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: #f59e0b;">${pendingCount}</div>
+                        <div class="stat-label">待审核</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" style="color: #10b981;">${approvedCount}</div>
+                        <div class="stat-label">已通过</div>
+                    </div>
+                `;
+                container.appendChild(statsContainer);
+                
+                // 标签页切换
+                const tabContainer = document.createElement('div');
+                tabContainer.className = 'tab-container';
+                tabContainer.innerHTML = `
+                    <button class="tab-btn ${currentTab === 'pending' ? 'active' : ''}" data-tab="pending">待审核 (${pendingCount})</button>
+                    <button class="tab-btn ${currentTab === 'approved' ? 'active' : ''}" data-tab="approved">已通过 (${approvedCount})</button>
+                    <button class="tab-btn ${currentTab === 'logs' ? 'active' : ''}" data-tab="logs">操作日志</button>
+                `;
+                container.appendChild(tabContainer);
+                
+                // 内容区域
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'submit-form';
+                contentDiv.style.maxWidth = '800px';
+                
+                if (currentTab === 'pending') {
+                    // 待审核内容
+                    let pendingHtml = '<h3 style="color: #f59e0b; margin-bottom: 1rem;">待审核列表</h3>';
+                    
+                    if (pendingSignatures.length === 0) {
+                        pendingHtml += '<div style="color: #9ca3af; text-align: center; padding: 2rem;">暂无待审核内容</div>';
+                    } else {
+                        pendingHtml += '<div style="max-height: 500px; overflow-y: auto;">';
+                        pendingSignatures.forEach((sig) => {
+                            let previewContent = '';
+                            let displayInfo = '';
+                            
+                            if (sig.submit_type === 'signature') {
+                                previewContent = convertToHtml(sig.content);
+                                displayInfo = `<div style="margin-top: 0.3rem;">${previewContent}</div>`;
+                            } else if (sig.submit_type === 'report') {
+                                displayInfo = `<div style="color: #ef4444; margin-top: 0.3rem;">倒卖举报 - 证据图片: ${sig.images ? sig.images.length : 0}张</div>`;
+                            } else if (sig.submit_type === 'bug') {
+                                displayInfo = `<div style="color: #f59e0b; margin-top: 0.3rem;">Bug反馈: ${sig.content}</div>`;
+                            }
+                            
+                            const platformDisplay = sig.platform === 'qq' ? 'QQ' : '抖音';
+                            const authorDisplay = sig.platform === 'qq' ? sig.qq : `dy:${sig.qq}`;
+                            
+                            pendingHtml += `
+                                <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
+                                    <div style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                                        <span><span style="color: #818cf8;">${platformDisplay}:</span> ${authorDisplay}</span>
+                                        ${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}
+                                    </div>
+                                    <div style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.5rem;">
+                                        <span style="color: #818cf8;">内容:</span>
+                                        ${displayInfo}
+                                    </div>
+                                    <div style="margin-bottom: 0.5rem; color: #9ca3af; font-size: 0.8rem;">提交时间: ${new Date(sig.submit_time).toLocaleString()}</div>
+                                    <div style="display: flex; gap: 0.5rem;">
+                                        <button class="query-button" style="background: #10b981;" onclick="window.approveSignature(${sig.id})">通过</button>
+                                        <button class="query-button" style="background: #ef4444;" onclick="window.rejectSignature(${sig.id})">拒绝</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        pendingHtml += '</div>';
+                    }
+                    contentDiv.innerHTML = pendingHtml;
+                    
+                } else if (currentTab === 'approved') {
+                    // 已通过内容
+                    let approvedHtml = '<h3 style="color: #10b981; margin-bottom: 1rem;">已通过列表</h3>';
+                    
+                    const approvedItems = approvedSignatures.filter(s => s.submit_type === 'signature');
+                    if (approvedItems.length === 0) {
+                        approvedHtml += '<div style="color: #9ca3af; text-align: center; padding: 2rem;">暂无已通过签名</div>';
+                    } else {
+                        approvedHtml += '<div style="max-height: 500px; overflow-y: auto;">';
+                        approvedItems.forEach((sig) => {
+                            const previewContent = convertToHtml(sig.content);
+                            const platformDisplay = sig.platform === 'qq' ? 'QQ' : '抖音';
+                            const authorDisplay = sig.platform === 'qq' ? sig.qq : `dy:${sig.qq}`;
+                            
+                            approvedHtml += `
+                                <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
+                                    <div style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+                                        <span><span style="color: #818cf8;">${platformDisplay}:</span> ${authorDisplay}</span>
+                                        ${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}
+                                    </div>
+                                    <div style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.5rem;">
+                                        <span style="color: #818cf8;">预览:</span>
+                                        <div style="margin-top: 0.3rem;">${previewContent}</div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        approvedHtml += '</div>';
+                    }
+                    contentDiv.innerHTML = approvedHtml;
+                    
+                } else if (currentTab === 'logs') {
+                    // 操作日志
+                    let logHtml = '<h3 style="color: #818cf8; margin-bottom: 1rem;">操作日志</h3>';
+                    logHtml += '<div class="log-container" style="max-height: 500px;">';
+                    
+                    if (operationLogs.length === 0) {
+                        logHtml += '<div style="color: #9ca3af; text-align: center; padding: 1rem;">暂无操作日志</div>';
+                    } else {
+                        operationLogs.forEach(log => {
+                            let logClass = 'log-content';
+                            if (log.action.includes('通过')) logClass += ' approved';
+                            else if (log.action.includes('拒绝')) logClass += ' rejected';
+                            else if (log.action.includes('删除')) logClass += ' deleted';
+                            
+                            logHtml += `
+                                <div class="log-item">
+                                    <span class="log-time">[${log.time}]</span>
+                                    <span class="${logClass}">${log.action}: ${log.details}</span>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    logHtml += '</div>';
+                    contentDiv.innerHTML = logHtml;
+                }
+                
+                container.appendChild(contentDiv);
+                
+                // 超级管理员专属刷新按钮
                 if (currentAdminLevel === 'super') {
                     const syncBtn = document.createElement('button');
                     syncBtn.className = 'download-html-btn';
+                    syncBtn.style.marginTop = '1rem';
                     syncBtn.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
                     syncBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 强制刷新云端';
                     syncBtn.addEventListener('click', async function() {
@@ -1779,151 +1999,16 @@
                     container.appendChild(syncBtn);
                 }
                 
-                // 固定签名展示（不可删除）
-                const fixedSection = document.createElement('div');
-                fixedSection.className = 'submit-form';
-                fixedSection.style.marginBottom = '2rem';
-                
-                let fixedHtml = '<h3 style="color: #818cf8; margin-bottom: 1rem;">固定签名</h3>';
-                
-                fixedHtml += '<div style="max-height: 400px; overflow-y: auto;">';
-                fixedSignatures.forEach((sig) => {
-                    const previewContent = convertToHtml(sig.content);
-                    fixedHtml += `
-                        <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
-                            <div style="margin-bottom: 0.5rem;">
-                                <span style="color: #818cf8;">${sig.platform === 'qq' ? 'QQ' : '抖音'}:</span> ${sig.qq}
-                            </div>
-                            <div style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.5rem;">
-                                <span style="color: #818cf8;">预览:</span>
-                                <div style="margin-top: 0.3rem;">${previewContent}</div>
-                            </div>
-                        </div>
-                    `;
-                });
-                fixedHtml += '</div>';
-                
-                fixedSection.innerHTML = fixedHtml;
-                container.appendChild(fixedSection);
-                
-                // 待审核项目
-                const pendingSection = document.createElement('div');
-                pendingSection.className = 'submit-form';
-                pendingSection.style.marginBottom = '2rem';
-                
-                let pendingHtml = '<h3 style="color: #f59e0b; margin-bottom: 1rem;">待审核</h3>';
-                
-                if (pendingSignatures.length === 0) {
-                    pendingHtml += '<div style="color: #9ca3af; text-align: center; padding: 2rem;">暂无待审核</div>';
-                } else {
-                    pendingHtml += '<div style="max-height: 400px; overflow-y: auto;">';
-                    pendingSignatures.forEach((sig) => {
-                        let previewContent = '';
-                        let displayInfo = '';
-                        
-                        if (sig.submit_type === 'signature') {
-                            previewContent = convertToHtml(sig.content);
-                            displayInfo = `<div style="margin-top: 0.3rem;">${previewContent}</div>`;
-                        } else if (sig.submit_type === 'report') {
-                            displayInfo = `<div style="color: #ef4444; margin-top: 0.3rem;">倒卖举报 - 证据图片: ${sig.images ? sig.images.length : 0}张</div>`;
-                        } else if (sig.submit_type === 'bug') {
-                            displayInfo = `<div style="color: #f59e0b; margin-top: 0.3rem;">Bug反馈: ${sig.content}</div>`;
-                        }
-                        
-                        const platformDisplay = sig.platform === 'qq' ? 'QQ' : '抖音';
-                        const authorDisplay = sig.platform === 'qq' ? sig.qq : `dy:${sig.qq}`;
-                        
-                        pendingHtml += `
-                            <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
-                                <div style="margin-bottom: 0.5rem;">
-                                    <span><span style="color: #818cf8;">${platformDisplay}:</span> ${authorDisplay}</span>
-                                </div>
-                                <div style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.5rem;">
-                                    <span style="color: #818cf8;">内容:</span>
-                                    ${displayInfo}
-                                </div>
-                                <div style="margin-bottom: 0.5rem; color: #9ca3af; font-size: 0.8rem;">提交时间: ${new Date(sig.submit_time).toLocaleString()}</div>
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <button class="query-button" style="background: #10b981;" onclick="window.approveSignature(${sig.id})">通过</button>
-                                    <button class="query-button" style="background: #ef4444;" onclick="window.rejectSignature(${sig.id})">拒绝</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    pendingHtml += '</div>';
-                }
-                
-                pendingSection.innerHTML = pendingHtml;
-                container.appendChild(pendingSection);
-                
-                // 已通过项目
-                const approvedSection = document.createElement('div');
-                approvedSection.className = 'submit-form';
-                
-                let approvedHtml = '<h3 style="color: #10b981; margin-bottom: 1rem;">已通过</h3>';
-                
-                const approvedItems = approvedSignatures.filter(s => s.submit_type === 'signature');
-                if (approvedItems.length === 0) {
-                    approvedHtml += '<div style="color: #9ca3af; text-align: center; padding: 2rem;">暂无通过的签名</div>';
-                } else {
-                    approvedHtml += '<div style="max-height: 400px; overflow-y: auto;">';
-                    approvedItems.forEach((sig) => {
-                        const previewContent = convertToHtml(sig.content);
-                        const platformDisplay = sig.platform === 'qq' ? 'QQ' : '抖音';
-                        const authorDisplay = sig.platform === 'qq' ? sig.qq : `dy:${sig.qq}`;
-                        
-                        approvedHtml += `
-                            <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
-                                <div style="margin-bottom: 0.5rem;">
-                                    <span><span style="color: #818cf8;">${platformDisplay}:</span> ${authorDisplay}</span>
-                                </div>
-                                <div style="margin-bottom: 0.5rem; background: rgba(0,0,0,0.2); padding: 0.5rem; border-radius: 0.5rem;">
-                                    <span style="color: #818cf8;">预览:</span>
-                                    <div style="margin-top: 0.3rem;">${previewContent}</div>
-                                </div>
-                                <div style="display: flex; gap: 0.5rem;">
-                                    <button class="query-button" style="background: #ef4444;" onclick="window.deleteApprovedSignature(${sig.id})">删除</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    approvedHtml += '</div>';
-                }
-                
-                approvedSection.innerHTML = approvedHtml;
-                container.appendChild(approvedSection);
-                
-                const logSection = document.createElement('div');
-                logSection.className = 'submit-form';
-                logSection.style.marginTop = '2rem';
-                
-                let logHtml = '<h3 style="color: #818cf8; margin-bottom: 1rem;">操作日志</h3>';
-                logHtml += '<div class="log-container">';
-                
-                if (operationLogs.length === 0) {
-                    logHtml += '<div style="color: #9ca3af; text-align: center; padding: 1rem;">暂无操作日志</div>';
-                } else {
-                    operationLogs.forEach(log => {
-                        let logClass = 'log-content';
-                        if (log.action.includes('通过')) logClass += ' approved';
-                        else if (log.action.includes('拒绝')) logClass += ' rejected';
-                        else if (log.action.includes('删除')) logClass += ' deleted';
-                        
-                        logHtml += `
-                            <div class="log-item">
-                                <span class="log-time">[${log.time}]</span>
-                                <span class="${logClass}">${log.action}: ${log.details}</span>
-                            </div>
-                        `;
-                    });
-                }
-                
-                logHtml += '</div>';
-                logSection.innerHTML = logHtml;
-                container.appendChild(logSection);
-                
                 innerDynamic.innerHTML = '';
                 innerDynamic.appendChild(container);
+                
+                // 绑定标签页切换事件
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        currentTab = this.dataset.tab;
+                        showAdminPanel();
+                    });
+                });
                 
                 bindAdminEvents();
             }
@@ -1966,12 +2051,13 @@
                     }
                 };
                 
-                window.deleteApprovedSignature = async (id) => {
+                window.deleteAnyItem = async (id) => {
+                    if (!confirm('确定要删除这项内容吗？此操作不可恢复！')) return;
+                    
                     const success = await deleteFromSupabase(id);
                     
                     if (success) {
-                        const sig = approvedSignatures.find(s => s.id === id);
-                        await addLog('删除', `${sig.platform === 'qq' ? 'QQ' : '抖音'}:${sig.qq} 的签名被删除`, 'deleted');
+                        await addLog('删除', `超级管理员删除了ID为${id}的内容`, 'deleted');
                         showToast('已删除');
                         await loadFromSupabase();
                         showAdminPanel();
