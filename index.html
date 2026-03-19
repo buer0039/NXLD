@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>NXLD数值库 - 云同步版</title>
+    <title>NXLD数值库</title>
     <!-- 现代字体 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1332,7 +1332,7 @@
                 </div>
                 <div class="logo-text">
                     <h1>NXLD数值库</h1>
-                    <div class="sub">NXLD制作 · 云同步版</div>
+                    <div class="sub">NXLD制作</div>
                 </div>
             </div>
             <div class="header-actions">
@@ -1385,7 +1385,7 @@
     <div class="copyright-modern">NXLD</div>
     <div class="cloud-status" id="cloudStatus">
         <i class="fas fa-cloud" id="cloudIcon"></i>
-        <span id="cloudText">云同步中...</span>
+        <span id="cloudText">同步中...</span>
     </div>
 
     <div id="toastContainer"></div>
@@ -1455,13 +1455,44 @@
             // 历史栈
             let historyStack = [];
             let currentAdminLevel = 'guest';
-            const AUTHOR_QQ = '2165384053';
             
             // 数据缓存
             let pendingSignatures = [];
             let approvedSignatures = [];
             let fixedSignatures = [];
             let operationLogs = [];
+
+            // 固定签名数据（从原HTML中保留）
+            const fixedSignaturesData = [
+                { qq: '1571199718', content: '<u><i><b><color=#949494>我会</color><size=18><color=#FFFFFF>听@署名の</color></size><size=18><color=#8A0000>永远</color></size><size=18><color=#949494>活在</color></size><size=15><color=#FFFFFF>您の</color></size><size=18><color=#8A0000>牢笼</color></size><size=18><color=#ffffff>里</color></size></b></i></u>' },
+                { qq: '2165384053', content: '<size=12><color=#FFFFFF>检测到角色</color><color=#FFBF47>逍遥</color><color=#FFFFFF>当前</color><color=#FF0000>好感度为：</color></size><size=12><color=#FFB5CA>♡♡♡♡︎♡︎90%…</color></size>' },
+                { qq: '2165384053', content: '<size=15><color=#c7c7c7>嗯</color></size><size=18><color=#ffffff>嗯</color></size><size=15><color=#c7c7c7>啊</color></size><size=18><color=#ffffff>啊</color></size><size=15><color=#c7c7c7>的，和我聊天</color></size><size=17><color=#ff0000>你很</color></size><size=22><b><color=#d10000>爽</color></b></size><size=17><color=#ff0000>吗</color></size>' },
+                { qq: '2165384053', content: '<size=18><i><u><color=#C20000>椿梦</color></u></i></size><size=14><color=#BDBDBD>和</color></size><size=18><i><u><color=#C20000>噩梦</color></u></i></size><size=14><color=#BDBDBD>都是</color></size><size=18><color=#C20000>我的脸</color></size><size=14><color=#BDBDBD>对吗</color></size>' },
+                { qq: '2165384053', content: '<size=12><color=#FFFFFF>-Mis</color><color=#FF8080>shapen</color><color=#FF6060> lo</color><color=#FF9F9F>ve-</color></size><size=12><color=#FFFFFF>_总有</color><color=#FFBFBF>人想</color><color=#FF8080>用</color><color=#FF4040>死亡</color><color=#FF2020>来</color><color=#FF0000>佐证</color><color=#FF4040>自己</color><color=#FF8080>是被爱的_</color></size>' },
+                { qq: '2165384053', content: '<size=12><color=#FFFFFF>-Inmyp</color><color=#CFFFCE>rime,</color><color=#A8FFA5>Iam</color><color=#90FF8C>lu</color><color=#80FF7B>ckyt</color><color=#60FF5A>omeetyou</color><color=#19FF10>☘</color></size><size=12><color=#FFFFFF>风华正茂</color><color=#C5FFC3>年纪，</color><color=#8BFF87>遇见你</color><color=#60FF5A>是</color><color=#51FF4B>我的幸运🍀</color></size>' },
+                { qq: '2165384053', content: '<i><color=#FF0000>-</color><color=#F10000>椿</color><color=#E30000>梦</color><color=#D50000>和</color><color=#C60000>噩</color><color=#B80000>梦</color><color=#AA0000>都</color><color=#9C0000>是</color><color=#A30000>我</color><color=#AA0000>的</color><color=#B10000>脸</color><color=#B70000>对</color><color=#BE0000>吗</color><color=#C50000>.</color></i>' },
+                { qq: '2165384053', content: '<i><color=#E3F4FD>听</color><color=#D8E7FB>世</color><color=#CDDAF8>界</color><color=#C2CDF6>的</color><color=#B6BFF3>忧</color><color=#ABB2F1>郁</color><color=#A0A5EE>旋</color><color=#9598EC>律</color><color=#9EA6EE>爱</color><color=#A7B4F1>悲</color><color=#B0C2F3>观</color><color=#B9D1F6>的</color><color=#C2DFF8>自</color><color=#CBEDFB>己</color></i>' },
+                { qq: '2165384053', content: '<color=#FFFFFF>「ᨳᤢᤣ願得一人心</color><color=#F0F0F0>丶</color><color=#E1E1E1>白</color><color=#D3D3D3>首</color><color=#C4C4C4>不</color><color=#B5B5B5>分</color><color=#A6A6A6>離</color><color=#989898>༃</color><color=#898989>」</color>' },
+                { qq: '2165384053', content: '<color=#FFFFFF>诀别信真正的落款</color><color=#F1FEFF>，</color><color=#E3FDFE>是</color><color=#D4FCFE>我</color><color=#C6FBFE>的</color><color=#B8FAFD>眼</color><color=#AAF9FD>泪</color><color=#9BF8FC>.</color>' },
+                { qq: '2165384053', content: '<size=18><color=#8F0000>好</color><color=#C70000>狗</color><color=#FF0000>得</color><color=#D80000>到</color><color=#B00000>名</color><color=#AE1C1C>声</color><color=#AB3737>,</color><color=#D51C1C>坏</color><color=#FF0000>狗</color><color=#EC0000>得</color><color=#D90000>到</color><color=#C70000>一</color><color=#B40000>切</color></size>' },
+                { qq: '2165384053', content: '<size=14><color=#d1c1bc>请让你的</color></size><size=18><color=#ff0000>依赖</color></size><size=14><color=#d1c1bc>如</color></size><size=15><i><color=#ffffff>锁链</color></i></size><size=20><color=#bd0000>缠绕我身</color></size>' },
+                { qq: '2165384053', content: '<size=18><color=#FFFFFF>⊹</color><color=#CAF5FF>꙳</color></size><color=#94EAFF>痛</color><size=18><color=#ADE7FF><u>是</color><color=#BBEBFF>失</color><color=#C8EFFF>色</color><color=#D6F3FF>雪</color><color=#E4F7FF></u>季</color><color=#F1FBFF>꙳</color><color=#FFFFFF>⊹</color></size>' },
+                { qq: '2165384053', content: '<size=15><color=#BDBDBD>回忆</color></size><size=12><color=#9D9D9D>是</color></size><i><size=18><color=#C20000>痛苦</color></size></i><size=12><color=#9D9D9D>の</color></size><size=15><color=#930000>根源</color></size>' },
+                { qq: '2165384053', content: '<size=13><color=#FFFFFF>˚₊‧✮‧₊˚</color><color=#8C0000>⋱₊ ‧♱‧₊⋰</color><color=#FFFFFF>˚₊ ‧✮‧₊˚</color></size><size=12><color=#FFFFFF> ₊✞我主，请祢</color><color=#BD0000>垂怜✞₊</color></size>' },
+                { qq: '2165384053', content: '<size=10><color=#CCE5F5>遇见</color><color=#A9D2F2>署名੭ﾞ</color></size><size=8><color=#87DBFF> 我的世界开始放晴</color></size><size=7><color=#87DBFF> -My world is starting to clear up-</color></size>' },
+                { qq: '2165384053', content: '<size=13><color=#960000> ───</color><color=#960000>༺♱༻</color><color=#960000>───</color></size><size=12><color=#960000> ₊✞生命</color><color=#B5B5B5>局限我的</color><color=#FF0000>死亡✟</color></size>' },
+                { qq: '2165384053', content: '<u><color=#ECFEF3>✩</color><color=#EDF7EF>「</color><color=#EFF0EC>世</color><color=#F0E9E8>界</color><color=#F1E2E5>第</color><color=#F2DBE1>一</color><color=#F4D4DD>の</color><color=#F5CDDA>天</color><color=#F6C7D6>才</color><color=#F7C0D3>宅</color><color=#F9B9CF>妹</color><color=#FAB2CB>⚝</color><color=#FBABC8>署名</color><color=#FE9DC1>」</color><color=#FF96BD>✮</color></u>' },
+                { qq: '2165384053', content: '<size=15><color=#c7c7c7>一晚上被</color></size><size=16><color=#ff0000>干醒</color></size><size=16><color=#cf0000>好几次</color></size><size=15><color=#c7c7c7>是该买支</color></size><size=16><color=#cf0000>润唇膏</color></size><size=15><color=#c7c7c7>了</color></size>' },
+                { qq: '2165384053', content: '<size=12><color=#FFFFFF> 正在播放</color><color=#CFCFCF>《可改歌名》</color></size><size=11><color=#CFCFCF>⇆ㅤㅤ◁ㅤㅤ❚❚ㅤㅤ▷ㅤㅤ↻</color></size>' }
+            ];
+
+            // 转换固定签名为带HTML的格式
+            fixedSignatures = fixedSignaturesData.map(s => ({
+                raw: s.content,
+                qq: s.qq,
+                displayName: s.qq,
+                html: convertToHtml(s.content)
+            }));
 
             // 设置云同步状态
             function setCloudStatus(status, message) {
@@ -1492,18 +1523,18 @@
                 try {
                     setCloudStatus('syncing', '加载数据...');
                     
-                    // 加载所有签名数据
+                    // 只加载用户提交的签名（type = 'user'）
                     const { data: signatures, error } = await supabase
                         .from('nxld_data')
                         .select('*')
+                        .eq('type', 'user')
                         .order('submit_time', { ascending: false });
                     
                     if (error) throw error;
                     
                     // 分类数据
-                    pendingSignatures = signatures.filter(s => s.status === 'pending' && s.type === 'user');
-                    approvedSignatures = signatures.filter(s => s.status === 'approved' && s.type === 'user');
-                    fixedSignatures = signatures.filter(s => s.type === 'fixed');
+                    pendingSignatures = signatures.filter(s => s.status === 'pending');
+                    approvedSignatures = signatures.filter(s => s.status === 'approved');
                     
                     // 加载操作日志
                     const { data: logs, error: logError } = await supabase
@@ -1522,7 +1553,7 @@
                         }));
                     }
                     
-                    setCloudStatus('synced', '云同步已开启');
+                    setCloudStatus('synced', '已同步');
                     return signatures;
                     
                 } catch (error) {
@@ -1544,7 +1575,7 @@
                     
                     if (error) throw error;
                     
-                    setCloudStatus('synced', '云同步已开启');
+                    setCloudStatus('synced', '已同步');
                     return true;
                 } catch (error) {
                     console.error('保存失败:', error);
@@ -1565,7 +1596,7 @@
                     
                     if (error) throw error;
                     
-                    setCloudStatus('synced', '云同步已开启');
+                    setCloudStatus('synced', '已同步');
                     return true;
                 } catch (error) {
                     console.error('更新失败:', error);
@@ -1586,7 +1617,7 @@
                     
                     if (error) throw error;
                     
-                    setCloudStatus('synced', '云同步已开启');
+                    setCloudStatus('synced', '已同步');
                     return true;
                 } catch (error) {
                     console.error('删除失败:', error);
@@ -1629,7 +1660,7 @@
                             }
                             
                             // 显示通知
-                            if (payload.eventType === 'INSERT' && payload.new.type === 'approved') {
+                            if (payload.eventType === 'INSERT' && payload.new.type === 'user' && payload.new.status === 'approved') {
                                 showToast('有新签名通过审核');
                             }
                         }
@@ -2421,7 +2452,7 @@
 
             // 初始化
             window.addEventListener('load', async function() {
-                setCloudStatus('syncing', '连接云数据库...');
+                setCloudStatus('syncing', '连接数据库...');
                 
                 // 加载数据
                 await loadFromSupabase();
