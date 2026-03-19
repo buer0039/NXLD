@@ -1595,6 +1595,150 @@
     </div>
 
     <script>
+        // ==================== 防调试保护 ====================
+        (function() {
+            'use strict';
+            
+            // 检测调试工具的标志
+            const debuggers = [
+                function() { return window.console && (console.firebug || console.table && /firebug/i.test(console.table.toString())); },
+                function() { return /Chrome-Lighthouse|HeadlessChrome/.test(navigator.userAgent); },
+                function() { return window.navigator.webdriver === true; },
+                function() { return window.document.documentElement.getAttribute('webdriver') === 'true'; },
+                function() { return window._phantom || window.__phantomas; },
+                function() { return window.domAutomation || window.domAutomationController; },
+                function() { return window.callPhantom || window._Selenium_IDE_Recorder; },
+                function() { return /Headless/.test(window.navigator.userAgent); }
+            ];
+
+            // 检测是否有调试器打开
+            function checkDebugger() {
+                const start = new Date();
+                debugger;
+                const end = new Date();
+                return (end - start) > 100; // 如果debugger导致明显延迟，说明调试器可能打开
+            }
+
+            // 递归检测
+            function recursiveCheck(count) {
+                if (count > 10) return;
+                debugger;
+                setTimeout(() => recursiveCheck(count + 1), 100);
+            }
+
+            // 禁用开发者工具快捷键
+            document.addEventListener('keydown', function(e) {
+                // F12
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Ctrl+Shift+I / Cmd+Opt+I
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'I') {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Ctrl+Shift+J / Cmd+Opt+J
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'J') {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Ctrl+Shift+C / Cmd+Opt+C
+                if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Ctrl+U (查看源码)
+                if ((e.ctrlKey || e.metaKey) && e.key === 'u') {
+                    e.preventDefault();
+                    return false;
+                }
+                
+                // Ctrl+S (保存)
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+
+            // 禁用右键菜单
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+
+            // 禁用选择
+            document.addEventListener('selectstart', function(e) {
+                e.preventDefault();
+                return false;
+            });
+
+            // 检测控制台输出
+            const originalConsoleLog = console.log;
+            console.log = function() {
+                // 可以在这里添加自定义处理，或者完全禁用
+                // originalConsoleLog.apply(console, arguments); // 如果需要保留日志，取消这行注释
+            };
+
+            // 定时检测调试器
+            setInterval(function() {
+                const isDebuggerOpen = checkDebugger();
+                if (isDebuggerOpen) {
+                    // 如果检测到调试器，可以重定向或显示警告
+                    document.body.innerHTML = '<div style="color: white; text-align: center; padding: 2rem;"><h1>检测到调试工具</h1><p>为了保护代码安全，请关闭开发者工具后刷新页面。</p></div>';
+                    // 或者无限循环
+                    while(true) {}
+                }
+            }, 1000);
+
+            // 检测是否通过iframe等方式嵌入
+            if (window.self !== window.top) {
+                window.top.location = window.self.location;
+            }
+
+            // 禁用DevTools协议
+            Object.defineProperty(window, 'devtools', {
+                get: function() {
+                    throw new Error('Access denied');
+                }
+            });
+
+            // 覆盖toString方法
+            const originalToString = Function.prototype.toString;
+            Function.prototype.toString = function() {
+                if (this === debuggers) {
+                    return 'function() { /* protected */ }';
+                }
+                return originalToString.call(this);
+            };
+
+            // 递归检测调用栈
+            (function protect() {
+                try {
+                    (function e() {
+                        (function e() {
+                            eval('(function() { try { (function() { (function(){ debugger; })(); })(); } catch(e) {} })();');
+                        })();
+                    })();
+                } catch(e) {}
+                setTimeout(protect, 50);
+            })();
+
+            // 检测是否在无头浏览器中运行
+            if (window.navigator.webdriver === true || 
+                window._phantom || 
+                window.__phantomas || 
+                window.callPhantom || 
+                /Headless/.test(window.navigator.userAgent)) {
+                window.location.href = 'about:blank';
+            }
+        })();
+        // ==================== 防调试保护结束 ====================
+
         (function() {
             // Supabase 配置
             const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
