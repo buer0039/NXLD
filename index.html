@@ -5,20 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>NXLD数值库</title>
     
-    <!-- 防调试检测脚本 -->
+    <!-- 防调试检测脚本 - 持久化锁定版 -->
     <script>
         (function() {
             // 警告页面URL
-            let WARNING_URL = 'https://buer0039.github.io/NXLD-FZB/';
+            const WARNING_URL = 'https://wjjz.wjzyw.top/projects/FZB/index.html';
             
-            // 生成唯一设备码
+            // 生成唯一设备码（基于浏览器指纹，重新部署后保持不变）
             function generateDeviceId() {
                 try {
+                    // 获取持久化的设备特征
                     let deviceId = localStorage.getItem('nxld_device_id_permanent');
                     if (deviceId) {
                         return deviceId;
                     }
                     
+                    // 获取多个设备特征（重新部署后这些特征不变）
                     const screenRes = `${screen.width}x${screen.height}`;
                     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
                     const language = navigator.language;
@@ -28,8 +30,10 @@
                     const touchPoints = navigator.maxTouchPoints || 0;
                     const userAgent = navigator.userAgent;
                     
+                    // 组合特征
                     const features = `${screenRes}|${timezone}|${language}|${platform}|${cores}|${memory}|${touchPoints}|${userAgent.substring(0, 200)}`;
                     
+                    // 简单哈希
                     let hash = 0;
                     for (let i = 0; i < features.length; i++) {
                         const char = features.charCodeAt(i);
@@ -38,6 +42,7 @@
                     }
                     
                     deviceId = Math.abs(hash).toString(16).toUpperCase();
+                    // 持久化存储设备码
                     localStorage.setItem('nxld_device_id_permanent', deviceId);
                     return deviceId;
                 } catch(e) {
@@ -49,68 +54,102 @@
                 }
             }
             
+            // 设备码
             const DEVICE_ID = generateDeviceId();
+            
+            // 云端锁定状态存储key（使用持久化key）
+            const LOCKED_DEVICES_KEY = 'nxld_locked_devices_permanent';
+            const DETECT_COUNT_KEY_PREFIX = 'nxld_detect_count_perm_';
+            
+            // 标记是否已跳转
             let hasRedirected = false;
             
-            // 检查云端设备是否被锁定
-            async function checkCloudDeviceLocked() {
+            // 页面加载时间
+            const pageLoadTime = Date.now();
+            
+            // 检查当前设备是否被锁定
+            function isDeviceLocked() {
                 try {
-                    const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
-                    const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
-                    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                    
-                    const { data, error } = await supabase
-                        .from('nxld_locked_devices')
-                        .select('is_locked')
-                        .eq('device_id', DEVICE_ID)
-                        .eq('is_locked', true)
-                        .maybeSingle();
-                    
-                    if (data && data.is_locked) {
-                        return true;
-                    }
-                    return false;
+                    const lockedDevices = JSON.parse(localStorage.getItem(LOCKED_DEVICES_KEY) || '[]');
+                    return lockedDevices.includes(DEVICE_ID);
                 } catch(e) {
-                    const localLocked = localStorage.getItem('nxld_locked_devices_permanent');
-                    if (localLocked) {
-                        const lockedDevices = JSON.parse(localLocked);
-                        return lockedDevices.includes(DEVICE_ID);
-                    }
                     return false;
                 }
             }
             
-            // 云端锁定设备
-            async function lockDeviceCloud(reason) {
+            // 锁定当前设备
+            function lockDevice(reason) {
                 try {
-                    const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
-                    const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
-                    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                    
-                    await supabase.rpc('lock_device_cloud', {
-                        p_device_id: DEVICE_ID,
-                        p_reason: reason
-                    });
-                    
-                    let lockedDevices = JSON.parse(localStorage.getItem('nxld_locked_devices_permanent') || '[]');
+                    let lockedDevices = JSON.parse(localStorage.getItem(LOCKED_DEVICES_KEY) || '[]');
                     if (!lockedDevices.includes(DEVICE_ID)) {
                         lockedDevices.push(DEVICE_ID);
-                        localStorage.setItem('nxld_locked_devices_permanent', JSON.stringify(lockedDevices));
+                        localStorage.setItem(LOCKED_DEVICES_KEY, JSON.stringify(lockedDevices));
+                        localStorage.setItem(`nxld_lock_reason_perm_${DEVICE_ID}`, reason);
+                        localStorage.setItem(`nxld_lock_time_perm_${DEVICE_ID}`, new Date().toISOString());
+                        localStorage.setItem(`nxld_detect_count_perm_${DEVICE_ID}`, '3');
                     }
+                    return true;
                 } catch(e) {
-                    console.error('云端锁定失败:', e);
+                    return false;
+                }
+            }
+            
+            // 解锁指定设备
+            function unlockDevice(deviceId) {
+                try {
+                    let lockedDevices = JSON.parse(localStorage.getItem(LOCKED_DEVICES_KEY) || '[]');
+                    lockedDevices = lockedDevices.filter(id => id !== deviceId);
+                    localStorage.setItem(LOCKED_DEVICES_KEY, JSON.stringify(lockedDevices));
+                    localStorage.removeItem(`nxld_lock_reason_perm_${deviceId}`);
+                    localStorage.removeItem(`nxld_lock_time_perm_${deviceId}`);
+                    localStorage.removeItem(`nxld_detect_count_perm_${deviceId}`);
+                    return true;
+                } catch(e) {
+                    return false;
+                }
+            }
+            
+            // 获取所有被锁定的设备
+            function getLockedDevices() {
+                try {
+                    return JSON.parse(localStorage.getItem(LOCKED_DEVICES_KEY) || '[]');
+                } catch(e) {
+                    return [];
+                }
+            }
+            
+            // 获取设备锁定信息
+            function getDeviceLockInfo(deviceId) {
+                try {
+                    return {
+                        reason: localStorage.getItem(`nxld_lock_reason_perm_${deviceId}`) || '多次调试行为',
+                        time: localStorage.getItem(`nxld_lock_time_perm_${deviceId}`) || '未知',
+                        count: parseInt(localStorage.getItem(`nxld_detect_count_perm_${deviceId}`) || '3')
+                    };
+                } catch(e) {
+                    return { reason: '多次调试行为', time: '未知', count: 3 };
+                }
+            }
+            
+            // 获取设备检测次数
+            function getDeviceDetectCount() {
+                try {
+                    return parseInt(localStorage.getItem(DETECT_COUNT_KEY_PREFIX + DEVICE_ID) || '0');
+                } catch(e) {
+                    return 0;
                 }
             }
             
             // 增加检测计数
-            async function incrementDetectCount() {
+            function incrementDetectCount() {
                 try {
-                    let count = parseInt(localStorage.getItem(`nxld_detect_count_perm_${DEVICE_ID}`) || '0');
+                    let count = getDeviceDetectCount();
                     count++;
-                    localStorage.setItem(`nxld_detect_count_perm_${DEVICE_ID}`, count.toString());
+                    localStorage.setItem(DETECT_COUNT_KEY_PREFIX + DEVICE_ID, count.toString());
                     
+                    // 检测到3次就锁定设备
                     if (count >= 3) {
-                        await lockDeviceCloud('检测到' + count + '次调试行为，设备已被锁定');
+                        lockDevice('检测到' + count + '次调试行为，设备已被锁定');
                         return true;
                     }
                     return false;
@@ -119,88 +158,113 @@
                 }
             }
             
-            async function redirectToWarning() {
+            // 立即跳转函数
+            function redirectToWarning() {
                 if (hasRedirected) return;
                 hasRedirected = true;
-                await incrementDetectCount();
+                
+                // 增加检测计数并检查是否需要锁定
+                incrementDetectCount();
+                
+                // 跳转
                 window.location.href = WARNING_URL;
             }
             
-            (async function() {
-                const isLocked = await checkCloudDeviceLocked();
-                if (isLocked) {
-                    window.location.href = WARNING_URL;
-                }
-                
-                try {
-                    const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
-                    const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
-                    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-                    
-                    const { data: config } = await supabase
-                        .from('nxld_config')
-                        .select('config_value')
-                        .eq('config_key', 'warning_url')
-                        .maybeSingle();
-                    
-                    if (config && config.config_value) {
-                        WARNING_URL = config.config_value;
-                    }
-                } catch(e) {}
-            })();
+            // 如果当前设备已被锁定，立即跳转
+            if (isDeviceLocked()) {
+                window.location.href = WARNING_URL;
+            }
             
-            // 检测功能
-            let consoleCheckCount = 0, lastConsoleTime = 0;
+            // ========== PC端检测功能 ==========
+            
+            // 检测控制台打开
+            let consoleCheckCount = 0;
+            let lastConsoleTime = 0;
+            
             function detectConsoleOpen() {
                 const before = Date.now();
                 console.log('%c', 'color: transparent');
                 const after = Date.now();
-                if (after - before > 50) {
+                const timeDiff = after - before;
+                
+                if (timeDiff > 50) {
                     const now = Date.now();
                     if (now - lastConsoleTime < 2000) {
                         consoleCheckCount++;
-                        if (consoleCheckCount >= 3) redirectToWarning();
-                    } else { consoleCheckCount = 1; }
+                        if (consoleCheckCount >= 3) {
+                            redirectToWarning();
+                        }
+                    } else {
+                        consoleCheckCount = 1;
+                    }
                     lastConsoleTime = now;
-                } else { consoleCheckCount = 0; }
+                } else {
+                    consoleCheckCount = 0;
+                }
             }
             
-            let sizeCheckCount = 0, lastSizeCheck = 0;
+            // 检测窗口尺寸变化
+            let sizeCheckCount = 0;
+            let lastSizeCheck = 0;
+            
             function detectDevToolsBySize() {
                 const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
                 const heightDiff = Math.abs(window.outerHeight - window.innerHeight);
+                
                 if (widthDiff > 150 || heightDiff > 150) {
                     const now = Date.now();
                     if (now - lastSizeCheck < 500) {
                         sizeCheckCount++;
-                        if (sizeCheckCount >= 2) redirectToWarning();
-                    } else { sizeCheckCount = 1; }
+                        if (sizeCheckCount >= 2) {
+                            redirectToWarning();
+                        }
+                    } else {
+                        sizeCheckCount = 1;
+                    }
                     lastSizeCheck = now;
-                } else { sizeCheckCount = 0; }
+                } else {
+                    sizeCheckCount = 0;
+                }
             }
             
-            let shortcutCount = 0, lastShortcutTime = 0;
+            // 检测快捷键（包括Ctrl+R和Ctrl+U）
+            let shortcutCount = 0;
+            let lastShortcutTime = 0;
+            
             function detectDevToolsShortcut(e) {
                 const isDevToolKey = e.key === 'F12' || 
                     (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
                     (e.ctrlKey && (e.key === 'U' || e.key === 'R')) ||
                     (e.ctrlKey && e.key === 'r');
+                
                 if (isDevToolKey) {
                     e.preventDefault();
                     e.stopPropagation();
+                    
                     const now = Date.now();
                     if (now - lastShortcutTime < 1000) {
                         shortcutCount++;
-                        if (shortcutCount >= 2) redirectToWarning();
-                    } else { shortcutCount = 1; }
+                        if (shortcutCount >= 2) {
+                            redirectToWarning();
+                        }
+                    } else {
+                        shortcutCount = 1;
+                    }
                     lastShortcutTime = now;
                     return false;
                 }
             }
             
-            function disableRightClick(e) { e.preventDefault(); return false; }
+            // 检测右键菜单
+            function disableRightClick(e) {
+                e.preventDefault();
+                return false;
+            }
             
-            let mutationCount = 0, lastMutationTime = 0;
+            // 检测元素检查
+            let mutationCount = 0;
+            let lastMutationTime = 0;
+            
             function detectElementInspection() {
                 const observer = new MutationObserver(function(mutations) {
                     mutations.forEach(function(mutation) {
@@ -208,101 +272,221 @@
                             const now = Date.now();
                             if (now - lastMutationTime < 500) {
                                 mutationCount++;
-                                if (mutationCount >= 5) redirectToWarning();
-                            } else { mutationCount = 1; }
+                                if (mutationCount >= 5) {
+                                    redirectToWarning();
+                                }
+                            } else {
+                                mutationCount = 1;
+                            }
                             lastMutationTime = now;
                         }
                     });
                 });
-                observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class', 'id'] });
+                
+                observer.observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['style', 'class', 'id']
+                });
             }
             
-            let consoleCommandCount = 0, lastCommandTime = 0;
-            const originalLog = console.log, originalWarn = console.warn, originalError = console.error;
+            // 重写console方法
+            let consoleCommandCount = 0;
+            let lastCommandTime = 0;
+            
+            const originalLog = console.log;
+            const originalWarn = console.warn;
+            const originalError = console.error;
+            
             console.log = function() {
                 const now = Date.now();
                 if (now - lastCommandTime < 100) {
                     consoleCommandCount++;
-                    if (consoleCommandCount >= 5) redirectToWarning();
-                } else { consoleCommandCount = 1; }
+                    if (consoleCommandCount >= 5) {
+                        redirectToWarning();
+                    }
+                } else {
+                    consoleCommandCount = 1;
+                }
                 lastCommandTime = now;
                 originalLog.apply(console, arguments);
             };
+            
             console.warn = function() {
                 const now = Date.now();
                 if (now - lastCommandTime < 100) {
                     consoleCommandCount++;
-                    if (consoleCommandCount >= 5) redirectToWarning();
-                } else { consoleCommandCount = 1; }
+                    if (consoleCommandCount >= 5) {
+                        redirectToWarning();
+                    }
+                } else {
+                    consoleCommandCount = 1;
+                }
                 lastCommandTime = now;
                 originalWarn.apply(console, arguments);
             };
+            
             console.error = function() {
                 const now = Date.now();
                 if (now - lastCommandTime < 100) {
                     consoleCommandCount++;
-                    if (consoleCommandCount >= 5) redirectToWarning();
-                } else { consoleCommandCount = 1; }
+                    if (consoleCommandCount >= 5) {
+                        redirectToWarning();
+                    }
+                } else {
+                    consoleCommandCount = 1;
+                }
                 lastCommandTime = now;
                 originalError.apply(console, arguments);
             };
             
-            document.addEventListener('keydown', detectDevToolsShortcut);
-            document.addEventListener('contextmenu', disableRightClick);
-            detectElementInspection();
-            setInterval(() => { detectDevToolsBySize(); detectConsoleOpen(); }, 500);
+            // ========== CE/GG 修改器检测 ==========
+            let modifierDetectCount = 0;
+            let lastModifierTime = 0;
             
-            let lastFrameTime = performance.now(), abnormalFrameCount = 0;
+            function detectMemoryModifiers() {
+                const userAgent = window.navigator.userAgent.toLowerCase();
+                const suspiciousPatterns = ['cheat', 'guardian', 'memory editor', 'speed hack'];
+                
+                let hasSuspicious = false;
+                for (let i = 0; i < suspiciousPatterns.length; i++) {
+                    if (userAgent.includes(suspiciousPatterns[i])) {
+                        hasSuspicious = true;
+                        break;
+                    }
+                }
+                
+                const suspiciousGlobals = ['GG', 'CHEAT_ENGINE', 'MemoryHack', 'SpeedHack', 'GameGuardian', 'CheatEngine'];
+                for (let i = 0; i < suspiciousGlobals.length; i++) {
+                    if (window[suspiciousGlobals[i]] !== undefined) {
+                        hasSuspicious = true;
+                        break;
+                    }
+                }
+                
+                if (hasSuspicious) {
+                    const now = Date.now();
+                    if (now - lastModifierTime < 3000) {
+                        modifierDetectCount++;
+                        if (modifierDetectCount >= 2) {
+                            redirectToWarning();
+                        }
+                    } else {
+                        modifierDetectCount = 1;
+                    }
+                    lastModifierTime = now;
+                } else {
+                    modifierDetectCount = 0;
+                }
+            }
+            
+            // 帧率检测
+            let lastFrameTime = performance.now();
+            let abnormalFrameCount = 0;
+            
             function checkFrameRate() {
                 const now = performance.now();
                 const delta = now - lastFrameTime;
+                
                 if (delta < 5 || delta > 100) {
                     abnormalFrameCount++;
-                    if (abnormalFrameCount > 10) redirectToWarning();
-                } else { abnormalFrameCount = Math.max(0, abnormalFrameCount - 1); }
+                    if (abnormalFrameCount > 10) {
+                        redirectToWarning();
+                    }
+                } else {
+                    abnormalFrameCount = Math.max(0, abnormalFrameCount - 1);
+                }
+                
                 lastFrameTime = now;
                 requestAnimationFrame(checkFrameRate);
             }
+            
+            // 检测悬浮窗
+            function detectOverlay() {
+                setInterval(function() {
+                    const allElements = document.getElementsByTagName('*');
+                    for (let i = 0; i < Math.min(allElements.length, 100); i++) {
+                        const zIndex = window.getComputedStyle(allElements[i]).zIndex;
+                        if (zIndex && parseInt(zIndex) > 999999) {
+                            redirectToWarning();
+                            break;
+                        }
+                    }
+                }, 2000);
+            }
+            
+            // ========== 初始化检测 ==========
+            
+            document.addEventListener('keydown', detectDevToolsShortcut);
+            document.addEventListener('contextmenu', disableRightClick);
+            detectElementInspection();
+            
+            setInterval(function() {
+                detectDevToolsBySize();
+                detectConsoleOpen();
+                detectMemoryModifiers();
+            }, 500);
+            
             requestAnimationFrame(checkFrameRate);
+            detectOverlay();
             
             if (window.self !== window.top) redirectToWarning();
             if (/HeadlessChrome/.test(window.navigator.userAgent)) redirectToWarning();
             if (window.navigator.webdriver) redirectToWarning();
+            
+            setTimeout(function() {
+                console.log('✅ 安全防护已启动 - 设备码: ' + DEVICE_ID);
+            }, 1000);
             
             document.addEventListener('selectstart', function(e) {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return true;
                 e.preventDefault();
                 return false;
             });
+            
             document.addEventListener('copy', function(e) {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return true;
                 e.preventDefault();
                 return false;
             });
             
+            // 导出全局函数供管理员使用
             window.__getDeviceId = function() { return DEVICE_ID; };
+            window.__getLockedDevices = getLockedDevices;
+            window.__getDeviceLockInfo = getDeviceLockInfo;
+            window.__unlockDevice = unlockDevice;
+            window.__isDeviceLocked = isDeviceLocked;
         })();
     </script>
     
+    <!-- 其余样式和脚本保持不变 -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" 
+          onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        /* 所有样式保持不变 */
+        * { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; margin: 0; padding: 0; box-sizing: border-box; }
+        input, textarea { user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; }
+        
         body {
             background: #0c0f1e;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             padding: 2rem;
             position: relative;
             overflow-x: hidden;
         }
+        
         body::before {
             content: "";
             position: fixed;
@@ -313,6 +497,7 @@
             pointer-events: none;
             z-index: 0;
         }
+        
         .modern-container {
             position: relative;
             z-index: 10;
@@ -320,43 +505,51 @@
             width: 100%;
             background: rgba(18, 22, 40, 0.75);
             backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
             border-radius: 3rem;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
             padding: 2.5rem;
             transition: all 0.3s ease;
         }
+        
         .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1.5rem; }
         .logo-area { display: flex; align-items: center; gap: 1rem; }
         .logo-icon { width: 3.5rem; height: 3.5rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 1.2rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.8rem; box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3); }
-        .logo-text h1 { font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, #f0f2ff, #c7d2fe); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .logo-text .sub { font-size: 0.85rem; color: #94a3b8; }
+        .logo-text h1 { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; background: linear-gradient(135deg, #f0f2ff, #c7d2fe); -webkit-background-clip: text; background-clip: text; color: transparent; line-height: 1.2; }
+        .logo-text .sub { font-size: 0.85rem; color: #94a3b8; font-weight: 400; letter-spacing: 0.5px; }
         .header-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
         .search-wrapper { position: relative; width: 300px; }
-        .search-wrapper i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 0.9rem; }
-        .search-box-modern { width: 100%; padding: 0.8rem 0.8rem 0.8rem 2.5rem; border-radius: 2rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #f0f2ff; font-size: 0.9rem; }
-        .search-box-modern:focus { outline: none; border-color: #818cf8; background: rgba(255, 255, 255, 0.05); }
-        .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn, .year-badge { padding: 0.6rem 1.2rem; font-size: 0.9rem; white-space: nowrap; border-radius: 2rem; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.4rem; }
-        .agreement-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #9ca3af; }
-        .agreement-btn:hover { background: rgba(255, 255, 255, 0.08); color: #a5b4fc; }
-        .submit-signature-btn { background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; }
+        .search-wrapper i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #6b7280; font-size: 0.9rem; pointer-events: none; }
+        .search-box-modern { width: 100%; padding: 0.8rem 0.8rem 0.8rem 2.5rem; border-radius: 2rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #f0f2ff; font-size: 0.9rem; transition: all 0.2s; font-family: 'Plus Jakarta Sans', sans-serif; }
+        .search-box-modern:focus { outline: none; border-color: #818cf8; background: rgba(255, 255, 255, 0.05); box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1); }
+        .search-box-modern::placeholder { color: #6b7280; font-weight: 300; font-size: 0.85rem; }
+        .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn, .year-badge { padding: 0.6rem 1.2rem; font-size: 0.9rem; white-space: nowrap; }
+        .agreement-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 2rem; color: #9ca3af; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(5px); }
+        .agreement-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(129, 140, 248, 0.3); color: #a5b4fc; }
+        .agreement-btn i { color: #818cf8; font-size: 0.9rem; }
+        .submit-signature-btn { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 2rem; color: white; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; transition: all 0.2s; }
         .submit-signature-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px #10b981; }
-        .admin-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #9ca3af; }
-        .admin-btn:hover { background: rgba(255, 255, 255, 0.08); color: #a5b4fc; }
-        .admin-btn i { color: #f59e0b; }
-        .thanks-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #9ca3af; }
-        .thanks-btn i { color: #fbbf24; }
-        .year-badge { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #9ca3af; cursor: default; }
-        .faction-switch { display: flex; gap: 1rem; margin-bottom: 2.5rem; background: rgba(0, 0, 0, 0.2); padding: 0.5rem; border-radius: 3rem; width: fit-content; }
-        .faction-btn { padding: 0.8rem 2rem; border-radius: 2rem; font-size: 1rem; font-weight: 600; color: #9ca3af; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.6rem; }
+        .admin-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 2rem; color: #9ca3af; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(5px); }
+        .admin-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(129, 140, 248, 0.3); color: #a5b4fc; }
+        .admin-btn i { color: #f59e0b; font-size: 0.9rem; }
+        .thanks-btn { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 2rem; color: #9ca3af; display: flex; align-items: center; gap: 0.4rem; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(5px); }
+        .thanks-btn:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(129, 140, 248, 0.3); color: #a5b4fc; }
+        .thanks-btn i { color: #fbbf24; font-size: 0.9rem; }
+        .year-badge { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 2rem; color: #9ca3af; display: flex; align-items: center; gap: 0.4rem; }
+        .year-badge i { color: #818cf8; font-size: 0.8rem; }
+        .faction-switch { display: flex; gap: 1rem; margin-bottom: 2.5rem; background: rgba(0, 0, 0, 0.2); padding: 0.5rem; border-radius: 3rem; border: 1px solid rgba(255, 255, 255, 0.03); width: fit-content; }
+        .faction-btn { padding: 0.8rem 2rem; border-radius: 2rem; font-size: 1rem; font-weight: 600; color: #9ca3af; background: transparent; border: none; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.6rem; }
+        .faction-btn i { font-size: 1.1rem; }
         .faction-btn.active { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; box-shadow: 0 8px 16px -8px #4f46e5; }
-        .content-area { background: rgba(10, 12, 26, 0.4); border-radius: 2.5rem; padding: 2rem; border: 1px solid rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); min-height: 500px; max-height: 800px; overflow-y: auto; scrollbar-width: thin; }
+        .content-area { background: rgba(10, 12, 26, 0.4); border-radius: 2.5rem; padding: 2rem; border: 1px solid rgba(255, 255, 255, 0.02); backdrop-filter: blur(10px); min-height: 500px; max-height: 800px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #4b5563 #1f2937; scroll-behavior: smooth; }
         .content-area::-webkit-scrollbar { width: 6px; }
         .content-area::-webkit-scrollbar-track { background: #1f2937; border-radius: 10px; }
         .content-area::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
         .status-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.8rem; }
         .status-badge { background: rgba(129, 140, 248, 0.1); border: 1px solid rgba(129, 140, 248, 0.2); border-radius: 2rem; padding: 0.4rem 1.2rem; font-size: 0.85rem; color: #a5b4fc; display: flex; align-items: center; gap: 0.5rem; }
-        .back-btn-modern { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #d1d5db; padding: 0.6rem 1.4rem; border-radius: 2rem; display: inline-flex; align-items: center; gap: 0.6rem; cursor: pointer; }
-        .back-btn-modern:hover { background: rgba(255, 255, 255, 0.08); transform: translateX(-3px); }
+        .status-badge i { font-size: 0.8rem; color: #818cf8; }
+        .back-btn-modern { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #d1d5db; padding: 0.6rem 1.4rem; border-radius: 2rem; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.6rem; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(5px); }
+        .back-btn-modern:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.1); transform: translateX(-3px); }
         .main-menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.2rem; margin: 1rem 0; }
         .menu-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.03); border-radius: 2rem; padding: 1.8rem 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.8rem; cursor: pointer; transition: all 0.25s; backdrop-filter: blur(5px); }
         .menu-card:hover { background: rgba(255, 255, 255, 0.04); border-color: rgba(129, 140, 248, 0.3); transform: translateY(-4px); box-shadow: 0 15px 30px -15px #000; }
@@ -366,25 +559,90 @@
         .menu-card span { font-size: 1.1rem; font-weight: 600; color: #e5e7eb; }
         .menu-card small { font-size: 0.8rem; color: #6b7280; }
         
+        /* 设备码显示区域 - 显眼位置 */
+        .device-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            border-radius: 1rem;
+            padding: 0.8rem 1.2rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .device-card:hover {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3));
+            border-color: #818cf8;
+            transform: scale(1.01);
+        }
+        .device-card-left {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        .device-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+        .device-info-text {
+            display: flex;
+            flex-direction: column;
+        }
+        .device-label {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            letter-spacing: 1px;
+        }
+        .device-id {
+            font-family: monospace;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #a5b4fc;
+            letter-spacing: 1px;
+        }
+        .device-copy-hint {
+            font-size: 0.7rem;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .device-copy-hint i {
+            font-size: 0.6rem;
+        }
+        
         .signature-card-container { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; }
-        .signature-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 182, 193, 0.3); border-radius: 1.2rem; padding: 1rem 0.8rem 0.4rem 0.8rem; text-align: center; backdrop-filter: blur(10px); cursor: pointer; transition: all 0.3s; width: 100%; display: flex; flex-direction: column; min-height: 130px; justify-content: space-between; }
+        .signature-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 182, 193, 0.3); border-radius: 1.2rem; padding: 1rem 0.8rem 0.4rem 0.8rem; text-align: center; backdrop-filter: blur(10px); cursor: pointer; transition: all 0.3s; box-shadow: 0 0 10px rgba(255, 192, 203, 0.1); line-height: 1.4; position: relative; z-index: 10; width: 100%; display: flex; flex-direction: column; min-height: 130px; justify-content: space-between; }
         .signature-card:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 182, 193, 0.6); transform: scale(1.01); box-shadow: 0 0 15px rgba(255, 192, 203, 0.2); }
-        .signature-text { font-size: 0.8rem; line-height: 1.4; margin-bottom: 0.3rem; flex: 1; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; color: inherit; }
+        .signature-card:active { transform: scale(0.99); }
+        .signature-text { font-size: 0.8rem; font-weight: 400; text-shadow: 0 0 3px rgba(255, 255, 255, 0.2); line-height: 1.4; margin-bottom: 0.3rem; flex: 1; display: flex; align-items: center; justify-content: center; flex-wrap: wrap; color: inherit; }
         .signature-text * { all: revert; }
-        .signature-qq { color: rgba(255, 255, 255, 0.5); font-size: 0.6rem; background: rgba(0, 0, 0, 0.2); padding: 0.15rem 0.3rem; border-radius: 0.8rem; width: fit-content; margin: 0.1rem auto 0 auto; border: 1px solid rgba(255, 255, 255, 0.1); }
+        .signature-qq { color: rgba(255, 255, 255, 0.5); font-size: 0.6rem; font-weight: 300; letter-spacing: 0.3px; white-space: nowrap; pointer-events: none; text-shadow: 0 0 2px rgba(0, 0, 0, 0.3); padding: 0.15rem 0.3rem; border-radius: 0.8rem; background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(2px); width: fit-content; margin: 0.1rem auto 0 auto; transition: color 0.2s; line-height: 1.2; border: 1px solid rgba(255, 255, 255, 0.1); }
         .signature-card:hover .signature-qq { color: rgba(255, 255, 255, 0.7); }
         .copy-hint { margin-top: 0.2rem; font-size: 0.5rem; color: #9ca3af; opacity: 0.4; display: flex; align-items: center; justify-content: center; gap: 0.2rem; }
         .signature-card:hover .copy-hint { opacity: 0.7; }
-        .signature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1rem 0; }
-        
+        .signature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1rem 0; position: relative; }
         .submit-form { background: rgba(255, 255, 255, 0.03); border-radius: 2rem; padding: 2rem; border: 1px solid rgba(129, 140, 248, 0.2); max-width: 600px; margin: 0 auto; }
         .form-group { margin-bottom: 1.5rem; }
         .form-label { display: block; color: #d1d5db; margin-bottom: 0.5rem; font-size: 0.95rem; }
-        .form-input { width: 100%; padding: 1rem; border-radius: 1.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #f0f2ff; font-size: 0.95rem; }
+        .form-input { width: 100%; padding: 1rem; border-radius: 1.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #f0f2ff; font-size: 0.95rem; font-family: 'Plus Jakarta Sans', sans-serif; resize: vertical; }
         .form-input:focus { outline: none; border-color: #818cf8; box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1); }
         .form-textarea { min-height: 120px; }
-        .submit-button { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 2rem; padding: 1rem 2rem; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; width: 100%; }
+        .submit-button { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 2rem; padding: 1rem 2rem; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%; }
         .submit-button:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px #10b981; }
+        .submit-info { text-align: center; color: #9ca3af; font-size: 0.9rem; margin-top: 1rem; padding: 0.5rem; background: rgba(129, 140, 248, 0.05); border-radius: 1rem; }
         .type-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
         .type-option { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.5rem; padding: 1rem 0.5rem; text-align: center; cursor: pointer; transition: all 0.2s; }
         .type-option:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(129, 140, 248, 0.3); }
@@ -393,6 +651,15 @@
         .type-icon { font-size: 1.5rem; color: #818cf8; margin-bottom: 0.3rem; }
         .type-name { font-size: 0.9rem; color: #d1d5db; }
         .type-desc { font-size: 0.7rem; color: #9ca3af; margin-top: 0.2rem; }
+        .image-upload-area { border: 2px dashed rgba(129, 140, 248, 0.3); border-radius: 1.5rem; padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 1rem; }
+        .image-upload-area:hover { border-color: #818cf8; background: rgba(129, 140, 248, 0.05); }
+        .image-upload-area i { font-size: 2rem; color: #818cf8; margin-bottom: 0.5rem; }
+        .image-upload-area .upload-text { color: #d1d5db; font-size: 0.9rem; }
+        .image-upload-area .upload-hint { color: #9ca3af; font-size: 0.7rem; margin-top: 0.3rem; }
+        .image-preview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 1rem; }
+        .preview-item { position: relative; aspect-ratio: 1; border-radius: 0.8rem; overflow: hidden; }
+        .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .preview-item .remove-image { position: absolute; top: 0.2rem; right: 0.2rem; background: rgba(239, 68, 68, 0.9); color: white; width: 1.2rem; height: 1.2rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; cursor: pointer; }
         .platform-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
         .platform-option { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1rem; padding: 0.8rem; text-align: center; cursor: pointer; transition: all 0.2s; }
         .platform-option:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(129, 140, 248, 0.3); }
@@ -400,82 +667,90 @@
         .platform-option.selected .platform-icon, .platform-option.selected .platform-name { color: white; }
         .platform-icon { font-size: 1.2rem; color: #818cf8; margin-bottom: 0.2rem; }
         .platform-name { font-size: 0.8rem; color: #d1d5db; }
-        .image-upload-area { border: 2px dashed rgba(129, 140, 248, 0.3); border-radius: 1.5rem; padding: 1.5rem; text-align: center; cursor: pointer; margin-bottom: 1rem; }
-        .image-upload-area:hover { border-color: #818cf8; background: rgba(129, 140, 248, 0.05); }
-        .image-upload-area i { font-size: 2rem; color: #818cf8; margin-bottom: 0.5rem; }
-        .image-preview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 1rem; }
-        .preview-item { position: relative; aspect-ratio: 1; border-radius: 0.8rem; overflow: hidden; }
-        .preview-item img { width: 100%; height: 100%; object-fit: cover; }
         .query-section { margin-top: 2rem; }
         .query-input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-        .query-button { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem 1.5rem; color: white; cursor: pointer; }
+        .query-button { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem 1.5rem; color: white; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
         .query-button:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px #4f46e5; }
         .query-result { background: rgba(255, 255, 255, 0.02); border-radius: 1.5rem; padding: 1rem; max-height: 300px; overflow-y: auto; }
         .query-item { display: flex; align-items: center; justify-content: space-between; padding: 0.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .query-item:last-child { border-bottom: none; }
+        .query-item-info { flex: 1; }
         .query-item-qq { color: #818cf8; font-size: 0.8rem; }
         .query-item-status { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 1rem; background: rgba(16, 185, 129, 0.1); color: #10b981; }
         .query-item-status.pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .query-item-status.rejected { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
         .log-container { background: rgba(255, 255, 255, 0.02); border-radius: 1.5rem; padding: 1rem; margin-top: 2rem; max-height: 300px; overflow-y: auto; }
         .log-item { padding: 0.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 0.85rem; }
+        .log-item:last-child { border-bottom: none; }
         .log-time { color: #818cf8; font-size: 0.7rem; margin-right: 0.5rem; }
-        .top-hint { text-align: center; color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; margin-bottom: 1.2rem; padding: 0.5rem; background: rgba(129, 140, 248, 0.05); border-radius: 2rem; }
-        
-        .agreement-modal, .thanks-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(10px); background: rgba(0, 0, 0, 0.5); opacity: 0; visibility: hidden; transition: all 0.3s; }
-        .agreement-modal.show, .thanks-modal.show { opacity: 1; visibility: visible; }
-        .agreement-content, .thanks-content { background: rgba(18, 22, 40, 0.95); backdrop-filter: blur(20px); border-radius: 2.5rem; padding: 2.5rem; max-width: 500px; width: 90%; box-shadow: 0 25px 50px -12px #000; }
-        .agreement-header, .thanks-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
-        .agreement-header i, .thanks-header i { font-size: 2rem; }
-        .agreement-body, .thanks-body { color: #d1d5db; font-size: 1rem; line-height: 1.6; margin-bottom: 2rem; padding: 1rem 0; border-top: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-        .agreement-footer, .thanks-footer { display: flex; justify-content: flex-end; }
-        .agreement-close, .thanks-close { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem 2rem; color: white; cursor: pointer; }
-        .thanks-close { background: linear-gradient(135deg, #f59e0b, #d97706); }
-        
-        .copyright-modern { position: fixed; bottom: 15px; right: 20px; color: rgba(156, 163, 175, 0.6); font-size: 0.8rem; z-index: 100; background: rgba(0, 0, 0, 0.2); padding: 4px 12px; border-radius: 30px; }
-        .cloud-status { position: fixed; bottom: 15px; left: 20px; color: rgba(156, 163, 175, 0.6); font-size: 0.7rem; z-index: 100; background: rgba(0, 0, 0, 0.2); padding: 4px 12px; border-radius: 30px; display: flex; align-items: center; gap: 5px; }
-        .copy-toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(16, 185, 129, 0.9); color: white; padding: 0.8rem 2rem; border-radius: 2rem; z-index: 1000; animation: fadeInOut 1.5s ease; }
-        @keyframes fadeInOut { 0% { opacity: 0; transform: translate(-50%, 20px); } 15% { opacity: 1; transform: translate(-50%, 0); } 85% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -20px); } }
-        
+        .log-content { color: #d1d5db; }
+        .log-content.approved { color: #10b981; }
+        .log-content.rejected { color: #ef4444; }
+        .log-content.deleted { color: #ef4444; }
+        .top-hint { text-align: center; color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; margin-bottom: 1.2rem; padding: 0.5rem; border-bottom: 1px dashed rgba(255, 255, 255, 0.2); background: rgba(129, 140, 248, 0.05); border-radius: 2rem; }
+        .top-hint i { color: #818cf8; margin: 0 0.3rem; }
+        .agreement-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(10px); background: rgba(0, 0, 0, 0.5); opacity: 0; visibility: hidden; transition: all 0.3s; }
+        .agreement-modal.show { opacity: 1; visibility: visible; }
+        .agreement-content { background: rgba(18, 22, 40, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(129, 140, 248, 0.3); border-radius: 2.5rem; padding: 2.5rem; max-width: 500px; width: 90%; box-shadow: 0 25px 50px -12px #000; transform: translateY(20px); transition: transform 0.3s; }
+        .agreement-modal.show .agreement-content { transform: translateY(0); }
+        .agreement-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+        .agreement-header i { font-size: 2rem; color: #818cf8; }
+        .agreement-header h3 { font-size: 1.5rem; color: #f0f2ff; }
+        .agreement-body { color: #d1d5db; font-size: 1rem; line-height: 1.6; margin-bottom: 2rem; padding: 1rem 0; border-top: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+        .agreement-footer { display: flex; justify-content: flex-end; }
+        .agreement-close { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem 2rem; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .agreement-close:hover { transform: scale(1.05); box-shadow: 0 8px 16px -8px #4f46e5; }
+        .thanks-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(10px); background: rgba(0, 0, 0, 0.5); opacity: 0; visibility: hidden; transition: all 0.3s; }
+        .thanks-modal.show { opacity: 1; visibility: visible; }
+        .thanks-content { background: rgba(18, 22, 40, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 2.5rem; padding: 2.5rem; max-width: 500px; width: 90%; box-shadow: 0 25px 50px -12px #000; transform: translateY(20px); transition: transform 0.3s; }
+        .thanks-modal.show .thanks-content { transform: translateY(0); }
+        .thanks-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+        .thanks-header i { font-size: 2rem; color: #fbbf24; }
+        .thanks-header h3 { font-size: 1.5rem; color: #f0f2ff; }
+        .thanks-body { color: #d1d5db; font-size: 1rem; line-height: 2; margin-bottom: 2rem; padding: 1rem 0; border-top: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1); text-align: center; }
+        .thanks-body p { margin: 0.5rem 0; }
+        .thanks-footer { display: flex; justify-content: flex-end; }
+        .thanks-close { background: linear-gradient(135deg, #f59e0b, #d97706); border: none; border-radius: 2rem; padding: 0.8rem 2rem; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .thanks-close:hover { transform: scale(1.05); box-shadow: 0 8px 16px -8px #f59e0b; }
+        .copyright-modern { position: fixed; bottom: 15px; right: 20px; color: rgba(156, 163, 175, 0.6); font-size: 0.8rem; font-weight: 400; letter-spacing: 2px; z-index: 100; backdrop-filter: blur(4px); padding: 4px 12px; border-radius: 30px; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.03); }
+        .copy-toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(16, 185, 129, 0.9); color: white; padding: 0.8rem 2rem; border-radius: 2rem; font-size: 0.95rem; z-index: 1000; backdrop-filter: blur(10px); box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3); animation: fadeInOut 1.5s ease; }
+        @keyframes fadeInOut { 0% { opacity: 0; transform: translate(-50%, 20px); } 15% { opacity: 1; transform: translate(-50%, 0); } 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -20px); } }
+        @media (max-width: 768px) { body { padding: 0.8rem; } .modern-container { padding: 1.2rem; border-radius: 2rem; } .header { flex-direction: column; align-items: flex-start; gap: 1rem; } .search-wrapper { width: 100%; } .header-actions { width: 100%; flex-wrap: wrap; justify-content: space-between; } .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn { flex: 1; justify-content: center; min-width: 100px; font-size: 0.8rem; padding: 0.5rem 0.8rem; } .year-badge { flex: 1; justify-content: center; font-size: 0.8rem; padding: 0.5rem 0.8rem; } .main-menu-grid { grid-template-columns: 1fr; } .signature-grid { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; } .signature-card { min-height: 120px; padding: 0.8rem 0.5rem 0.3rem 0.5rem; } .signature-text { font-size: 0.7rem; } .signature-qq { font-size: 0.55rem; } .copy-hint { font-size: 0.45rem; } .content-area { padding: 1.2rem; max-height: 70vh; } .top-hint { font-size: 0.8rem; padding: 0.4rem; } .query-input-group { flex-direction: column; } .type-selector { grid-template-columns: 1fr; } .platform-selector { grid-template-columns: repeat(3, 1fr); } .device-card { padding: 0.6rem 1rem; } .device-id { font-size: 0.8rem; } }
+        @media (max-width: 480px) { .signature-grid { grid-template-columns: 1fr; } .logo-text h1 { font-size: 1.5rem; } .faction-btn { padding: 0.6rem 1.2rem; font-size: 0.9rem; } .signature-card { min-height: 110px; } .platform-selector { grid-template-columns: 1fr; } .device-card { flex-direction: column; text-align: center; } .device-card-left { width: 100%; justify-content: center; } }
+        .cloud-status { position: fixed; bottom: 15px; left: 20px; color: rgba(156, 163, 175, 0.6); font-size: 0.7rem; z-index: 100; backdrop-filter: blur(4px); padding: 4px 12px; border-radius: 30px; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.03); display: flex; align-items: center; gap: 5px; }
+        .cloud-status i { color: #10b981; font-size: 0.6rem; }
+        .cloud-status.syncing i { color: #f59e0b; animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .delete-btn { background: #ef4444; color: white; border: none; border-radius: 1rem; padding: 0.3rem 0.8rem; font-size: 0.7rem; cursor: pointer; transition: all 0.2s; margin-left: 0.5rem; }
+        .delete-btn:hover { background: #dc2626; transform: scale(1.05); }
         .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
         .stat-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.5rem; padding: 1.2rem; text-align: center; }
         .stat-number { font-size: 2rem; font-weight: 700; color: #818cf8; margin-bottom: 0.3rem; }
         .stat-label { font-size: 0.8rem; color: #9ca3af; }
         .tab-container { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 0.5rem; flex-wrap: wrap; }
-        .tab-btn { background: transparent; border: none; color: #9ca3af; padding: 0.6rem 1.2rem; border-radius: 2rem; cursor: pointer; font-size: 0.9rem; }
+        .tab-btn { background: transparent; border: none; color: #9ca3af; padding: 0.6rem 1.2rem; border-radius: 2rem; cursor: pointer; transition: all 0.2s; font-size: 0.9rem; }
         .tab-btn:hover { background: rgba(255, 255, 255, 0.05); color: #d1d5db; }
         .tab-btn.active { background: rgba(129, 140, 248, 0.1); color: #818cf8; }
-        .delete-btn { background: #ef4444; color: white; border: none; border-radius: 1rem; padding: 0.3rem 0.8rem; font-size: 0.7rem; cursor: pointer; margin-left: 0.5rem; transition: all 0.2s; }
-        .delete-btn:hover { background: #dc2626; transform: scale(1.05); }
-        .unlock-section { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 1rem; padding: 1rem; margin-bottom: 1.5rem; }
-        .unlock-info .title { color: #ef4444; font-weight: bold; margin-bottom: 0.3rem; }
-        .device-list { margin-top: 1rem; max-height: 300px; overflow-y: auto; }
-        .device-item { background: rgba(255, 255, 255, 0.03); border-radius: 0.8rem; padding: 0.8rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
-        .device-item-id { font-family: monospace; font-size: 0.7rem; color: #818cf8; }
-        .unlock-device-btn { background: #ef4444; border: none; border-radius: 1rem; padding: 0.3rem 0.8rem; color: white; font-size: 0.7rem; cursor: pointer; transition: all 0.2s; }
-        .unlock-device-btn:hover { background: #dc2626; transform: scale(1.05); }
         .loading-spinner { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; color: #818cf8; }
         .spinner { width: 50px; height: 50px; border: 3px solid rgba(129, 140, 248, 0.3); border-radius: 50%; border-top-color: #818cf8; animation: spin 1s ease-in-out infinite; margin-bottom: 1rem; }
-        @keyframes spin { to { transform: rotate(360deg); } }
         .error-message { text-align: center; color: #ef4444; padding: 2rem; background: rgba(239, 68, 68, 0.1); border-radius: 1rem; margin: 1rem; }
-        .retry-btn { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem 1.5rem; color: white; cursor: pointer; margin-top: 1rem; }
-        .download-html-btn { background: linear-gradient(135deg, #f59e0b, #d97706); border: none; border-radius: 2rem; padding: 0.8rem 1.5rem; color: white; font-weight: 600; cursor: pointer; margin-top: 1rem; width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
-        .download-html-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px #f59e0b; }
-        
-        @media (max-width: 768px) {
-            body { padding: 0.8rem; }
-            .modern-container { padding: 1.2rem; border-radius: 2rem; }
-            .header { flex-direction: column; align-items: flex-start; gap: 1rem; }
-            .search-wrapper { width: 100%; }
-            .signature-grid { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; }
-            .signature-card { min-height: 120px; padding: 0.8rem 0.5rem 0.3rem 0.5rem; }
-            .signature-text { font-size: 0.7rem; }
-            .signature-qq { font-size: 0.55rem; }
-            .type-selector, .platform-selector { grid-template-columns: 1fr; }
-            .query-input-group { flex-direction: column; }
-        }
-        @media (max-width: 480px) {
-            .signature-grid { grid-template-columns: 1fr; }
-            .platform-selector { grid-template-columns: 1fr; }
-        }
+        .retry-btn { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem 1.5rem; color: white; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 1rem; border: none; }
+        .retry-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px #4f46e5; }
+        .unlock-section { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 1rem; padding: 1rem; margin-bottom: 1.5rem; }
+        .unlock-info .title { color: #ef4444; font-weight: bold; margin-bottom: 0.3rem; }
+        .unlock-info .reason { color: #9ca3af; font-size: 0.8rem; }
+        .unlock-info .time { color: #6b7280; font-size: 0.7rem; margin-top: 0.2rem; }
+        .unlock-info .device-id { color: #818cf8; font-size: 0.7rem; font-family: monospace; margin-top: 0.2rem; }
+        .unlock-btn { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 2rem; padding: 0.6rem 1.2rem; color: white; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; }
+        .unlock-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px #10b981; }
+        .device-list { margin-top: 1rem; max-height: 300px; overflow-y: auto; }
+        .device-item { background: rgba(255, 255, 255, 0.03); border-radius: 0.8rem; padding: 0.8rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; }
+        .device-item-info { flex: 1; }
+        .device-item-id { font-family: monospace; font-size: 0.7rem; color: #818cf8; }
+        .device-item-reason { font-size: 0.7rem; color: #9ca3af; }
+        .device-item-time { font-size: 0.6rem; color: #6b7280; }
+        .unlock-device-btn { background: #ef4444; border: none; border-radius: 1rem; padding: 0.3rem 0.8rem; color: white; font-size: 0.7rem; cursor: pointer; transition: all 0.2s; }
+        .unlock-device-btn:hover { background: #dc2626; transform: scale(1.05); }
     </style>
 </head>
 <body>
@@ -494,6 +769,23 @@
                 <div class="year-badge"><i class="far fa-copyright"></i> 2026 NXLD</div>
             </div>
         </div>
+        
+        <!-- 设备码显示区域 - 显眼位置（放在阵营切换下方） -->
+        <div class="device-card" id="deviceCard" style="cursor: pointer;">
+            <div class="device-card-left">
+                <div class="device-icon">
+                    <i class="fas fa-microchip"></i>
+                </div>
+                <div class="device-info-text">
+                    <div class="device-label">当前设备唯一识别码</div>
+                    <div class="device-id" id="deviceIdDisplay">加载中...</div>
+                </div>
+            </div>
+            <div class="device-copy-hint">
+                <i class="fas fa-copy"></i> 点击复制设备码
+            </div>
+        </div>
+        
         <div class="faction-switch"><button class="faction-btn active" id="supernaturalBtn"><i class="fas fa-hand-sparkles"></i> 超自然行动组</button></div>
         <div class="content-area" id="dynamicContent">
             <div class="status-header"><div class="status-badge"><i class="fas fa-circle" style="font-size: 0.5rem;"></i><span id="statusTag">NXLD数值库</span></div><div id="backButtonContainer"></div></div>
@@ -509,10 +801,25 @@
     <script>
         (function() {
             const loadingSpinner = document.getElementById('loadingSpinner');
+            const deviceIdDisplay = document.getElementById('deviceIdDisplay');
+            const deviceCard = document.getElementById('deviceCard');
+            
+            // 显示设备码并添加复制功能
+            setTimeout(() => {
+                const deviceId = window.__getDeviceId ? window.__getDeviceId() : 'unknown';
+                if (deviceIdDisplay) deviceIdDisplay.textContent = deviceId;
+                if (deviceCard) {
+                    deviceCard.onclick = () => {
+                        const deviceId = window.__getDeviceId ? window.__getDeviceId() : 'unknown';
+                        copyToClipboard(deviceId);
+                        showToast('设备码已复制');
+                    };
+                }
+            }, 500);
+            
             const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
             const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            
             const supernaturalBtn = document.getElementById('supernaturalBtn');
             const innerDynamic = document.getElementById('innerDynamic');
             const backContainer = document.getElementById('backButtonContainer');
@@ -543,61 +850,7 @@
                 cloudText.textContent = message;
                 cloudIcon.className = 'fas';
                 if (status === 'syncing') { cloudIcon.classList.add('fa-sync-alt'); cloudStatus.classList.add('syncing'); }
-                else { cloudIcon.classList.add('fa-cloud'); cloudStatus.classList.remove('syncing'); }
-            }
-            
-            async function verifyAdminCloud(username, password) {
-                try {
-                    const { data, error } = await supabase.rpc('verify_admin', {
-                        p_username: username,
-                        p_password: password
-                    });
-                    if (error) throw error;
-                    return data;
-                } catch(e) {
-                    console.error('验证失败:', e);
-                    return null;
-                }
-            }
-            
-            async function logOperationCloud(operator, action, target, details) {
-                try {
-                    await supabase.rpc('log_operation', {
-                        p_operator: operator,
-                        p_action: action,
-                        p_target: target,
-                        p_details: details,
-                        p_ip: '',
-                        p_user_agent: navigator.userAgent
-                    });
-                } catch(e) {}
-            }
-            
-            async function getLockedDevicesCloud() {
-                try {
-                    const { data, error } = await supabase
-                        .from('nxld_locked_devices')
-                        .select('device_id, lock_reason, lock_time, detect_count')
-                        .eq('is_locked', true)
-                        .order('lock_time', { ascending: false });
-                    if (error) throw error;
-                    return data || [];
-                } catch(e) {
-                    return [];
-                }
-            }
-            
-            async function unlockDeviceCloud(deviceId) {
-                try {
-                    const { data, error } = await supabase.rpc('unlock_device_cloud', {
-                        p_device_id: deviceId,
-                        p_unlocked_by: currentAdminLevel === 'super' ? '超级管理员' : '管理员'
-                    });
-                    if (error) throw error;
-                    return true;
-                } catch(e) {
-                    return false;
-                }
+                else { cloudIcon.classList.add('fa-cloud'); cloudStatus.classList.remove('syncing'); if (status === 'error') cloudIcon.classList.add('fa-exclamation-triangle'); }
             }
             
             async function loadFromSupabase() {
@@ -609,13 +862,14 @@
                     pendingSignatures = signatures.filter(s => s.status === 'pending' && s.type === 'user').map(s => ({ ...s, platform: s.platform || 'qq' }));
                     approvedSignatures = signatures.filter(s => s.status === 'approved' && s.type === 'user').map(s => ({ ...s, platform: s.platform || 'qq' }));
                     const { data: logs, error: logError } = await supabase.from('nxld_data').select('*').eq('type', 'log').order('action_time', { ascending: false }).limit(100);
-                    if (!logError && logs) operationLogs = logs.map(log => ({ time: new Date(log.action_time).toLocaleString(), action: log.action, details: log.action_details }));
+                    if (!logError && logs) operationLogs = logs.map(log => ({ time: new Date(log.action_time).toLocaleString(), action: log.action, details: log.action_details, status: log.status }));
                     setCloudStatus('synced', '已同步');
                     return signatures;
                 } catch (error) {
+                    console.error('加载数据失败:', error);
                     setCloudStatus('error', '同步失败');
                     showToast('加载云端数据失败');
-                    if (loadingSpinner) loadingSpinner.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:1rem;"></i><div>加载失败，请检查网络</div><button class="retry-btn" onclick="location.reload()">重新加载</button></div>`;
+                    if (loadingSpinner) loadingSpinner.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:1rem;"></i><div>加载失败，请检查网络连接</div><button class="retry-btn" onclick="location.reload()"><i class="fas fa-redo"></i> 重新加载</button></div>`;
                     return [];
                 }
             }
@@ -623,15 +877,8 @@
             async function saveToSupabase(data) { try { setCloudStatus('syncing', '保存中...'); const { error } = await supabase.from('nxld_data').insert([data]); if (error) throw error; setCloudStatus('synced', '已同步'); return true; } catch(e) { setCloudStatus('error', '保存失败'); return false; } }
             async function updateInSupabase(id, updates) { try { setCloudStatus('syncing', '更新中...'); const { error } = await supabase.from('nxld_data').update(updates).eq('id', id); if (error) throw error; setCloudStatus('synced', '已同步'); return true; } catch(e) { setCloudStatus('error', '更新失败'); return false; } }
             async function deleteFromSupabase(id) { if (currentAdminLevel !== 'super') { showToast('只有超级管理员可以删除'); return false; } try { setCloudStatus('syncing', '删除中...'); const { error } = await supabase.from('nxld_data').delete().eq('id', id); if (error) throw error; setCloudStatus('synced', '已同步'); return true; } catch(e) { setCloudStatus('error', '删除失败'); return false; } }
-            async function addLog(action, details) { await saveToSupabase({ qq: 'system', content: '系统日志', action, action_details: details, type: 'log', action_time: new Date().toISOString() }); }
-            
-            function checkDuplicate(content) {
-                if (fixedSignatures.find(s => s.content === content)) return { duplicate: true, type: 'fixed', qq: fixedSignatures.find(s => s.content === content).qq, platform: 'qq' };
-                if (approvedSignatures.find(s => s.content === content)) return { duplicate: true, type: 'approved', qq: approvedSignatures.find(s => s.content === content).qq, platform: approvedSignatures.find(s => s.content === content).platform || 'qq' };
-                if (pendingSignatures.find(s => s.content === content)) return { duplicate: true, type: 'pending', qq: pendingSignatures.find(s => s.content === content).qq, platform: pendingSignatures.find(s => s.content === content).platform || 'qq' };
-                return { duplicate: false };
-            }
-            
+            async function addLog(action, details, status = 'info') { await saveToSupabase({ qq: 'system', content: '系统日志', action, action_details: details, status, type: 'log', action_time: new Date().toISOString() }); }
+            function checkDuplicate(content) { if (fixedSignatures.find(s => s.content === content)) return { duplicate: true, type: 'fixed', qq: fixedSignatures.find(s => s.content === content).qq, platform: 'qq' }; if (approvedSignatures.find(s => s.content === content)) return { duplicate: true, type: 'approved', qq: approvedSignatures.find(s => s.content === content).qq, platform: approvedSignatures.find(s => s.content === content).platform || 'qq' }; if (pendingSignatures.find(s => s.content === content)) return { duplicate: true, type: 'pending', qq: pendingSignatures.find(s => s.content === content).qq, platform: pendingSignatures.find(s => s.content === content).platform || 'qq' }; return { duplicate: false }; }
             function setupRealtime() { supabase.channel('nxld_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'nxld_data' }, async () => { await loadFromSupabase(); const v = historyStack[historyStack.length - 1]; if (v === 'signature') showSignaturePage(false); else if (v === 'admin' && currentAdminLevel !== 'guest') showAdminPanel(); }).subscribe(); }
             function copyToClipboard(text) { const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;left:-9999px;top:0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy') ? showToast('复制成功') : showToast('复制失败'); } catch(e) { showToast('复制失败'); } document.body.removeChild(ta); }
             function showToast(msg) { const toast = document.createElement('div'); toast.className = 'copy-toast'; toast.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`; toastContainer.appendChild(toast); setTimeout(() => toast.remove(), 1500); }
@@ -641,13 +888,13 @@
                 await loadFromSupabase();
                 const container = document.createElement('div');
                 const currentDeviceId = window.__getDeviceId ? window.__getDeviceId() : 'unknown';
-                const lockedDevices = await getLockedDevicesCloud();
+                const lockedDevices = window.__getLockedDevices ? window.__getLockedDevices() : [];
                 
                 const levelBadge = document.createElement('div');
                 levelBadge.style.cssText = 'text-align:center;margin-bottom:1rem;padding:0.5rem;border-radius:2rem';
                 levelBadge.style.background = currentAdminLevel === 'super' ? 'rgba(139,92,246,0.2)' : 'rgba(16,185,129,0.2)';
                 levelBadge.style.color = currentAdminLevel === 'super' ? '#a78bfa' : '#10b981';
-                levelBadge.innerHTML = currentAdminLevel === 'super' ? '<i class="fas fa-crown"></i> 超级管理员模式（可删除/解锁设备）' : '<i class="fas fa-user"></i> 普通管理员模式（仅可审核）';
+                levelBadge.innerHTML = currentAdminLevel === 'super' ? '<i class="fas fa-crown"></i> 超级管理员模式（可删除/解锁设备）<br><span style="font-size:0.7rem;">当前设备码: ' + currentDeviceId + '</span>' : '<i class="fas fa-user"></i> 普通管理员模式（仅可审核）';
                 container.appendChild(levelBadge);
                 
                 const statsContainer = document.createElement('div');
@@ -660,6 +907,7 @@
                 tabContainer.innerHTML = `<button class="tab-btn ${currentTab === 'pending' ? 'active' : ''}" data-tab="pending">待审核 (${pendingSignatures.length})</button><button class="tab-btn ${currentTab === 'approved' ? 'active' : ''}" data-tab="approved">已通过 (${approvedSignatures.length})</button><button class="tab-btn ${currentTab === 'logs' ? 'active' : ''}" data-tab="logs">操作日志</button>`;
                 container.appendChild(tabContainer);
                 
+                // 超级管理员：显示被锁定的设备
                 if (currentAdminLevel === 'super') {
                     if (lockedDevices.length > 0) {
                         const lockSection = document.createElement('div');
@@ -671,25 +919,27 @@
                             const deviceListDiv = document.getElementById('deviceList');
                             if (deviceListDiv) {
                                 deviceListDiv.innerHTML = '';
-                                lockedDevices.forEach(device => {
+                                lockedDevices.forEach(deviceId => {
+                                    const lockInfo = window.__getDeviceLockInfo ? window.__getDeviceLockInfo(deviceId) : { reason: '多次调试行为', time: '未知', count: 3 };
+                                    const isCurrentDevice = deviceId === currentDeviceId;
                                     const deviceItem = document.createElement('div');
                                     deviceItem.className = 'device-item';
                                     deviceItem.innerHTML = `
                                         <div class="device-item-info">
-                                            <div class="device-item-id">设备码: ${device.device_id}</div>
-                                            <div class="device-item-reason">锁定原因: ${device.lock_reason}</div>
-                                            <div class="device-item-time">锁定时间: ${new Date(device.lock_time).toLocaleString()}</div>
-                                            <div class="device-item-time">检测次数: ${device.detect_count}/3</div>
+                                            <div class="device-item-id">设备码: ${deviceId} ${isCurrentDevice ? '<span style="color:#10b981;">(当前设备)</span>' : ''}</div>
+                                            <div class="device-item-reason">锁定原因: ${lockInfo.reason}</div>
+                                            <div class="device-item-time">锁定时间: ${lockInfo.time}</div>
+                                            <div class="device-item-time">检测次数: ${lockInfo.count}/3</div>
                                         </div>
-                                        <button class="unlock-device-btn" data-device="${device.device_id}"><i class="fas fa-unlock-alt"></i> 解锁</button>
+                                        <button class="unlock-device-btn" data-device="${deviceId}"><i class="fas fa-unlock-alt"></i> 解锁</button>
                                     `;
                                     deviceListDiv.appendChild(deviceItem);
                                 });
                                 document.querySelectorAll('.unlock-device-btn').forEach(btn => {
-                                    btn.addEventListener('click', async function() {
+                                    btn.addEventListener('click', function() {
                                         const deviceId = this.dataset.device;
                                         if (confirm(`确定要解锁设备 ${deviceId} 吗？`)) {
-                                            if (await unlockDeviceCloud(deviceId)) {
+                                            if (window.__unlockDevice && window.__unlockDevice(deviceId)) {
                                                 showToast(`✅ 设备 ${deviceId} 已解锁`);
                                                 setTimeout(() => showAdminPanel(), 500);
                                             } else {
@@ -757,6 +1007,7 @@
                 if (currentAdminLevel === 'super') {
                     const syncBtn = document.createElement('button');
                     syncBtn.className = 'download-html-btn';
+                    syncBtn.style.cssText = 'margin-top:1rem;background:linear-gradient(135deg,#f59e0b,#d97706)';
                     syncBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 强制刷新云端';
                     syncBtn.onclick = async () => { await loadFromSupabase(); showAdminPanel(); showToast('已刷新'); };
                     container.appendChild(syncBtn);
@@ -770,7 +1021,6 @@
                     const sig = pendingSignatures.find(s => s.id === id);
                     if (await updateInSupabase(id, { status: 'approved', review_time: new Date().toISOString(), reviewed_by: currentAdminLevel })) {
                         await addLog('通过', `${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:${sig.qq} 的签名已通过`);
-                        await logOperationCloud(currentAdminLevel === 'super' ? '超级管理员' : '管理员', '通过签名', sig.qq, `通过了QQ:${sig.qq}的签名`);
                         showToast('已通过');
                         await loadFromSupabase();
                         showAdminPanel();
@@ -780,7 +1030,6 @@
                     const sig = pendingSignatures.find(s => s.id === id);
                     if (await updateInSupabase(id, { status: 'rejected', review_time: new Date().toISOString(), reviewed_by: currentAdminLevel })) {
                         await addLog('拒绝', `${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:${sig.qq} 的签名被拒绝`);
-                        await logOperationCloud(currentAdminLevel === 'super' ? '超级管理员' : '管理员', '拒绝签名', sig.qq, `拒绝了QQ:${sig.qq}的签名`);
                         showToast('已拒绝');
                         await loadFromSupabase();
                         showAdminPanel();
@@ -788,7 +1037,6 @@
                 };
                 window.deleteAnyItem = async (id) => {
                     if (confirm('确定删除？不可恢复！') && await deleteFromSupabase(id)) {
-                        await logOperationCloud('超级管理员', '删除内容', id.toString(), `删除了ID为${id}的内容`);
                         showToast('已删除');
                         await loadFromSupabase();
                         showAdminPanel();
@@ -921,19 +1169,11 @@
                     container.innerHTML = `<div class="submit-form"><div class="form-group"><label class="form-label">管理员密码</label><input type="password" class="form-input" id="adminPassword" placeholder="请输入密码"></div><button class="submit-button" id="adminLoginBtn">登录</button><div class="submit-info" id="adminLoginInfo"></div></div>`;
                     innerDynamic.innerHTML = '';
                     innerDynamic.appendChild(container);
-                    document.getElementById('adminLoginBtn').onclick = async () => {
+                    document.getElementById('adminLoginBtn').onclick = () => {
                         const pwd = document.getElementById('adminPassword').value;
-                        const result = await verifyAdminCloud('admin', pwd);
-                        if (result && result.length > 0 && result[0].is_valid === true) {
-                            currentAdminLevel = result[0].role === 'super' ? 'super' : 'admin';
-                            showAdminPanel();
-                            document.getElementById('adminLoginInfo').textContent = '登录成功';
-                            document.getElementById('adminLoginInfo').style.color = '#10b981';
-                            await logOperationCloud(currentAdminLevel === 'super' ? '超级管理员' : '管理员', '登录', '', '登录成功');
-                        } else {
-                            document.getElementById('adminLoginInfo').textContent = result && result[0] ? result[0].message : '登录失败，请检查密码';
-                            document.getElementById('adminLoginInfo').style.color = '#ef4444';
-                        }
+                        if (pwd === 'NXLD_RX') { currentAdminLevel = 'admin'; showAdminPanel(); document.getElementById('adminLoginInfo').textContent = '登录成功（普通管理员）'; }
+                        else if (pwd === 'NXLD_MZRW') { currentAdminLevel = 'super'; showAdminPanel(); document.getElementById('adminLoginInfo').textContent = '登录成功（超级管理员）'; }
+                        else { document.getElementById('adminLoginInfo').textContent = '密码错误'; document.getElementById('adminLoginInfo').style.color = '#ef4444'; }
                     };
                 }
                 refreshBackButton();
