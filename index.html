@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>NXLD数值库</title>
     
-    <!-- 防调试检测脚本 - 移除所有debugger暂停 -->
+    <!-- 防调试检测脚本 - 增强版 -->
     <script>
         (function() {
             // 警告页面URL
@@ -28,9 +28,6 @@
                 try {
                     const locked = localStorage.getItem(LOCK_KEY);
                     if (locked === 'true') {
-                        const lockTime = localStorage.getItem(LOCK_TIME_KEY);
-                        const lockReason = localStorage.getItem(LOCK_REASON_KEY) || '多次检测到调试行为';
-                        console.log('网站已被锁定，原因：' + lockReason);
                         return true;
                     }
                     return false;
@@ -104,63 +101,62 @@
                 window.location.href = WARNING_URL;
             }
             
-            // ========== 开发者工具检测（不使用debugger） ==========
+            // ========== 增强检测 ==========
             
-            // 检测窗口尺寸变化
+            // 立即执行一次检测
+            let immediateDetectCount = 0;
+            
+            function immediateDetection() {
+                // 检测控制台是否打开
+                const before = Date.now();
+                console.log('%c', 'color: transparent');
+                const after = Date.now();
+                if (after - before > 50) {
+                    immediateDetectCount++;
+                    if (immediateDetectCount >= 1) {
+                        redirectToWarning();
+                    }
+                }
+            }
+            
+            // 延迟100ms后执行立即检测
+            setTimeout(immediateDetection, 100);
+            
+            // 检测窗口尺寸变化（快速响应）
             let sizeCheckCount = 0;
+            let lastSizeCheck = 0;
             
             function detectDevToolsBySize() {
-                if (Date.now() - pageLoadTime < 3000) return;
-                
                 const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
                 const heightDiff = Math.abs(window.outerHeight - window.innerHeight);
                 
-                if (widthDiff > 200 || heightDiff > 200) {
-                    sizeCheckCount++;
-                    if (sizeCheckCount >= 2) {
-                        redirectToWarning();
+                if (widthDiff > 150 || heightDiff > 150) {
+                    const now = Date.now();
+                    if (now - lastSizeCheck < 500) {
+                        sizeCheckCount++;
+                        if (sizeCheckCount >= 2) {
+                            redirectToWarning();
+                        }
+                    } else {
+                        sizeCheckCount = 1;
                     }
+                    lastSizeCheck = now;
                 } else {
                     sizeCheckCount = 0;
                 }
             }
             
-            // 检测控制台打开
-            let consoleCheckCount = 0;
-            let lastConsoleTime = 0;
-            
-            function detectConsoleOpen() {
-                if (Date.now() - pageLoadTime < 3000) return;
-                
-                const before = Date.now();
-                console.log('%c', 'color: transparent');
-                const after = Date.now();
-                const timeDiff = after - before;
-                
-                if (timeDiff > 50) {
-                    const now = Date.now();
-                    if (now - lastConsoleTime < 2000) {
-                        consoleCheckCount++;
-                        if (consoleCheckCount >= 3) {
-                            redirectToWarning();
-                        }
-                    } else {
-                        consoleCheckCount = 1;
-                    }
-                    lastConsoleTime = now;
-                } else {
-                    consoleCheckCount = 0;
-                }
-            }
-            
-            // 检测快捷键
+            // 检测快捷键（增强版，包括Ctrl+U）
             let shortcutCount = 0;
             let lastShortcutTime = 0;
             
             function detectDevToolsShortcut(e) {
+                // 检测所有调试相关快捷键
                 const isDevToolKey = e.key === 'F12' || 
                     (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
-                    (e.ctrlKey && (e.key === 'U' || e.key === 'S'));
+                    (e.ctrlKey && (e.key === 'U' || e.key === 'S')) ||
+                    (e.key === 'F5') ||
+                    (e.ctrlKey && e.key === 'r');
                 
                 if (isDevToolKey) {
                     e.preventDefault();
@@ -186,6 +182,32 @@
                 return false;
             }
             
+            // 检测控制台打开（高频检测）
+            let consoleCheckCount = 0;
+            let lastConsoleTime = 0;
+            
+            function detectConsoleOpen() {
+                const before = Date.now();
+                console.log('%c', 'color: transparent');
+                const after = Date.now();
+                const timeDiff = after - before;
+                
+                if (timeDiff > 50) {
+                    const now = Date.now();
+                    if (now - lastConsoleTime < 1000) {
+                        consoleCheckCount++;
+                        if (consoleCheckCount >= 2) {
+                            redirectToWarning();
+                        }
+                    } else {
+                        consoleCheckCount = 1;
+                    }
+                    lastConsoleTime = now;
+                } else {
+                    consoleCheckCount = 0;
+                }
+            }
+            
             // 检测元素检查
             let mutationCount = 0;
             let lastMutationTime = 0;
@@ -197,7 +219,7 @@
                             const now = Date.now();
                             if (now - lastMutationTime < 500) {
                                 mutationCount++;
-                                if (mutationCount >= 10) {
+                                if (mutationCount >= 5) {
                                     redirectToWarning();
                                 }
                             } else {
@@ -226,7 +248,7 @@
                 const now = Date.now();
                 if (now - lastCommandTime < 100) {
                     consoleCommandCount++;
-                    if (consoleCommandCount >= 5) {
+                    if (consoleCommandCount >= 3) {
                         redirectToWarning();
                     }
                 } else {
@@ -240,7 +262,7 @@
                 const now = Date.now();
                 if (now - lastCommandTime < 100) {
                     consoleCommandCount++;
-                    if (consoleCommandCount >= 5) {
+                    if (consoleCommandCount >= 3) {
                         redirectToWarning();
                     }
                 } else {
@@ -254,7 +276,7 @@
                 const now = Date.now();
                 if (now - lastCommandTime < 100) {
                     consoleCommandCount++;
-                    if (consoleCommandCount >= 5) {
+                    if (consoleCommandCount >= 3) {
                         redirectToWarning();
                     }
                 } else {
@@ -270,8 +292,6 @@
             let lastModifierTime = 0;
             
             function detectMemoryModifiers() {
-                if (Date.now() - pageLoadTime < 5000) return;
-                
                 const userAgent = window.navigator.userAgent.toLowerCase();
                 const suspiciousPatterns = ['cheat', 'guardian', 'memory editor', 'speed hack'];
                 
@@ -286,15 +306,6 @@
                 const suspiciousGlobals = ['GG', 'CHEAT_ENGINE', 'MemoryHack', 'SpeedHack', 'GameGuardian', 'CheatEngine'];
                 for (let i = 0; i < suspiciousGlobals.length; i++) {
                     if (window[suspiciousGlobals[i]] !== undefined) {
-                        hasSuspicious = true;
-                        break;
-                    }
-                }
-                
-                const scripts = document.getElementsByTagName('script');
-                for (let i = 0; i < scripts.length; i++) {
-                    const src = scripts[i].src || '';
-                    if (src.includes('cheat') || src.includes('guardian') || src.includes('hack')) {
                         hasSuspicious = true;
                         break;
                     }
@@ -326,7 +337,7 @@
                 
                 if (delta < 5 || delta > 100) {
                     abnormalFrameCount++;
-                    if (abnormalFrameCount > 10) {
+                    if (abnormalFrameCount > 5) {
                         redirectToWarning();
                     }
                 } else {
@@ -348,28 +359,27 @@
                             break;
                         }
                     }
-                }, 5000);
+                }, 2000);
             }
             
-            // ========== 初始化检测 ==========
+            // ========== 初始化检测（缩短检测时间） ==========
             
             document.addEventListener('keydown', detectDevToolsShortcut);
             document.addEventListener('contextmenu', disableRightClick);
             detectElementInspection();
             
+            // 高频检测（每0.5秒检测一次）
             setInterval(function() {
                 detectDevToolsBySize();
                 detectConsoleOpen();
                 detectMemoryModifiers();
-            }, 2000);
+            }, 500);
             
-            setTimeout(() => {
-                requestAnimationFrame(checkFrameRate);
-            }, 5000);
+            // 启动帧率检测
+            requestAnimationFrame(checkFrameRate);
             
-            setTimeout(() => {
-                detectOverlay();
-            }, 3000);
+            // 启动悬浮窗检测
+            detectOverlay();
             
             // 检测iframe
             if (window.self !== window.top) {
@@ -389,9 +399,9 @@
             // 检测开启成功提示
             setTimeout(function() {
                 console.log('✅ 安全防护已启动 - 检测到3次调试行为将永久锁定网站');
-            }, 1000);
+            }, 500);
             
-            // 显示提示（如果有alert，会被用户看到）
+            // 显示提示
             setTimeout(function() {
                 const style = document.createElement('style');
                 style.textContent = `
@@ -415,8 +425,8 @@
                 tip.className = 'security-tip';
                 tip.innerHTML = '🔒 安全防护已启动';
                 document.body.appendChild(tip);
-                setTimeout(() => tip.remove(), 3000);
-            }, 2000);
+                setTimeout(() => tip.remove(), 2000);
+            }, 500);
             
             // ========== 正常用户保护 ==========
             
@@ -451,7 +461,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* 所有样式保持不变 - 只保留必要的 */
+        /* 所有样式保持不变 */
         * {
             user-select: none;
             -webkit-user-select: none;
@@ -1828,6 +1838,62 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 16px -8px #4f46e5;
         }
+
+        /* 解锁按钮样式 */
+        .unlock-section {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .unlock-info {
+            flex: 1;
+        }
+
+        .unlock-info .title {
+            color: #ef4444;
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+
+        .unlock-info .reason {
+            color: #9ca3af;
+            font-size: 0.8rem;
+        }
+
+        .unlock-info .time {
+            color: #6b7280;
+            font-size: 0.7rem;
+            margin-top: 0.2rem;
+        }
+
+        .unlock-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            border-radius: 2rem;
+            padding: 0.6rem 1.2rem;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .unlock-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px -8px #10b981;
+        }
     </style>
 </head>
 <body>
@@ -2203,7 +2269,7 @@
                     .replace(/<u>/g, '<u>').replace(/<\/u>/g, '</u>');
             }
 
-            // 管理员面板 - 新增解锁功能
+            // 管理员面板 - 新增解锁UI
             async function showAdminPanel() {
                 await loadFromSupabase();
                 const container = document.createElement('div');
@@ -2212,19 +2278,26 @@
                 const isLocked = localStorage.getItem('nxld_site_locked') === 'true';
                 const lockReason = localStorage.getItem('nxld_lock_reason') || '无';
                 const lockTime = localStorage.getItem('nxld_lock_time') || '未知';
+                const detectCount = parseInt(localStorage.getItem('nxld_detect_count') || '0');
                 
                 if (isLocked && currentAdminLevel === 'super') {
-                    // 超级管理员可以看到解锁按钮
-                    const lockWarning = document.createElement('div');
-                    lockWarning.style.cssText = 'background:rgba(239,68,68,0.2);border:1px solid #ef4444;border-radius:1rem;padding:1rem;margin-bottom:1.5rem;text-align:center';
-                    lockWarning.innerHTML = `
-                        <i class="fas fa-lock" style="color:#ef4444;font-size:1.5rem;margin-bottom:0.5rem;display:block"></i>
-                        <div style="color:#ef4444;font-weight:bold;margin-bottom:0.5rem">⚠️ 网站已被锁定</div>
-                        <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:0.5rem">原因: ${lockReason}</div>
-                        <div style="color:#9ca3af;font-size:0.7rem;margin-bottom:1rem">锁定时间: ${lockTime}</div>
-                        <button class="query-button" id="unlockSiteBtn" style="background:#10b981">🔓 解锁网站</button>
+                    // 超级管理员可以看到解锁UI（放在操作日志右边）
+                    const unlockSection = document.createElement('div');
+                    unlockSection.className = 'unlock-section';
+                    unlockSection.innerHTML = `
+                        <div class="unlock-info">
+                            <div class="title">
+                                <i class="fas fa-lock"></i> 网站已被锁定
+                            </div>
+                            <div class="reason">原因: ${lockReason}</div>
+                            <div class="time">锁定时间: ${lockTime}</div>
+                            <div class="time">检测次数: ${detectCount}/3</div>
+                        </div>
+                        <button class="unlock-btn" id="unlockSiteBtn">
+                            <i class="fas fa-unlock-alt"></i> 解锁网站
+                        </button>
                     `;
-                    container.appendChild(lockWarning);
+                    container.appendChild(unlockSection);
                     
                     document.getElementById('unlockSiteBtn').addEventListener('click', function() {
                         if (confirm('确定要解锁网站吗？解锁后用户可以正常访问。')) {
@@ -2237,15 +2310,20 @@
                         }
                     });
                 } else if (isLocked) {
-                    // 非超级管理员看到锁定提示，无法操作
-                    const lockWarning = document.createElement('div');
-                    lockWarning.style.cssText = 'background:rgba(239,68,68,0.2);border:1px solid #ef4444;border-radius:1rem;padding:1rem;margin-bottom:1.5rem;text-align:center';
-                    lockWarning.innerHTML = `
-                        <i class="fas fa-lock" style="color:#ef4444;font-size:1.5rem;margin-bottom:0.5rem;display:block"></i>
-                        <div style="color:#ef4444;font-weight:bold;margin-bottom:0.5rem">⚠️ 网站已被锁定</div>
-                        <div style="color:#9ca3af;font-size:0.8rem">请联系超级管理员解锁</div>
+                    // 非超级管理员看到锁定提示
+                    const lockSection = document.createElement('div');
+                    lockSection.className = 'unlock-section';
+                    lockSection.style.background = 'rgba(239,68,68,0.1)';
+                    lockSection.innerHTML = `
+                        <div class="unlock-info">
+                            <div class="title">
+                                <i class="fas fa-lock"></i> 网站已被锁定
+                            </div>
+                            <div class="reason">原因: ${lockReason}</div>
+                            <div class="time">请联系超级管理员解锁</div>
+                        </div>
                     `;
-                    container.appendChild(lockWarning);
+                    container.appendChild(lockSection);
                 }
                 
                 const levelBadge = document.createElement('div');
