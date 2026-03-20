@@ -2,265 +2,9 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>NXLD数值库</title>
-    
-    <!-- 防调试检测脚本 - 立即跳转版 -->
-    <script>
-        (function() {
-            // 警告页面URL
-            const WARNING_URL = 'https://buer0039.github.io/NXLD-FZB/';
-            
-            // 标记是否已跳转
-            let hasRedirected = false;
-            
-            // 立即跳转函数（无延迟）
-            function redirectToWarning() {
-                if (hasRedirected) return;
-                hasRedirected = true;
-                
-                // 清空所有存储
-                try {
-                    localStorage.clear();
-                    sessionStorage.clear();
-                } catch(e) {}
-                
-                // 立即跳转
-                window.location.href = WARNING_URL;
-            }
-            
-            // ========== 开发者工具立即检测 ==========
-            
-            // 检测窗口尺寸变化（立即执行）
-            function detectDevToolsBySize() {
-                const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
-                const heightDiff = Math.abs(window.outerHeight - window.innerHeight);
-                
-                if (widthDiff > 150 || heightDiff > 150) {
-                    redirectToWarning();
-                }
-            }
-            
-            // 检测控制台打开（通过console.log执行时间）
-            function detectConsoleOpen() {
-                const before = Date.now();
-                console.log('%c', 'color: transparent');
-                const after = Date.now();
-                if (after - before > 50) {
-                    redirectToWarning();
-                }
-            }
-            
-            // 检测快捷键
-            function detectDevToolsShortcut(e) {
-                const isDevToolKey = e.key === 'F12' || 
-                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
-                    (e.ctrlKey && (e.key === 'U' || e.key === 'S'));
-                
-                if (isDevToolKey) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    redirectToWarning();
-                    return false;
-                }
-            }
-            
-            // 检测右键菜单
-            function disableRightClick(e) {
-                e.preventDefault();
-                return false;
-            }
-            
-            // 重写console方法，检测控制台输入
-            const originalLog = console.log;
-            const originalWarn = console.warn;
-            const originalError = console.error;
-            
-            console.log = function() {
-                redirectToWarning();
-                originalLog.apply(console, arguments);
-            };
-            
-            console.warn = function() {
-                redirectToWarning();
-                originalWarn.apply(console, arguments);
-            };
-            
-            console.error = function() {
-                redirectToWarning();
-                originalError.apply(console, arguments);
-            };
-            
-            // ========== CE/GG 修改器立即检测 ==========
-            
-            // 检测内存修改器特征
-            function detectMemoryModifiers() {
-                // 检测UserAgent
-                const userAgent = window.navigator.userAgent.toLowerCase();
-                const suspiciousPatterns = ['cheat', 'guardian', 'memory', 'hack', 'speed', 'modifier'];
-                
-                for (let i = 0; i < suspiciousPatterns.length; i++) {
-                    if (userAgent.includes(suspiciousPatterns[i])) {
-                        // 保存检测到的修改器类型
-                        window._detectedModifier = suspiciousPatterns[i];
-                        redirectToWarning();
-                        break;
-                    }
-                }
-                
-                // 检测全局变量
-                const suspiciousGlobals = ['GG', 'CHEAT_ENGINE', 'MemoryHack', 'SpeedHack', 'GameGuardian', 'CheatEngine'];
-                for (let i = 0; i < suspiciousGlobals.length; i++) {
-                    if (window[suspiciousGlobals[i]] !== undefined) {
-                        window._detectedModifier = suspiciousGlobals[i];
-                        redirectToWarning();
-                        break;
-                    }
-                }
-                
-                // 检测是否有注入的脚本
-                const scripts = document.getElementsByTagName('script');
-                for (let i = 0; i < scripts.length; i++) {
-                    const src = scripts[i].src || '';
-                    if (src.includes('cheat') || src.includes('guardian') || src.includes('hack')) {
-                        window._detectedModifier = src;
-                        redirectToWarning();
-                        break;
-                    }
-                }
-            }
-            
-            // 帧率异常检测（立即启动）
-            let frameCount = 0;
-            let lastFrameTime = performance.now();
-            
-            function checkFrameRate() {
-                const now = performance.now();
-                const delta = now - lastFrameTime;
-                
-                // 如果帧率异常快（<5ms）或异常慢（>100ms）
-                if (delta < 5 || delta > 100) {
-                    frameCount++;
-                    if (frameCount > 3) {
-                        window._detectedModifier = 'Frame Rate Anomaly';
-                        redirectToWarning();
-                    }
-                } else {
-                    frameCount = 0;
-                }
-                
-                lastFrameTime = now;
-                requestAnimationFrame(checkFrameRate);
-            }
-            
-            // 检测悬浮窗
-            function detectOverlay() {
-                const allElements = document.getElementsByTagName('*');
-                for (let i = 0; i < Math.min(allElements.length, 100); i++) {
-                    const zIndex = window.getComputedStyle(allElements[i]).zIndex;
-                    if (zIndex && parseInt(zIndex) > 999999) {
-                        window._detectedModifier = 'Overlay Detected';
-                        redirectToWarning();
-                        break;
-                    }
-                }
-            }
-            
-            // ========== 立即执行所有检测 ==========
-            
-            // 立即执行尺寸检测
-            detectDevToolsBySize();
-            
-            // 立即执行console检测
-            detectConsoleOpen();
-            
-            // 立即执行修改器检测
-            detectMemoryModifiers();
-            
-            // 立即执行悬浮窗检测
-            detectOverlay();
-            
-            // 启动帧率检测
-            requestAnimationFrame(checkFrameRate);
-            
-            // 监听快捷键
-            document.addEventListener('keydown', detectDevToolsShortcut);
-            document.addEventListener('contextmenu', disableRightClick);
-            
-            // 持续快速检测（每500ms一次，减少延迟）
-            setInterval(function() {
-                detectDevToolsBySize();
-                detectConsoleOpen();
-                detectMemoryModifiers();
-                detectOverlay();
-            }, 500);
-            
-            // 检测iframe
-            if (window.self !== window.top) {
-                redirectToWarning();
-            }
-            
-            // 检测无头浏览器
-            if (/HeadlessChrome/.test(window.navigator.userAgent)) {
-                window._detectedModifier = 'Headless Browser';
-                redirectToWarning();
-            }
-            
-            // 检测webdriver
-            if (window.navigator.webdriver || window.navigator.webdriver === true) {
-                window._detectedModifier = 'WebDriver';
-                redirectToWarning();
-            }
-            
-            // ========== 正常用户保护 ==========
-            
-            // 禁止选中和复制（不影响输入框）
-            document.addEventListener('selectstart', function(e) {
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                    return true;
-                }
-                e.preventDefault();
-                return false;
-            });
-            
-            document.addEventListener('copy', function(e) {
-                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
-                    return true;
-                }
-                e.preventDefault();
-                return false;
-            });
-        })();
-    </script>
-    
-    <!-- 其余样式和脚本保持不变 -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
-    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" 
-          onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>安全警告 - NXLD</title>
     <style>
-        /* 所有样式保持不变 */
-        * {
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-        }
-        
-        input, textarea {
-            user-select: text;
-            -webkit-user-select: text;
-            -moz-user-select: text;
-            -ms-user-select: text;
-        }
-        
         * {
             margin: 0;
             padding: 0;
@@ -268,2116 +12,527 @@
         }
 
         body {
-            background: #0c0f1e;
             min-height: 100vh;
+            background: linear-gradient(135deg, #0c0f1e 0%, #0a0c18 100%);
+            font-family: 'Segoe UI', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            padding: 2rem;
             position: relative;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
+        /* 动态背景效果 */
         body::before {
             content: "";
             position: fixed;
             inset: 0;
-            background: radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-                        radial-gradient(circle at 100% 0%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
-                        radial-gradient(circle at 50% 100%, rgba(139, 92, 246, 0.15) 0%, transparent 60%);
+            background: radial-gradient(circle at 20% 40%, rgba(239, 68, 68, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 60%, rgba(99, 102, 241, 0.1) 0%, transparent 50%);
             pointer-events: none;
-            z-index: 0;
         }
 
-        .modern-container {
+        /* 闪烁警告光效 */
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+                border-color: rgba(239, 68, 68, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(239, 68, 68, 0.8);
+                border-color: rgba(239, 68, 68, 0.8);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .warning-container {
             position: relative;
             z-index: 10;
-            max-width: 1600px;
-            width: 100%;
-            background: rgba(18, 22, 40, 0.75);
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-radius: 3rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+            max-width: 550px;
+            width: 90%;
+            margin: 2rem;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        .warning-card {
+            background: rgba(18, 22, 40, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 2rem;
             padding: 2.5rem;
-            transition: all 0.3s ease;
+            text-align: center;
+            border: 2px solid #ef4444;
+            animation: pulse 2s infinite;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
 
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 2.5rem;
-            flex-wrap: wrap;
-            gap: 1.5rem;
-        }
-
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .logo-icon {
-            width: 3.5rem;
-            height: 3.5rem;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            border-radius: 1.2rem;
+        /* 盾牌图标容器 */
+        .shield-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 1.8rem;
-            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3);
+            animation: blink 1.5s ease-in-out infinite;
         }
 
-        .logo-text h1 {
+        .shield-icon i {
+            font-size: 48px;
+            color: white;
+        }
+
+        /* 警告标题 */
+        .warning-title {
             font-size: 2rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #f0f2ff, #c7d2fe);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ef4444, #f97316);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            line-height: 1.2;
         }
 
-        .logo-text .sub {
-            font-size: 0.85rem;
-            color: #94a3b8;
-            font-weight: 400;
-            letter-spacing: 0.5px;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .search-wrapper {
-            position: relative;
-            width: 300px;
-        }
-
-        .search-wrapper i {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #6b7280;
-            font-size: 0.9rem;
-            pointer-events: none;
-        }
-
-        .search-box-modern {
-            width: 100%;
-            padding: 0.8rem 0.8rem 0.8rem 2.5rem;
-            border-radius: 2rem;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            color: #f0f2ff;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        .search-box-modern:focus {
-            outline: none;
-            border-color: #818cf8;
-            background: rgba(255, 255, 255, 0.05);
-            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
-        }
-
-        .search-box-modern::placeholder {
-            color: #6b7280;
-            font-weight: 300;
-            font-size: 0.85rem;
-        }
-
-        .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn, .year-badge {
-            padding: 0.6rem 1.2rem;
-            font-size: 0.9rem;
-            white-space: nowrap;
-        }
-
-        .agreement-btn {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 2rem;
-            color: #9ca3af;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            backdrop-filter: blur(5px);
-        }
-
-        .agreement-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(129, 140, 248, 0.3);
-            color: #a5b4fc;
-        }
-
-        .agreement-btn i {
-            color: #818cf8;
-            font-size: 0.9rem;
-        }
-
-        .submit-signature-btn {
-            background: linear-gradient(135deg, #10b981, #059669);
-            border: none;
-            border-radius: 2rem;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .submit-signature-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px -8px #10b981;
-        }
-
-        .admin-btn {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 2rem;
-            color: #9ca3af;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            backdrop-filter: blur(5px);
-        }
-
-        .admin-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(129, 140, 248, 0.3);
-            color: #a5b4fc;
-        }
-
-        .admin-btn i {
-            color: #f59e0b;
-            font-size: 0.9rem;
-        }
-
-        .thanks-btn {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 2rem;
-            color: #9ca3af;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            backdrop-filter: blur(5px);
-        }
-
-        .thanks-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(129, 140, 248, 0.3);
-            color: #a5b4fc;
-        }
-
-        .thanks-btn i {
-            color: #fbbf24;
-            font-size: 0.9rem;
-        }
-
-        .year-badge {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 2rem;
-            color: #9ca3af;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-
-        .year-badge i {
-            color: #818cf8;
-            font-size: 0.8rem;
-        }
-
-        .faction-switch {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2.5rem;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 0.5rem;
-            border-radius: 3rem;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            width: fit-content;
-        }
-
-        .faction-btn {
-            padding: 0.8rem 2rem;
-            border-radius: 2rem;
-            font-size: 1rem;
-            font-weight: 600;
-            color: #9ca3af;
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.6rem;
-        }
-
-        .faction-btn i {
+        /* 警告子标题 */
+        .warning-subtitle {
             font-size: 1.1rem;
+            color: #fbbf24;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
         }
 
-        .faction-btn.active {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            color: white;
-            box-shadow: 0 8px 16px -8px #4f46e5;
+        /* 警告消息 */
+        .warning-message {
+            color: #9ca3af;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            font-size: 1rem;
         }
 
-        .content-area {
-            background: rgba(10, 12, 26, 0.4);
-            border-radius: 2.5rem;
-            padding: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.02);
-            backdrop-filter: blur(10px);
-            min-height: 500px;
-            max-height: 800px;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: #4b5563 #1f2937;
-            scroll-behavior: smooth;
+        /* 检测到的项目列表 */
+        .detected-list {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 1rem;
+            padding: 1rem;
+            margin: 1.5rem 0;
+            text-align: left;
         }
 
-        .content-area::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .content-area::-webkit-scrollbar-track {
-            background: #1f2937;
-            border-radius: 10px;
-        }
-
-        .content-area::-webkit-scrollbar-thumb {
-            background: #4b5563;
-            border-radius: 10px;
-        }
-
-        .status-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 1.8rem;
-        }
-
-        .status-badge {
-            background: rgba(129, 140, 248, 0.1);
-            border: 1px solid rgba(129, 140, 248, 0.2);
-            border-radius: 2rem;
-            padding: 0.4rem 1.2rem;
+        .detected-title {
+            color: #ef4444;
             font-size: 0.85rem;
-            color: #a5b4fc;
+            margin-bottom: 0.8rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .status-badge i {
+        .detected-title i {
             font-size: 0.8rem;
-            color: #818cf8;
         }
 
-        .back-btn-modern {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            color: #d1d5db;
-            padding: 0.6rem 1.4rem;
+        .detected-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .detected-badge {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
             border-radius: 2rem;
-            font-size: 0.95rem;
+            padding: 0.3rem 0.8rem;
+            font-size: 0.75rem;
+            color: #ef4444;
             display: inline-flex;
             align-items: center;
-            gap: 0.6rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            backdrop-filter: blur(5px);
+            gap: 0.3rem;
         }
 
-        .back-btn-modern:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.1);
-            transform: translateX(-3px);
+        .detected-badge i {
+            font-size: 0.7rem;
         }
 
-        .main-menu-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.2rem;
-            margin: 1rem 0;
+        /* 修改器专用标识 */
+        .modifier-badge {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: #f59e0b;
+            color: #f59e0b;
         }
 
-        .menu-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            border-radius: 2rem;
-            padding: 1.8rem 1rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.8rem;
-            cursor: pointer;
-            transition: all 0.25s;
-            backdrop-filter: blur(5px);
-        }
-
-        .menu-card:hover {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: rgba(129, 140, 248, 0.3);
-            transform: translateY(-4px);
-            box-shadow: 0 15px 30px -15px #000;
-        }
-
-        .menu-icon {
-            width: 3.5rem;
-            height: 3.5rem;
-            border-radius: 1.5rem;
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.6rem;
-        }
-
-        .menu-card.skin .menu-icon {
-            background: linear-gradient(135deg, #b453b6, #d946ef);
-        }
-
-        .menu-card.signature .menu-icon {
-            background: linear-gradient(135deg, #10b981, #059669);
-        }
-
-        .menu-card span {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #e5e7eb;
-        }
-
-        .menu-card small {
-            font-size: 0.8rem;
+        /* 代码标识 */
+        .code-hint {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 0.8rem;
+            padding: 0.8rem;
+            margin: 1.5rem 0;
+            font-family: monospace;
+            font-size: 0.75rem;
             color: #6b7280;
+            letter-spacing: 1px;
         }
 
-        .signature-card-container {
-            position: relative;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .signature-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 182, 193, 0.3);
-            border-radius: 1.2rem;
-            padding: 1rem 0.8rem 0.4rem 0.8rem;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 0 10px rgba(255, 192, 203, 0.1);
-            line-height: 1.4;
-            position: relative;
-            z-index: 10;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            min-height: 130px;
-            justify-content: space-between;
-        }
-
-        .signature-card:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 182, 193, 0.6);
-            transform: scale(1.01);
-            box-shadow: 0 0 15px rgba(255, 192, 203, 0.2);
-        }
-
-        .signature-card:active {
-            transform: scale(0.99);
-        }
-
-        .signature-text {
-            font-size: 0.8rem;
-            font-weight: 400;
-            text-shadow: 0 0 3px rgba(255, 255, 255, 0.2);
-            line-height: 1.4;
-            margin-bottom: 0.3rem;
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            color: inherit;
-        }
-
-        .signature-text * {
-            all: revert;
-        }
-
-        .signature-qq {
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 0.6rem;
-            font-weight: 300;
-            letter-spacing: 0.3px;
-            white-space: nowrap;
-            pointer-events: none;
-            text-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
-            padding: 0.15rem 0.3rem;
-            border-radius: 0.8rem;
-            background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(2px);
-            width: fit-content;
-            margin: 0.1rem auto 0 auto;
-            transition: color 0.2s;
-            line-height: 1.2;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .signature-card:hover .signature-qq {
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .copy-hint {
-            margin-top: 0.2rem;
-            font-size: 0.5rem;
-            color: #9ca3af;
-            opacity: 0.4;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.2rem;
-        }
-
-        .signature-card:hover .copy-hint {
-            opacity: 0.7;
-        }
-
-        .signature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 1rem;
-            margin: 1rem 0;
-            position: relative;
-        }
-
-        .submit-form {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 2rem;
-            padding: 2rem;
-            border: 1px solid rgba(129, 140, 248, 0.2);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            display: block;
-            color: #d1d5db;
-            margin-bottom: 0.5rem;
-            font-size: 0.95rem;
-        }
-
-        .form-input {
-            width: 100%;
+        /* 提示信息 */
+        .info-message {
+            margin-top: 1.5rem;
             padding: 1rem;
-            border-radius: 1.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #f0f2ff;
-            font-size: 0.95rem;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            resize: vertical;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: #818cf8;
-            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
-        }
-
-        .form-textarea {
-            min-height: 120px;
-        }
-
-        .submit-button {
-            background: linear-gradient(135deg, #10b981, #059669);
-            border: none;
-            border-radius: 2rem;
-            padding: 1rem 2rem;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            width: 100%;
-        }
-
-        .submit-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px -8px #10b981;
-        }
-
-        .submit-info {
-            text-align: center;
-            color: #9ca3af;
-            font-size: 0.9rem;
-            margin-top: 1rem;
-            padding: 0.5rem;
-            background: rgba(129, 140, 248, 0.05);
-            border-radius: 1rem;
-        }
-
-        .type-selector {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.8rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .type-option {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 1.5rem;
-            padding: 1rem 0.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .type-option:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(129, 140, 248, 0.3);
-        }
-
-        .type-option.selected {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            border-color: transparent;
-        }
-
-        .type-option.selected .type-icon,
-        .type-option.selected .type-name {
-            color: white;
-        }
-
-        .type-icon {
-            font-size: 1.5rem;
-            color: #818cf8;
-            margin-bottom: 0.3rem;
-        }
-
-        .type-name {
-            font-size: 0.9rem;
-            color: #d1d5db;
-        }
-
-        .type-desc {
-            font-size: 0.7rem;
-            color: #9ca3af;
-            margin-top: 0.2rem;
-        }
-
-        .image-upload-area {
-            border: 2px dashed rgba(129, 140, 248, 0.3);
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 1rem;
-        }
-
-        .image-upload-area:hover {
-            border-color: #818cf8;
-            background: rgba(129, 140, 248, 0.05);
-        }
-
-        .image-upload-area i {
-            font-size: 2rem;
-            color: #818cf8;
-            margin-bottom: 0.5rem;
-        }
-
-        .image-upload-area .upload-text {
-            color: #d1d5db;
-            font-size: 0.9rem;
-        }
-
-        .image-upload-area .upload-hint {
-            color: #9ca3af;
-            font-size: 0.7rem;
-            margin-top: 0.3rem;
-        }
-
-        .image-preview {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .preview-item {
-            position: relative;
-            aspect-ratio: 1;
-            border-radius: 0.8rem;
-            overflow: hidden;
-        }
-
-        .preview-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .preview-item .remove-image {
-            position: absolute;
-            top: 0.2rem;
-            right: 0.2rem;
-            background: rgba(239, 68, 68, 0.9);
-            color: white;
-            width: 1.2rem;
-            height: 1.2rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.6rem;
-            cursor: pointer;
-        }
-
-        .platform-selector {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .platform-option {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 1rem;
-            padding: 0.8rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .platform-option:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(129, 140, 248, 0.3);
-        }
-
-        .platform-option.selected {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-        }
-
-        .platform-option.selected .platform-icon,
-        .platform-option.selected .platform-name {
-            color: white;
-        }
-
-        .platform-icon {
-            font-size: 1.2rem;
-            color: #818cf8;
-            margin-bottom: 0.2rem;
-        }
-
-        .platform-name {
-            font-size: 0.8rem;
-            color: #d1d5db;
-        }
-
-        .query-section {
-            margin-top: 2rem;
-        }
-
-        .query-input-group {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .query-button {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            border: none;
-            border-radius: 2rem;
-            padding: 0.8rem 1.5rem;
-            color: white;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-
-        .query-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px -8px #4f46e5;
-        }
-
-        .query-result {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 1.5rem;
-            padding: 1rem;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .query-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.8rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .query-item:last-child {
-            border-bottom: none;
-        }
-
-        .query-item-info {
-            flex: 1;
-        }
-
-        .query-item-qq {
-            color: #818cf8;
-            font-size: 0.8rem;
-        }
-
-        .query-item-status {
-            font-size: 0.7rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 1rem;
             background: rgba(16, 185, 129, 0.1);
-            color: #10b981;
-        }
-
-        .query-item-status.pending {
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
-        }
-
-        .query-item-status.rejected {
-            background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-        }
-
-        .log-container {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 1.5rem;
-            padding: 1rem;
-            margin-top: 2rem;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .log-item {
-            padding: 0.8rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 0.85rem;
-        }
-
-        .log-item:last-child {
-            border-bottom: none;
-        }
-
-        .log-time {
-            color: #818cf8;
-            font-size: 0.7rem;
-            margin-right: 0.5rem;
-        }
-
-        .log-content {
-            color: #d1d5db;
-        }
-
-        .log-content.approved {
-            color: #10b981;
-        }
-
-        .log-content.rejected {
-            color: #ef4444;
-        }
-
-        .log-content.deleted {
-            color: #ef4444;
-        }
-
-        .top-hint {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.9rem;
-            margin-bottom: 1.2rem;
-            padding: 0.5rem;
-            border-bottom: 1px dashed rgba(255, 255, 255, 0.2);
-            background: rgba(129, 140, 248, 0.05);
-            border-radius: 2rem;
-        }
-
-        .top-hint i {
-            color: #818cf8;
-            margin: 0 0.3rem;
-        }
-
-        .agreement-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-            background: rgba(0, 0, 0, 0.5);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-        }
-
-        .agreement-modal.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .agreement-content {
-            background: rgba(18, 22, 40, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(129, 140, 248, 0.3);
-            border-radius: 2.5rem;
-            padding: 2.5rem;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 25px 50px -12px #000;
-            transform: translateY(20px);
-            transition: transform 0.3s;
-        }
-
-        .agreement-modal.show .agreement-content {
-            transform: translateY(0);
-        }
-
-        .agreement-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .agreement-header i {
-            font-size: 2rem;
-            color: #818cf8;
-        }
-
-        .agreement-header h3 {
-            font-size: 1.5rem;
-            color: #f0f2ff;
-        }
-
-        .agreement-body {
-            color: #d1d5db;
-            font-size: 1rem;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-            padding: 1rem 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .agreement-footer {
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .agreement-close {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            border: none;
-            border-radius: 2rem;
-            padding: 0.8rem 2rem;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .agreement-close:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 16px -8px #4f46e5;
-        }
-
-        .thanks-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-            background: rgba(0, 0, 0, 0.5);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-        }
-
-        .thanks-modal.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        .thanks-content {
-            background: rgba(18, 22, 40, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            border-radius: 2.5rem;
-            padding: 2.5rem;
-            max-width: 500px;
-            width: 90%;
-            box-shadow: 0 25px 50px -12px #000;
-            transform: translateY(20px);
-            transition: transform 0.3s;
-        }
-
-        .thanks-modal.show .thanks-content {
-            transform: translateY(0);
-        }
-
-        .thanks-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .thanks-header i {
-            font-size: 2rem;
-            color: #fbbf24;
-        }
-
-        .thanks-header h3 {
-            font-size: 1.5rem;
-            color: #f0f2ff;
-        }
-
-        .thanks-body {
-            color: #d1d5db;
-            font-size: 1rem;
-            line-height: 2;
-            margin-bottom: 2rem;
-            padding: 1rem 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
-        }
-
-        .thanks-body p {
-            margin: 0.5rem 0;
-        }
-
-        .thanks-footer {
-            display: flex;
-            justify-content: flex-end;
-        }
-
-        .thanks-close {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            border: none;
-            border-radius: 2rem;
-            padding: 0.8rem 2rem;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .thanks-close:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 16px -8px #f59e0b;
-        }
-
-        .copyright-modern {
-            position: fixed;
-            bottom: 15px;
-            right: 20px;
-            color: rgba(156, 163, 175, 0.6);
-            font-size: 0.8rem;
-            font-weight: 400;
-            letter-spacing: 2px;
-            z-index: 100;
-            backdrop-filter: blur(4px);
-            padding: 4px 12px;
-            border-radius: 30px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.03);
-        }
-
-        .copy-toast {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(16, 185, 129, 0.9);
-            color: white;
-            padding: 0.8rem 2rem;
-            border-radius: 2rem;
-            font-size: 0.95rem;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3);
-            animation: fadeInOut 1.5s ease;
-        }
-
-        @keyframes fadeInOut {
-            0% { opacity: 0; transform: translate(-50%, 20px); }
-            15% { opacity: 1; transform: translate(-50%, 0); }
-            85% { opacity: 1; transform: translate(-50%, 0); }
-            100% { opacity: 0; transform: translate(-50%, -20px); }
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 0.8rem;
-            }
-            
-            .modern-container { 
-                padding: 1.2rem; 
-                border-radius: 2rem;
-            }
-            
-            .header { 
-                flex-direction: column; 
-                align-items: flex-start; 
-                gap: 1rem;
-            }
-            
-            .search-wrapper { 
-                width: 100%; 
-            }
-            
-            .header-actions { 
-                width: 100%; 
-                flex-wrap: wrap; 
-                justify-content: space-between;
-            }
-            
-            .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn { 
-                flex: 1; 
-                justify-content: center;
-                min-width: 100px;
-                font-size: 0.8rem;
-                padding: 0.5rem 0.8rem;
-            }
-            
-            .year-badge {
-                flex: 1;
-                justify-content: center;
-                font-size: 0.8rem;
-                padding: 0.5rem 0.8rem;
-            }
-            
-            .main-menu-grid { 
-                grid-template-columns: 1fr; 
-            }
-            
-            .signature-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.8rem;
-            }
-            
-            .signature-card {
-                min-height: 120px;
-                padding: 0.8rem 0.5rem 0.3rem 0.5rem;
-            }
-            
-            .signature-text { 
-                font-size: 0.7rem; 
-            }
-            
-            .signature-qq {
-                font-size: 0.55rem;
-            }
-            
-            .copy-hint {
-                font-size: 0.45rem;
-            }
-            
-            .content-area {
-                padding: 1.2rem;
-                max-height: 70vh;
-            }
-            
-            .top-hint {
-                font-size: 0.8rem;
-                padding: 0.4rem;
-            }
-            
-            .query-input-group {
-                flex-direction: column;
-            }
-            
-            .type-selector {
-                grid-template-columns: 1fr;
-            }
-            
-            .platform-selector {
-                grid-template-columns: repeat(3, 1fr);
-            }
-        }
-
-        @media (max-width: 480px) {
-            .signature-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .logo-text h1 {
-                font-size: 1.5rem;
-            }
-            
-            .faction-btn {
-                padding: 0.6rem 1.2rem;
-                font-size: 0.9rem;
-            }
-            
-            .signature-card {
-                min-height: 110px;
-            }
-            
-            .platform-selector {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .cloud-status {
-            position: fixed;
-            bottom: 15px;
-            left: 20px;
-            color: rgba(156, 163, 175, 0.6);
-            font-size: 0.7rem;
-            z-index: 100;
-            backdrop-filter: blur(4px);
-            padding: 4px 12px;
-            border-radius: 30px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .cloud-status i {
-            color: #10b981;
-            font-size: 0.6rem;
-        }
-
-        .cloud-status.syncing i {
-            color: #f59e0b;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .delete-btn {
-            background: #ef4444;
-            color: white;
-            border: none;
             border-radius: 1rem;
-            padding: 0.3rem 0.8rem;
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-left: 0.5rem;
-        }
-
-        .delete-btn:hover {
-            background: #dc2626;
-            transform: scale(1.05);
-        }
-
-        .admin-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 1.5rem;
-            padding: 1.2rem;
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #818cf8;
-            margin-bottom: 0.3rem;
-        }
-
-        .stat-label {
             font-size: 0.8rem;
-            color: #9ca3af;
-        }
-
-        .tab-container {
+            color: #10b981;
             display: flex;
+            align-items: center;
+            justify-content: center;
             gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            padding-bottom: 0.5rem;
-            flex-wrap: wrap;
         }
 
-        .tab-btn {
-            background: transparent;
-            border: none;
-            color: #9ca3af;
-            padding: 0.6rem 1.2rem;
-            border-radius: 2rem;
-            cursor: pointer;
-            transition: all 0.2s;
+        .info-message i {
             font-size: 0.9rem;
         }
 
-        .tab-btn:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: #d1d5db;
-        }
-
-        .tab-btn.active {
-            background: rgba(129, 140, 248, 0.1);
-            color: #818cf8;
-        }
-
-        .loading-spinner {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 300px;
-            color: #818cf8;
-        }
-        
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(129, 140, 248, 0.3);
+        /* 粒子效果 */
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ef4444;
             border-radius: 50%;
-            border-top-color: #818cf8;
-            animation: spin 1s ease-in-out infinite;
-            margin-bottom: 1rem;
+            opacity: 0.5;
+            animation: float 4s infinite;
+            pointer-events: none;
         }
-        
-        .error-message {
-            text-align: center;
-            color: #ef4444;
-            padding: 2rem;
+
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.5;
+            }
+            90% {
+                opacity: 0.5;
+            }
+            100% {
+                transform: translateY(-100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        /* 禁止选中 */
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* 警告提示条 */
+        .warning-tip {
+            margin-top: 1rem;
+            padding: 0.5rem;
             background: rgba(239, 68, 68, 0.1);
             border-radius: 1rem;
-            margin: 1rem;
+            font-size: 0.7rem;
+            color: #ef4444;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
         }
-        
-        .retry-btn {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            border: none;
-            border-radius: 2rem;
-            padding: 0.8rem 1.5rem;
-            color: white;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 1rem;
-            border: none;
-        }
-        
-        .retry-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px -8px #4f46e5;
+
+        .warning-tip i {
+            font-size: 0.6rem;
         }
     </style>
 </head>
 <body>
-    <div class="modern-container">
-        <div class="header">
-            <div class="logo-area">
-                <div class="logo-icon">
-                    <i class="fas fa-cube"></i>
-                </div>
-                <div class="logo-text">
-                    <h1>NXLD数值库</h1>
-                    <div class="sub">NXLD制作</div>
-                </div>
+    <div class="warning-container">
+        <div class="warning-card">
+            <!-- 盾牌图标 -->
+            <div class="shield-icon">
+                <i class="fas fa-shield-alt"></i>
             </div>
-            <div class="header-actions">
-                <div class="search-wrapper">
-                    <i class="fas fa-search"></i>
-                    <input type="text" class="search-box-modern" id="searchInput" placeholder="搜索内容「只支持对应分类搜索」">
-                </div>
-                <div class="submit-signature-btn" id="submitSignatureBtn">
-                    <i class="fas fa-pen"></i>
-                    提交投稿
-                </div>
-                <div class="agreement-btn" id="agreementBtn">
-                    <i class="fas fa-scale-balanced"></i>
-                    知情协议
-                </div>
-                <div class="admin-btn" id="adminBtn">
-                    <i class="fas fa-crown"></i>
-                    管理员系统
-                </div>
-                <div class="thanks-btn" id="thanksBtn">
-                    <i class="fas fa-heart"></i>
-                    致谢名单
-                </div>
-                <div class="year-badge">
-                    <i class="far fa-copyright"></i>
-                    2026 NXLD
-                </div>
-            </div>
-        </div>
 
-        <div class="faction-switch">
-            <button class="faction-btn active" id="supernaturalBtn">
-                <i class="fas fa-hand-sparkles"></i>
-                超自然行动组
-            </button>
-        </div>
-
-        <div class="content-area" id="dynamicContent">
-            <div class="status-header">
-                <div class="status-badge">
-                    <i class="fas fa-circle" style="font-size: 0.5rem;"></i>
-                    <span id="statusTag">NXLD数值库</span>
-                </div>
-                <div id="backButtonContainer"></div>
+            <!-- 警告标题 -->
+            <h1 class="warning-title">安全警告</h1>
+            <div class="warning-subtitle" id="warningSubtitle">
+                <i class="fas fa-exclamation-triangle"></i> 检测到异常行为
             </div>
-            <div id="innerDynamic" style="min-height: 300px;">
-                <div class="loading-spinner" id="loadingSpinner">
-                    <div class="spinner"></div>
-                    <div>加载中...</div>
+
+            <!-- 警告消息 -->
+            <div class="warning-message">
+                为了保障数据安全和用户隐私，页面已被锁定。<br>
+                请关闭以下工具后刷新页面重新访问。
+            </div>
+
+            <!-- 检测到的项目 - 动态显示 -->
+            <div class="detected-list">
+                <div class="detected-title">
+                    <i class="fas fa-search"></i> 检测到的异常行为：
                 </div>
+                <div class="detected-items" id="detectedItems">
+                    <!-- 默认显示，会被JS动态更新 -->
+                </div>
+            </div>
+
+            <!-- 修改器详细信息（如果是修改器检测） -->
+            <div id="modifierDetail" style="display: none;">
+                <div class="detected-list" style="border-color: #f59e0b;">
+                    <div class="detected-title" style="color: #f59e0b;">
+                        <i class="fas fa-skull"></i> 修改器检测详情：
+                    </div>
+                    <div class="detected-items" id="modifierDetailItems">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 代码标识 -->
+            <div class="code-hint">
+                <i class="fas fa-fingerprint"></i> 事件ID: NXLD-SEC-<span id="eventId">****</span><br>
+                <i class="fas fa-clock"></i> 检测时间: <span id="detectTime"></span>
+            </div>
+
+            <!-- 提示信息 -->
+            <div class="info-message">
+                <i class="fas fa-info-circle"></i> 请关闭开发者工具或修改器后刷新页面
+            </div>
+
+            <!-- 警告提示 -->
+            <div class="warning-tip">
+                <i class="fas fa-shield-virus"></i> 使用非法工具将永久锁定访问权限
             </div>
         </div>
     </div>
 
-    <div class="copyright-modern">© 2026 NXLD</div>
-    <div class="cloud-status" id="cloudStatus">
-        <i class="fas fa-cloud" id="cloudIcon"></i>
-        <span id="cloudText">同步中...</span>
-    </div>
+    <!-- 粒子效果容器 -->
+    <div id="particleContainer"></div>
 
-    <div id="toastContainer"></div>
-
-    <div class="agreement-modal" id="agreementModal">
-        <div class="agreement-content">
-            <div class="agreement-header">
-                <i class="fas fa-scale-balanced"></i>
-                <h3>知情协议</h3>
-            </div>
-            <div class="agreement-body">
-                <p>本网站全部资源均已经过原作者授权。</p>
-                <p>本网站及其内容未经原作者许可严禁倒卖或二次魔改。</p>
-                <p style="margin-top: 1rem; color: #818cf8;">署名：NXLD</p>
-            </div>
-            <div class="agreement-footer">
-                <button class="agreement-close" id="closeAgreement">已知晓</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="thanks-modal" id="thanksModal">
-        <div class="thanks-content">
-            <div class="thanks-header">
-                <i class="fas fa-heart"></i>
-                <h3>致谢名单</h3>
-            </div>
-            <div class="thanks-body">
-                <p>感谢小猫原创、TwT、蜜雪小橙、</p>
-                <p>小夕、祁厌、Jocelyn提供的个签代码</p>
-            </div>
-            <div class="thanks-footer">
-                <button class="thanks-close" id="closeThanks">关闭</button>
-            </div>
-        </div>
-    </div>
-
+    <!-- 添加 Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <script>
         (function() {
-            // 显示加载动画
-            const loadingSpinner = document.getElementById('loadingSpinner');
-            
-            // Supabase 配置
-            const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
-            const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
-            
-            // 初始化 Supabase 客户端
-            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            
-            // 基础变量
-            const supernaturalBtn = document.getElementById('supernaturalBtn');
-            const innerDynamic = document.getElementById('innerDynamic');
-            const backContainer = document.getElementById('backButtonContainer');
-            const statusTag = document.getElementById('statusTag');
-            const searchInput = document.getElementById('searchInput');
-            const toastContainer = document.getElementById('toastContainer');
-            const agreementBtn = document.getElementById('agreementBtn');
-            const agreementModal = document.getElementById('agreementModal');
-            const closeAgreement = document.getElementById('closeAgreement');
-            const cloudStatus = document.getElementById('cloudStatus');
-            const cloudIcon = document.getElementById('cloudIcon');
-            const cloudText = document.getElementById('cloudText');
-            
-            const thanksBtn = document.getElementById('thanksBtn');
-            const thanksModal = document.getElementById('thanksModal');
-            const closeThanks = document.getElementById('closeThanks');
-            const submitSignatureBtn = document.getElementById('submitSignatureBtn');
-            const adminBtn = document.getElementById('adminBtn');
-
-            // 历史栈
-            let historyStack = [];
-            let currentAdminLevel = 'guest';
-            
-            // 数据缓存
-            let pendingSignatures = [];
-            let approvedSignatures = [];
-            let fixedSignatures = [];
-            let operationLogs = [];
-
-            // 当前选中的标签页
-            let currentTab = 'pending';
-
-            // 设置云同步状态
-            function setCloudStatus(status, message) {
-                cloudText.textContent = message;
-                cloudIcon.className = 'fas';
+            // 从URL参数获取检测到的修改器类型
+            function getDetectedType() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const type = urlParams.get('type');
+                const modifier = urlParams.get('modifier');
                 
-                switch(status) {
-                    case 'syncing':
-                        cloudIcon.classList.add('fa-sync-alt');
-                        cloudStatus.classList.add('syncing');
-                        break;
-                    case 'synced':
-                        cloudIcon.classList.add('fa-cloud');
-                        cloudStatus.classList.remove('syncing');
-                        break;
-                    case 'error':
-                        cloudIcon.classList.add('fa-exclamation-triangle');
-                        cloudStatus.classList.remove('syncing');
-                        break;
-                    default:
-                        cloudIcon.classList.add('fa-cloud');
-                        cloudStatus.classList.remove('syncing');
+                if (modifier) {
+                    return { type: 'modifier', name: modifier };
                 }
-            }
-
-            // 从 Supabase 加载数据
-            async function loadFromSupabase() {
+                if (type === 'devtools') {
+                    return { type: 'devtools', name: '开发者工具' };
+                }
+                if (type === 'ce') {
+                    return { type: 'modifier', name: 'Cheat Engine (CE)' };
+                }
+                if (type === 'gg') {
+                    return { type: 'modifier', name: 'GameGuardian (GG)' };
+                }
+                // 尝试从 localStorage 读取
                 try {
-                    setCloudStatus('syncing', '加载数据...');
+                    const detected = localStorage.getItem('_detected_modifier');
+                    if (detected) {
+                        return { type: 'modifier', name: detected };
+                    }
+                } catch(e) {}
+                
+                return { type: 'unknown', name: '未知工具' };
+            }
+            
+            // 生成随机事件ID
+            function generateEventId() {
+                return Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+            }
+
+            // 格式化当前时间
+            function getCurrentTime() {
+                const now = new Date();
+                return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+            }
+
+            // 设置页面信息
+            function setPageInfo() {
+                document.getElementById('eventId').textContent = generateEventId();
+                document.getElementById('detectTime').textContent = getCurrentTime();
+            }
+
+            // 根据检测类型更新显示内容
+            function updateDetectedDisplay() {
+                const detected = getDetectedType();
+                const detectedItems = document.getElementById('detectedItems');
+                const warningSubtitle = document.getElementById('warningSubtitle');
+                const modifierDetail = document.getElementById('modifierDetail');
+                const modifierDetailItems = document.getElementById('modifierDetailItems');
+                
+                if (!detectedItems) return;
+                
+                // 清空现有内容
+                detectedItems.innerHTML = '';
+                
+                if (detected.type === 'devtools') {
+                    // 开发者工具检测
+                    warningSubtitle.innerHTML = '<i class="fas fa-code"></i> 检测到开发者工具';
+                    detectedItems.innerHTML = `
+                        <span class="detected-badge"><i class="fas fa-code"></i> 开发者工具打开</span>
+                        <span class="detected-badge"><i class="fas fa-keyboard"></i> 调试快捷键触发</span>
+                        <span class="detected-badge"><i class="fas fa-mouse-pointer"></i> 元素检查</span>
+                        <span class="detected-badge"><i class="fas fa-terminal"></i> 控制台操作</span>
+                    `;
+                    modifierDetail.style.display = 'none';
                     
-                    const { data: signatures, error } = await supabase
-                        .from('nxld_data')
-                        .select('*')
-                        .order('submit_time', { ascending: false });
+                } else if (detected.type === 'modifier') {
+                    // 修改器检测
+                    warningSubtitle.innerHTML = '<i class="fas fa-skull"></i> 检测到内存修改器';
                     
-                    if (error) throw error;
+                    // 显示修改器名称
+                    let modifierName = detected.name;
+                    let modifierIcon = 'fa-bug';
+                    let modifierColor = '#f59e0b';
                     
-                    // 分类数据 - 强制为所有固定签名添加 platform = 'qq'
-                    fixedSignatures = signatures.filter(s => s.type === 'fixed').map(s => ({
-                        ...s,
-                        platform: 'qq'
-                    }));
-                    
-                    pendingSignatures = signatures.filter(s => s.status === 'pending' && s.type === 'user').map(s => ({
-                        ...s,
-                        platform: s.platform || 'qq'
-                    }));
-                    
-                    approvedSignatures = signatures.filter(s => s.status === 'approved' && s.type === 'user').map(s => ({
-                        ...s,
-                        platform: s.platform || 'qq'
-                    }));
-                    
-                    const { data: logs, error: logError } = await supabase
-                        .from('nxld_data')
-                        .select('*')
-                        .eq('type', 'log')
-                        .order('action_time', { ascending: false })
-                        .limit(100);
-                    
-                    if (!logError && logs) {
-                        operationLogs = logs.map(log => ({
-                            time: new Date(log.action_time).toLocaleString(),
-                            action: log.action,
-                            details: log.action_details,
-                            status: log.status
-                        }));
+                    if (modifierName.toLowerCase().includes('cheat') || modifierName.toLowerCase().includes('ce')) {
+                        modifierName = 'Cheat Engine (CE)';
+                        modifierIcon = 'fa-microchip';
+                    } else if (modifierName.toLowerCase().includes('guardian') || modifierName.toLowerCase().includes('gg')) {
+                        modifierName = 'GameGuardian (GG)';
+                        modifierIcon = 'fa-shield-haltered';
+                    } else if (modifierName.toLowerCase().includes('memory')) {
+                        modifierName = '内存修改器';
+                        modifierIcon = 'fa-database';
+                    } else if (modifierName.toLowerCase().includes('speed')) {
+                        modifierName = '变速工具';
+                        modifierIcon = 'fa-gauge-high';
                     }
                     
-                    setCloudStatus('synced', '已同步');
-                    return signatures;
+                    // 显示检测到的修改器
+                    detectedItems.innerHTML = `
+                        <span class="detected-badge modifier-badge"><i class="fas ${modifierIcon}"></i> ${modifierName}</span>
+                        <span class="detected-badge"><i class="fas fa-chart-line"></i> 帧率异常检测</span>
+                        <span class="detected-badge"><i class="fas fa-window-maximize"></i> 悬浮窗检测</span>
+                    `;
                     
-                } catch (error) {
-                    console.error('加载数据失败:', error);
-                    setCloudStatus('error', '同步失败');
-                    showToast('加载云端数据失败');
-                    
-                    if (loadingSpinner) {
-                        loadingSpinner.innerHTML = `
-                            <div class="error-message">
-                                <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
-                                <div>加载失败，请检查网络连接</div>
-                                <button class="retry-btn" onclick="location.reload()">
-                                    <i class="fas fa-redo"></i> 重新加载
-                                </button>
-                            </div>
-                        `;
-                    }
-                    
-                    return [];
-                }
-            }
-
-            // 保存到 Supabase
-            async function saveToSupabase(data) {
-                try {
-                    setCloudStatus('syncing', '保存中...');
-                    const { error } = await supabase.from('nxld_data').insert([data]);
-                    if (error) throw error;
-                    setCloudStatus('synced', '已同步');
-                    return true;
-                } catch (error) {
-                    console.error('保存失败:', error);
-                    setCloudStatus('error', '保存失败');
-                    return false;
-                }
-            }
-
-            // 更新数据到 Supabase
-            async function updateInSupabase(id, updates) {
-                try {
-                    setCloudStatus('syncing', '更新中...');
-                    const { error } = await supabase.from('nxld_data').update(updates).eq('id', id);
-                    if (error) throw error;
-                    setCloudStatus('synced', '已同步');
-                    return true;
-                } catch (error) {
-                    console.error('更新失败:', error);
-                    setCloudStatus('error', '更新失败');
-                    return false;
-                }
-            }
-
-            // 删除数据（仅超级管理员可用）
-            async function deleteFromSupabase(id) {
-                if (currentAdminLevel !== 'super') {
-                    showToast('只有超级管理员可以删除');
-                    return false;
-                }
-                
-                try {
-                    setCloudStatus('syncing', '删除中...');
-                    const { error } = await supabase.from('nxld_data').delete().eq('id', id);
-                    if (error) throw error;
-                    setCloudStatus('synced', '已同步');
-                    return true;
-                } catch (error) {
-                    console.error('删除失败:', error);
-                    setCloudStatus('error', '删除失败');
-                    return false;
-                }
-            }
-
-            // 添加操作日志
-            async function addLog(action, details, status = 'info') {
-                const logData = {
-                    qq: 'system',
-                    content: '系统日志',
-                    action: action,
-                    action_details: details,
-                    status: status,
-                    type: 'log',
-                    action_time: new Date().toISOString()
-                };
-                await saveToSupabase(logData);
-            }
-
-            // 检查重复签名
-            function checkDuplicate(content) {
-                const fixedDuplicate = fixedSignatures.find(s => s.content === content);
-                if (fixedDuplicate) return { duplicate: true, type: 'fixed', qq: fixedDuplicate.qq, platform: 'qq' };
-                const approvedDuplicate = approvedSignatures.find(s => s.content === content);
-                if (approvedDuplicate) return { duplicate: true, type: 'approved', qq: approvedDuplicate.qq, platform: approvedDuplicate.platform || 'qq' };
-                const pendingDuplicate = pendingSignatures.find(s => s.content === content);
-                if (pendingDuplicate) return { duplicate: true, type: 'pending', qq: pendingDuplicate.qq, platform: pendingDuplicate.platform || 'qq' };
-                return { duplicate: false };
-            }
-
-            // 设置实时监听
-            function setupRealtime() {
-                supabase
-                    .channel('nxld_changes')
-                    .on('postgres_changes', 
-                        { event: '*', schema: 'public', table: 'nxld_data' },
-                        async (payload) => {
-                            await loadFromSupabase();
-                            const currentView = historyStack[historyStack.length - 1];
-                            if (currentView === VIEWS.SIGNATURE_PAGE) {
-                                showSignaturePage(false);
-                            } else if (currentView === VIEWS.ADMIN_PAGE && currentAdminLevel !== 'guest') {
-                                showAdminPanel();
-                            }
-                        }
-                    )
-                    .subscribe();
-            }
-
-            // 复制功能
-            function copyToClipboard(text) {
-                const textarea = document.createElement('textarea');
-                textarea.value = text;
-                textarea.style.cssText = 'position:fixed;opacity:0;left:-9999px;top:0';
-                document.body.appendChild(textarea);
-                textarea.select();
-                try {
-                    document.execCommand('copy') ? showToast('复制成功') : showToast('复制失败');
-                } catch(e) {
-                    showToast('复制失败');
-                }
-                document.body.removeChild(textarea);
-            }
-
-            function showToast(message) {
-                const toast = document.createElement('div');
-                toast.className = 'copy-toast';
-                toast.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
-                toastContainer.appendChild(toast);
-                setTimeout(() => toast.remove(), 1500);
-            }
-
-            // 转换HTML
-            function convertToHtml(content) {
-                if (!content) return '';
-                return content
-                    .replace(/<color=#([A-Fa-f0-9]{6})>/g, '<span style="color:#$1;">')
-                    .replace(/<color=#([A-Fa-f0-9]{3})>/g, '<span style="color:#$1;">')
-                    .replace(/<size=(\d+)>/g, (m,s) => `<span style="font-size:${parseInt(s)/16}rem;">`)
-                    .replace(/<\/color>/g, '</span>')
-                    .replace(/<\/size>/g, '</span>')
-                    .replace(/<b>/g, '<b>').replace(/<\/b>/g, '</b>')
-                    .replace(/<i>/g, '<i>').replace(/<\/i>/g, '</i>')
-                    .replace(/<u>/g, '<u>').replace(/<\/u>/g, '</u>');
-            }
-
-            // 管理员面板
-            async function showAdminPanel() {
-                await loadFromSupabase();
-                const container = document.createElement('div');
-                
-                const levelBadge = document.createElement('div');
-                levelBadge.style.cssText = 'text-align:center;margin-bottom:1.5rem;padding:0.5rem;border-radius:2rem';
-                levelBadge.style.background = currentAdminLevel === 'super' ? 'rgba(139,92,246,0.2)' : 'rgba(16,185,129,0.2)';
-                levelBadge.style.color = currentAdminLevel === 'super' ? '#a78bfa' : '#10b981';
-                levelBadge.innerHTML = currentAdminLevel === 'super' ? '<i class="fas fa-crown"></i> 超级管理员模式（可删除）' : '<i class="fas fa-user"></i> 普通管理员模式（仅可审核）';
-                container.appendChild(levelBadge);
-                
-                const statsContainer = document.createElement('div');
-                statsContainer.className = 'admin-stats';
-                statsContainer.innerHTML = `
-                    <div class="stat-card"><div class="stat-number">${pendingSignatures.length + approvedSignatures.length}</div><div class="stat-label">总提交</div></div>
-                    <div class="stat-card"><div class="stat-number" style="color:#f59e0b;">${pendingSignatures.length}</div><div class="stat-label">待审核</div></div>
-                    <div class="stat-card"><div class="stat-number" style="color:#10b981;">${approvedSignatures.length}</div><div class="stat-label">已通过</div></div>
-                `;
-                container.appendChild(statsContainer);
-                
-                const tabContainer = document.createElement('div');
-                tabContainer.className = 'tab-container';
-                tabContainer.innerHTML = `
-                    <button class="tab-btn ${currentTab === 'pending' ? 'active' : ''}" data-tab="pending">待审核 (${pendingSignatures.length})</button>
-                    <button class="tab-btn ${currentTab === 'approved' ? 'active' : ''}" data-tab="approved">已通过 (${approvedSignatures.length})</button>
-                    <button class="tab-btn ${currentTab === 'logs' ? 'active' : ''}" data-tab="logs">操作日志</button>
-                `;
-                container.appendChild(tabContainer);
-                
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'submit-form';
-                contentDiv.style.maxWidth = '800px';
-                
-                if (currentTab === 'pending') {
-                    let html = '<h3 style="color:#f59e0b;">待审核列表</h3>';
-                    if (!pendingSignatures.length) html += '<div style="color:#9ca3af;text-align:center;padding:2rem;">暂无待审核内容</div>';
-                    else {
-                        html += '<div style="max-height:500px;overflow-y:auto;">';
-                        pendingSignatures.forEach(sig => {
-                            let preview = '';
-                            if (sig.submit_type === 'signature') preview = `<div style="margin-top:0.3rem;">${convertToHtml(sig.content)}</div>`;
-                            else if (sig.submit_type === 'report') preview = `<div style="color:#ef4444;">倒卖举报 - 证据:${sig.images?.length||0}张</div>`;
-                            else preview = `<div style="color:#f59e0b;">Bug反馈: ${sig.content}</div>`;
-                            
-                            let platformText = sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks');
-                            let authorText = sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`);
-                            
-                            html += `
-                                <div style="background:rgba(255,255,255,0.03);border-radius:1rem;padding:1rem;margin-bottom:1rem;">
-                                    <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
-                                        <span><span style="color:#818cf8;">${platformText}:</span> ${authorText}</span>
-                                        ${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}
-                                    </div>
-                                    <div style="background:rgba(0,0,0,0.2);padding:0.5rem;border-radius:0.5rem;">${preview}</div>
-                                    <div style="color:#9ca3af;font-size:0.8rem;margin:0.5rem 0;">提交: ${new Date(sig.submit_time).toLocaleString()}</div>
-                                    <div style="display:flex;gap:0.5rem;">
-                                        <button class="query-button" style="background:#10b981;" onclick="window.approveSignature(${sig.id})">通过</button>
-                                        <button class="query-button" style="background:#ef4444;" onclick="window.rejectSignature(${sig.id})">拒绝</button>
-                                    </div>
-                                </div>`;
-                        });
-                        html += '</div>';
-                    }
-                    contentDiv.innerHTML = html;
-                } else if (currentTab === 'approved') {
-                    let html = '<h3 style="color:#10b981;">已通过列表</h3>';
-                    const approvedItems = approvedSignatures.filter(s => s.submit_type === 'signature');
-                    if (!approvedItems.length) html += '<div style="color:#9ca3af;text-align:center;padding:2rem;">暂无已通过签名</div>';
-                    else {
-                        html += '<div style="max-height:500px;overflow-y:auto;">';
-                        approvedItems.forEach(sig => {
-                            let platformText = sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks');
-                            let authorText = sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`);
-                            html += `
-                                <div style="background:rgba(255,255,255,0.03);border-radius:1rem;padding:1rem;margin-bottom:1rem;">
-                                    <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
-                                        <span><span style="color:#818cf8;">${platformText}:</span> ${authorText}</span>
-                                        ${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}
-                                    </div>
-                                    <div style="background:rgba(0,0,0,0.2);padding:0.5rem;border-radius:0.5rem;">
-                                        <span style="color:#818cf8;">预览:</span>
-                                        <div style="margin-top:0.3rem;">${convertToHtml(sig.content)}</div>
-                                    </div>
-                                </div>`;
-                        });
-                        html += '</div>';
-                    }
-                    contentDiv.innerHTML = html;
-                } else {
-                    let html = '<h3 style="color:#818cf8;">操作日志</h3><div class="log-container">';
-                    if (!operationLogs.length) html += '<div style="color:#9ca3af;text-align:center;padding:1rem;">暂无日志</div>';
-                    else operationLogs.forEach(l => html += `<div class="log-item"><span class="log-time">[${l.time}]</span><span class="log-content">${l.action}: ${l.details}</span></div>`);
-                    html += '</div>';
-                    contentDiv.innerHTML = html;
-                }
-                container.appendChild(contentDiv);
-                
-                if (currentAdminLevel === 'super') {
-                    const syncBtn = document.createElement('button');
-                    syncBtn.className = 'download-html-btn';
-                    syncBtn.style.cssText = 'margin-top:1rem;background:linear-gradient(135deg,#f59e0b,#d97706)';
-                    syncBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 强制刷新云端';
-                    syncBtn.onclick = async () => { await loadFromSupabase(); showAdminPanel(); showToast('已刷新'); };
-                    container.appendChild(syncBtn);
-                }
-                
-                innerDynamic.innerHTML = '';
-                innerDynamic.appendChild(container);
-                document.querySelectorAll('.tab-btn').forEach(btn => btn.onclick = () => { currentTab = btn.dataset.tab; showAdminPanel(); });
-                
-                window.approveSignature = async (id) => {
-                    const sig = pendingSignatures.find(s => s.id === id);
-                    if (await updateInSupabase(id, { status: 'approved', review_time: new Date().toISOString(), reviewed_by: currentAdminLevel })) {
-                        await addLog('通过', `${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:${sig.qq} 的签名已通过`);
-                        showToast('已通过');
-                        await loadFromSupabase();
-                        showAdminPanel();
-                    }
-                };
-                window.rejectSignature = async (id) => {
-                    const sig = pendingSignatures.find(s => s.id === id);
-                    if (await updateInSupabase(id, { status: 'rejected', review_time: new Date().toISOString(), reviewed_by: currentAdminLevel })) {
-                        await addLog('拒绝', `${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:${sig.qq} 的签名被拒绝`);
-                        showToast('已拒绝');
-                        await loadFromSupabase();
-                        showAdminPanel();
-                    }
-                };
-                window.deleteAnyItem = async (id) => {
-                    if (confirm('确定删除？不可恢复！') && await deleteFromSupabase(id)) {
-                        showToast('已删除');
-                        await loadFromSupabase();
-                        showAdminPanel();
-                    }
-                };
-            }
-
-            // 签名页面
-            async function showSignaturePage(pushToHistory = true) {
-                resetAll();
-                if (pushToHistory) historyStack.push(VIEWS.SIGNATURE_PAGE);
-                await loadFromSupabase();
-                
-                const allSignatures = [
-                    ...fixedSignatures.map(s => ({ ...s, platform: 'qq' })),
-                    ...approvedSignatures.filter(s => s.submit_type === 'signature')
-                ].map(s => {
-                    let displayName = s.platform === 'qq' ? `QQ：${s.qq}` : (s.platform === 'douyin' ? `dy：${s.qq}` : `ks：${s.qq}`);
-                    return { raw: s.content, displayName, html: convertToHtml(s.content) };
-                });
-                
-                const container = document.createElement('div');
-                const hint = document.createElement('div');
-                hint.className = 'top-hint';
-                hint.innerHTML = '<i class="fas fa-info-circle"></i> 点击卡片复制原内容';
-                container.appendChild(hint);
-                const grid = document.createElement('div');
-                grid.className = 'signature-grid';
-                allSignatures.forEach((sig, i) => {
-                    const card = document.createElement('div');
-                    card.className = 'signature-card-container';
-                    card.innerHTML = `
-                        <div class="signature-card">
-                            <div class="signature-text">${sig.html}</div>
-                            <div class="signature-qq">${sig.displayName}</div>
-                            <div class="copy-hint"><i class="fas fa-copy"></i> 点击复制</div>
+                    // 显示修改器详细信息
+                    modifierDetail.style.display = 'block';
+                    modifierDetailItems.innerHTML = `
+                        <div style="width:100%; padding: 0.3rem 0;">
+                            <span style="color: #f59e0b;">⚠️ 检测到内存修改器特征</span>
+                        </div>
+                        <div style="width:100%; padding: 0.3rem 0; font-size: 0.7rem; color: #9ca3af;">
+                            检测类型: ${modifierName}<br>
+                            检测方式: 行为特征分析 / 内存访问异常
+                        </div>
+                        <div style="width:100%; padding: 0.3rem 0; font-size: 0.7rem; color: #ef4444;">
+                            <i class="fas fa-ban"></i> 使用修改器将导致账户被永久封禁
                         </div>
                     `;
-                    card.onclick = () => copyToClipboard(sig.raw);
-                    grid.appendChild(card);
-                });
-                container.appendChild(grid);
-                statusTag.textContent = `签名合集 · 共${allSignatures.length}个`;
-                innerDynamic.innerHTML = '';
-                innerDynamic.appendChild(container);
-                refreshBackButton();
-                setTimeout(performGlobalSearch, 10);
+                    
+                } else {
+                    // 未知检测
+                    warningSubtitle.innerHTML = '<i class="fas fa-question-circle"></i> 检测到异常行为';
+                    detectedItems.innerHTML = `
+                        <span class="detected-badge"><i class="fas fa-shield"></i> 系统安全检测</span>
+                        <span class="detected-badge"><i class="fas fa-chart-line"></i> 行为异常分析</span>
+                    `;
+                    modifierDetail.style.display = 'none';
+                }
             }
 
-            // 提交页面
-            function showSubmitSignature(pushToHistory = true) {
-                resetAll();
-                if (pushToHistory) historyStack.push(VIEWS.SUBMIT_SIGNATURE);
-                statusTag.textContent = '提交投稿';
+            // 添加粒子效果
+            function createParticles() {
+                const container = document.getElementById('particleContainer');
+                if (!container) return;
                 
-                const container = document.createElement('div');
-                container.className = 'submit-form';
-                container.innerHTML = `
-                    <div class="type-selector">
-                        <div class="type-option selected" data-type="signature"><div class="type-icon"><i class="fas fa-signature"></i></div><div class="type-name">签名投稿</div><div class="type-desc">分享个性签名</div></div>
-                        <div class="type-option" data-type="report"><div class="type-icon"><i class="fas fa-exclamation-triangle"></i></div><div class="type-name">倒卖举报</div><div class="type-desc">举报倒卖行为（可传图）</div></div>
-                        <div class="type-option" data-type="bug"><div class="type-icon"><i class="fas fa-bug"></i></div><div class="type-name">Bug反馈</div><div class="type-desc">反馈问题</div></div>
-                    </div>
-                    <div class="platform-selector">
-                        <div class="platform-option selected" data-platform="qq"><div class="platform-icon"><i class="fab fa-qq"></i></div><div class="platform-name">QQ</div></div>
-                        <div class="platform-option" data-platform="douyin"><div class="platform-icon"><i class="fab fa-tiktok"></i></div><div class="platform-name">抖音</div></div>
-                        <div class="platform-option" data-platform="kuaishou"><div class="platform-icon"><i class="fas fa-video"></i></div><div class="platform-name">快手</div></div>
-                    </div>
-                    <div class="form-group"><label class="form-label" id="accountLabel">你的QQ号</label><input type="text" class="form-input" id="submitAccount" placeholder="请输入账号"></div>
-                    <div class="form-group" id="contentGroup"><label class="form-label" id="contentLabel">签名内容</label><textarea class="form-input form-textarea" id="submitContent" placeholder="请输入内容"></textarea></div>
-                    <div class="form-group" id="imageUploadGroup" style="display:none;"><div class="image-upload-area" id="imageUploadArea"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">点击上传图片证据</div><div class="upload-hint">支持多张，最多9张</div></div><input type="file" id="fileInput" multiple accept="image/*" style="display:none;"><div class="image-preview" id="imagePreview"></div></div>
-                    <button class="submit-button" id="doSubmitBtn">提交</button>
-                    <div class="submit-info" id="submitInfo"></div>
-                    <div class="query-section"><div class="query-input-group"><input type="text" class="form-input" id="queryAccount" placeholder="输入账号查询提交状态"><button class="query-button" id="queryBtn">查询</button></div><div class="query-result" id="queryResult"></div></div>
-                `;
-                innerDynamic.innerHTML = '';
-                innerDynamic.appendChild(container);
-                
-                let currentType = 'signature', currentPlatform = 'qq', uploadedImages = [];
-                document.querySelectorAll('.type-option').forEach(opt => opt.onclick = function() {
-                    document.querySelectorAll('.type-option').forEach(o => o.classList.remove('selected'));
-                    this.classList.add('selected');
-                    currentType = this.dataset.type;
-                    const cg = document.getElementById('contentGroup'), ig = document.getElementById('imageUploadGroup'), cl = document.getElementById('contentLabel'), al = document.getElementById('accountLabel');
-                    if (currentType === 'signature') { cg.style.display = 'block'; ig.style.display = 'none'; cl.textContent = '签名内容'; al.textContent = '你的账号'; }
-                    else if (currentType === 'report') { cg.style.display = 'block'; ig.style.display = 'block'; cl.textContent = '举报说明'; al.textContent = '你的账号'; }
-                    else { cg.style.display = 'block'; ig.style.display = 'none'; cl.textContent = 'Bug描述'; al.textContent = '你的账号'; }
-                });
-                document.querySelectorAll('.platform-option').forEach(opt => opt.onclick = function() {
-                    document.querySelectorAll('.platform-option').forEach(o => o.classList.remove('selected'));
-                    this.classList.add('selected');
-                    currentPlatform = this.dataset.platform;
-                    const al = document.getElementById('accountLabel');
-                    if (currentPlatform === 'qq') al.textContent = '你的QQ号';
-                    else if (currentPlatform === 'douyin') al.textContent = '你的抖音号';
-                    else al.textContent = '你的快手号';
-                });
-                const uploadArea = document.getElementById('imageUploadArea'), fileInput = document.getElementById('fileInput'), preview = document.getElementById('imagePreview');
-                uploadArea.onclick = () => fileInput.click();
-                fileInput.onchange = (e) => {
-                    uploadedImages = []; preview.innerHTML = '';
-                    Array.from(e.target.files).slice(0,9).forEach(f => {
-                        const r = new FileReader();
-                        r.onload = (ev) => {
-                            uploadedImages.push(ev.target.result);
-                            const item = document.createElement('div');
-                            item.className = 'preview-item';
-                            item.innerHTML = `<img src="${ev.target.result}"><div class="remove-image">×</div>`;
-                            item.querySelector('.remove-image').onclick = () => item.remove();
-                            preview.appendChild(item);
-                        };
-                        r.readAsDataURL(f);
-                    });
-                };
-                document.getElementById('doSubmitBtn').onclick = async () => {
-                    const acc = document.getElementById('submitAccount').value.trim(), cont = document.getElementById('submitContent').value.trim(), info = document.getElementById('submitInfo');
-                    if (!acc) { info.textContent = `请输入${currentPlatform === 'qq' ? 'QQ号' : (currentPlatform === 'douyin' ? '抖音号' : '快手号')}`; info.style.color = '#ef4444'; return; }
-                    if (currentType === 'signature') {
-                        if (!cont) { info.textContent = '请输入签名内容'; info.style.color = '#ef4444'; return; }
-                        const dup = checkDuplicate(cont);
-                        if (dup.duplicate) {
-                            let platformName = dup.platform === 'qq' ? 'QQ' : (dup.platform === 'douyin' ? 'dy' : 'ks');
-                            info.textContent = `该签名已存在 (${platformName}：${dup.qq})`;
-                            info.style.color = '#f59e0b'; return;
-                        }
+                for (let i = 0; i < 50; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.animationDelay = Math.random() * 4 + 's';
+                    particle.style.animationDuration = 3 + Math.random() * 2 + 's';
+                    particle.style.width = 2 + Math.random() * 4 + 'px';
+                    particle.style.height = particle.style.width;
+                    particle.style.background = `rgba(239, 68, 68, ${0.3 + Math.random() * 0.5})`;
+                    container.appendChild(particle);
+                }
+            }
+
+            // 禁止任何调试行为
+            function blockDebug() {
+                // 禁止F12
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'F12' || 
+                        (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+                        (e.ctrlKey && e.shiftKey && e.key === 'J') ||
+                        (e.ctrlKey && e.key === 'U') ||
+                        (e.ctrlKey && e.key === 'S')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return false;
                     }
-                    if (currentType === 'report' && !cont) { info.textContent = '请输入举报说明'; info.style.color = '#ef4444'; return; }
-                    if (currentType === 'bug' && !cont) { info.textContent = '请输入Bug描述'; info.style.color = '#ef4444'; return; }
-                    if (await saveToSupabase({ qq: acc, content: cont || '无内容', platform: currentPlatform, status: 'pending', type: 'user', submit_type: currentType, images: uploadedImages, submit_time: new Date().toISOString() })) {
-                        await addLog('提交', `${currentPlatform === 'qq' ? 'QQ' : (currentPlatform === 'douyin' ? 'dy' : 'ks')}:${acc} 提交了${currentType === 'signature' ? '签名' : (currentType === 'report' ? '举报' : 'Bug反馈')}`);
-                        info.textContent = '提交成功！管理员审核后将显示'; info.style.color = '#10b981';
-                        document.getElementById('submitAccount').value = ''; document.getElementById('submitContent').value = ''; uploadedImages = []; preview.innerHTML = '';
-                        await loadFromSupabase();
-                    } else { info.textContent = '提交失败，请重试'; info.style.color = '#ef4444'; }
-                };
-                document.getElementById('queryBtn').onclick = () => {
-                    const acc = document.getElementById('queryAccount').value.trim(), res = document.getElementById('queryResult');
-                    if (!acc) { res.innerHTML = '<div style="color:#ef4444;">请输入账号</div>'; return; }
-                    const items = [...pendingSignatures, ...approvedSignatures].filter(s => s.qq === acc);
-                    if (!items.length) res.innerHTML = '<div style="color:#9ca3af;">没有找到记录</div>';
-                    else res.innerHTML = items.map(s => `<div class="query-item"><div><div>${s.submit_type === 'signature' ? '签名投稿' : (s.submit_type === 'report' ? '倒卖举报' : 'Bug反馈')} - ${s.platform === 'qq' ? 'QQ' : (s.platform === 'douyin' ? 'dy' : 'ks')}：${s.qq}</div><div class="query-item-qq">提交: ${new Date(s.submit_time).toLocaleString()}</div></div><span class="query-item-status ${s.status === 'pending' ? 'pending' : ''}">${s.status === 'pending' ? '待审核' : '已通过'}</span></div>`).join('');
-                };
-                refreshBackButton();
-            }
-
-            function showAdminPage(pushToHistory = true) {
-                resetAll();
-                if (pushToHistory) historyStack.push(VIEWS.ADMIN_PAGE);
-                statusTag.textContent = '管理员系统';
-                const container = document.createElement('div');
-                if (currentAdminLevel !== 'guest') showAdminPanel();
-                else {
-                    container.innerHTML = `<div class="submit-form"><div class="form-group"><label class="form-label">管理员密码</label><input type="password" class="form-input" id="adminPassword" placeholder="请输入密码"></div><button class="submit-button" id="adminLoginBtn">登录</button><div class="submit-info" id="adminLoginInfo"></div></div>`;
-                    innerDynamic.innerHTML = '';
-                    innerDynamic.appendChild(container);
-                    document.getElementById('adminLoginBtn').onclick = () => {
-                        const pwd = document.getElementById('adminPassword').value;
-                        if (pwd === 'NXLD_RX') { currentAdminLevel = 'admin'; showAdminPanel(); document.getElementById('adminLoginInfo').textContent = '登录成功（普通管理员）'; }
-                        else if (pwd === 'NXLD_MZRW') { currentAdminLevel = 'super'; showAdminPanel(); document.getElementById('adminLoginInfo').textContent = '登录成功（超级管理员）'; }
-                        else { document.getElementById('adminLoginInfo').textContent = '密码错误'; document.getElementById('adminLoginInfo').style.color = '#ef4444'; }
-                    };
-                }
-                refreshBackButton();
-            }
-
-            function resetAll() { innerDynamic.innerHTML = ''; backContainer.innerHTML = ''; }
-            function createBackButton() {
-                const btn = document.createElement('div');
-                btn.className = 'back-btn-modern';
-                btn.innerHTML = '<i class="fas fa-arrow-left"></i> 返回';
-                btn.onclick = () => {
-                    historyStack.pop();
-                    const v = historyStack[historyStack.length-1];
-                    if (v === 'signature') showSignaturePage(false);
-                    else if (v === 'submit') showSubmitSignature(false);
-                    else if (v === 'admin') showAdminPage(false);
-                    else showSupernaturalInitial(false);
-                    searchInput.value = '';
-                    setTimeout(() => document.querySelector('.content-area').scrollTop = 0, 10);
-                };
-                return btn;
-            }
-            function refreshBackButton() { backContainer.innerHTML = ''; if (historyStack.length >= 2) backContainer.appendChild(createBackButton()); }
-            function performGlobalSearch() {
-                const term = searchInput.value.toLowerCase().trim();
-                const cards = document.querySelectorAll('#innerDynamic .menu-card, #innerDynamic .signature-card');
-                if (!term) { cards.forEach(c => { c.style.display = ''; c.classList.remove('search-highlight'); }); return; }
-                let has = false;
-                cards.forEach(c => {
-                    const txt = c.textContent.toLowerCase();
-                    if (txt.includes(term)) { c.style.display = ''; c.classList.add('search-highlight'); has = true; }
-                    else c.style.display = 'none';
                 });
-                const tip = document.getElementById('searchNoResultTip');
-                if (tip) tip.remove();
-                if (!has && cards.length) {
-                    const t = document.createElement('div');
-                    t.id = 'searchNoResultTip';
-                    t.style.cssText = 'text-align:center;color:#9ca3af;padding:2rem;';
-                    t.innerHTML = `🔍 未找到"${searchInput.value}"`;
-                    innerDynamic.appendChild(t);
-                }
-            }
-            let searchTimeout;
-            searchInput.oninput = () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(performGlobalSearch, 50); };
-            
-            function showSupernaturalInitial(pushToHistory = true) {
-                resetAll();
-                if (pushToHistory) historyStack.push(VIEWS.SUPERNATURAL_INITIAL);
-                statusTag.textContent = 'NXLD数值库';
-                const grid = document.createElement('div');
-                grid.className = 'main-menu-grid';
-                const items = [
-                    { icon: 'layer-group', name: '模式数值', desc: '开发中' },
-                    { icon: 'box', name: '局内物品', desc: '开发中' },
-                    { icon: 'palette', name: '皮肤数值', desc: '开发中' },
-                    { icon: 'signature', name: '主页签名', desc: '点击查看', isSignature: true }
-                ];
-                items.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = `menu-card ${item.isSignature ? 'signature' : ''}`;
-                    card.innerHTML = `<div class="menu-icon"><i class="fas fa-${item.icon}"></i></div><span>${item.name}</span><small>${item.desc}</small>`;
-                    if (item.isSignature) card.onclick = () => showSignaturePage();
-                    else card.onclick = () => showToast('功能开发中');
-                    grid.appendChild(card);
+
+                // 禁止右键
+                document.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    return false;
                 });
-                innerDynamic.appendChild(grid);
-                refreshBackButton();
-                setTimeout(performGlobalSearch, 10);
+
+                // 禁止选中
+                document.addEventListener('selectstart', function(e) {
+                    e.preventDefault();
+                    return false;
+                });
             }
 
-            const VIEWS = { SUPERNATURAL_INITIAL: 'main', SIGNATURE_PAGE: 'signature', SUBMIT_SIGNATURE: 'submit', ADMIN_PAGE: 'admin' };
-            supernaturalBtn.onclick = () => { if (historyStack.length === 0 || historyStack[historyStack.length-1] !== 'main') { historyStack = []; showSupernaturalInitial(); searchInput.value = ''; } };
-            agreementBtn.onclick = () => agreementModal.classList.add('show');
-            closeAgreement.onclick = () => agreementModal.classList.remove('show');
-            agreementModal.onclick = (e) => { if (e.target === agreementModal) agreementModal.classList.remove('show'); };
-            thanksBtn.onclick = () => thanksModal.classList.add('show');
-            closeThanks.onclick = () => thanksModal.classList.remove('show');
-            thanksModal.onclick = (e) => { if (e.target === thanksModal) thanksModal.classList.remove('show'); };
-            submitSignatureBtn.onclick = () => showSubmitSignature();
-            adminBtn.onclick = () => { currentAdminLevel = 'guest'; showAdminPage(); searchInput.value = ''; };
-            
-            window.addEventListener('load', async () => {
-                setCloudStatus('syncing', '连接数据库...');
-                await loadFromSupabase();
-                setupRealtime();
-                showSupernaturalInitial();
-                if (loadingSpinner) loadingSpinner.style.display = 'none';
-            });
+            // 添加动画样式
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes fadeOut {
+                    0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
+                    15% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                    85% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                    100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                }
+            `;
+            document.head.appendChild(style);
+
+            // 初始化
+            setPageInfo();
+            updateDetectedDisplay();
+            createParticles();
+            blockDebug();
+
+            // 防止控制台输出
+            console.log = function() {};
+            console.warn = function() {};
+            console.error = function() {};
+            console.info = function() {};
+
+            // 持续检测是否还在调试模式
+            let detectionCount = 0;
+            setInterval(function() {
+                const before = Date.now();
+                debugger;
+                const after = Date.now();
+                if (after - before > 100) {
+                    detectionCount++;
+                    if (detectionCount > 3) {
+                        // 重新生成事件ID
+                        setPageInfo();
+                        detectionCount = 0;
+                    }
+                }
+            }, 5000);
         })();
     </script>
 </body>
