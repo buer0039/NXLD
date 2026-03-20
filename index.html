@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>NXLD数值库</title>
     
-    <!-- 防调试检测脚本 - 1秒后跳转 -->
+    <!-- 防调试检测脚本 - 修复直接跳转问题 -->
     <script>
         (function() {
             // 新的跳转URL
@@ -15,9 +15,24 @@
             let hasRedirected = false;
             let redirectTimer = null;
             
+            // 页面是否已稳定加载完成
+            let pageStable = false;
+            
+            // 标记是否是正常用户（避免误判）
+            let isNormalUser = true;
+            
             // 跳转函数（延迟1秒）
             function redirectToWarning() {
                 if (hasRedirected) return;
+                if (!pageStable) {
+                    // 页面未稳定，延迟后再检测
+                    setTimeout(function() {
+                        if (!hasRedirected && pageStable) {
+                            redirectToWarning();
+                        }
+                    }, 500);
+                    return;
+                }
                 hasRedirected = true;
                 
                 // 清空所有存储
@@ -33,22 +48,25 @@
                 }, 1000);
             }
             
-            // ========== 开发者工具立即检测 ==========
+            // ========== 开发者工具检测（需要多次确认） ==========
             
             // 检测窗口尺寸变化
             let sizeCheckCount = 0;
             let lastSizeCheckTime = 0;
             
             function detectDevToolsBySize() {
+                // 页面未稳定时不检测
+                if (!pageStable) return;
+                
                 const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
                 const heightDiff = Math.abs(window.outerHeight - window.innerHeight);
                 
                 // 检测控制台是否打开（宽高差大于150）
                 if (widthDiff > 150 || heightDiff > 150) {
                     const now = Date.now();
-                    if (now - lastSizeCheckTime < 500) {
+                    if (now - lastSizeCheckTime < 1000) {
                         sizeCheckCount++;
-                        if (sizeCheckCount >= 2) {
+                        if (sizeCheckCount >= 3) {  // 需要连续3次确认
                             redirectToWarning();
                         }
                     } else {
@@ -65,16 +83,20 @@
             let lastConsoleTime = 0;
             
             function detectConsoleOpen() {
+                // 页面未稳定时不检测
+                if (!pageStable) return;
+                
                 const before = Date.now();
                 console.log('%c', 'color: transparent');
                 const after = Date.now();
                 const timeDiff = after - before;
                 
-                if (timeDiff > 50) {
+                // 需要更大的时间差才认为是开发者工具
+                if (timeDiff > 80) {
                     const now = Date.now();
-                    if (now - lastConsoleTime < 1000) {
+                    if (now - lastConsoleTime < 2000) {
                         consoleCheckCount++;
-                        if (consoleCheckCount >= 2) {
+                        if (consoleCheckCount >= 3) {  // 需要连续3次确认
                             redirectToWarning();
                         }
                     } else {
@@ -86,7 +108,7 @@
                 }
             }
             
-            // 检测快捷键
+            // 检测快捷键（只阻止，延迟跳转）
             let shortcutCount = 0;
             let lastShortcutTime = 0;
             
@@ -99,56 +121,72 @@
                     e.preventDefault();
                     e.stopPropagation();
                     
-                    const now = Date.now();
-                    if (now - lastShortcutTime < 500) {
-                        shortcutCount++;
-                        if (shortcutCount >= 1) {
-                            redirectToWarning();
+                    // 延迟检测，避免误触
+                    setTimeout(function() {
+                        const now = Date.now();
+                        if (now - lastShortcutTime < 1000) {
+                            shortcutCount++;
+                            if (shortcutCount >= 2) {
+                                redirectToWarning();
+                            }
+                        } else {
+                            shortcutCount = 1;
                         }
-                    } else {
-                        shortcutCount = 1;
-                    }
-                    lastShortcutTime = now;
+                        lastShortcutTime = now;
+                    }, 100);
                     return false;
                 }
             }
             
-            // 检测右键菜单
+            // 检测右键菜单（只阻止，不跳转）
             function disableRightClick(e) {
                 e.preventDefault();
                 return false;
             }
             
-            // 重写console方法，检测控制台输入
+            // 重写console方法，延迟检测
             const originalLog = console.log;
             const originalWarn = console.warn;
             const originalError = console.error;
             
             console.log = function() {
-                redirectToWarning();
+                if (pageStable) {
+                    // 延迟检测，避免页面加载时的误判
+                    setTimeout(function() {
+                        redirectToWarning();
+                    }, 500);
+                }
                 originalLog.apply(console, arguments);
             };
             
             console.warn = function() {
-                redirectToWarning();
+                if (pageStable) {
+                    setTimeout(function() {
+                        redirectToWarning();
+                    }, 500);
+                }
                 originalWarn.apply(console, arguments);
             };
             
             console.error = function() {
-                redirectToWarning();
+                if (pageStable) {
+                    setTimeout(function() {
+                        redirectToWarning();
+                    }, 500);
+                }
                 originalError.apply(console, arguments);
             };
             
-            // ========== CE/GG 修改器检测 ==========
+            // ========== CE/GG 修改器检测（延迟启动） ==========
             
             // 检测内存修改器特征
-            let modifierDetectCount = 0;
-            let lastModifierTime = 0;
-            
             function detectMemoryModifiers() {
+                // 页面未稳定或不活跃时不检测
+                if (!pageStable) return;
+                
                 // 检测UserAgent
                 const userAgent = window.navigator.userAgent.toLowerCase();
-                const suspiciousPatterns = ['cheat', 'guardian', 'memory', 'hack', 'speed', 'modifier'];
+                const suspiciousPatterns = ['cheat', 'guardian', 'memoryhack', 'speedhack'];
                 
                 for (let i = 0; i < suspiciousPatterns.length; i++) {
                     if (userAgent.includes(suspiciousPatterns[i])) {
@@ -157,37 +195,33 @@
                     }
                 }
                 
-                // 检测全局变量
-                const suspiciousGlobals = ['GG', 'CHEAT_ENGINE', 'MemoryHack', 'SpeedHack', 'GameGuardian', 'CheatEngine'];
+                // 检测全局变量（需要多次确认）
+                const suspiciousGlobals = ['GG', 'CHEAT_ENGINE', 'MemoryHack', 'GameGuardian'];
                 for (let i = 0; i < suspiciousGlobals.length; i++) {
                     if (window[suspiciousGlobals[i]] !== undefined) {
                         redirectToWarning();
                         break;
                     }
                 }
-                
-                // 检测是否有注入的脚本
-                const scripts = document.getElementsByTagName('script');
-                for (let i = 0; i < scripts.length; i++) {
-                    const src = scripts[i].src || '';
-                    if (src.includes('cheat') || src.includes('guardian') || src.includes('hack')) {
-                        redirectToWarning();
-                        break;
-                    }
-                }
             }
             
-            // 帧率异常检测
+            // 帧率异常检测（延迟启动）
             let frameCount = 0;
             let lastFrameTime = performance.now();
+            let frameCheckActive = false;
             
             function checkFrameRate() {
+                if (!pageStable || !frameCheckActive) {
+                    requestAnimationFrame(checkFrameRate);
+                    return;
+                }
+                
                 const now = performance.now();
                 const delta = now - lastFrameTime;
                 
-                if (delta < 5 || delta > 100) {
+                if (delta < 3 || delta > 120) {
                     frameCount++;
-                    if (frameCount > 5) {
+                    if (frameCount > 15) {  // 需要连续15次异常
                         redirectToWarning();
                     }
                 } else {
@@ -198,8 +232,12 @@
                 requestAnimationFrame(checkFrameRate);
             }
             
-            // 检测悬浮窗
+            // 检测悬浮窗（延迟启动）
+            let overlayCheckActive = false;
+            
             function detectOverlay() {
+                if (!pageStable || !overlayCheckActive) return;
+                
                 const allElements = document.getElementsByTagName('*');
                 for (let i = 0; i < Math.min(allElements.length, 100); i++) {
                     const zIndex = window.getComputedStyle(allElements[i]).zIndex;
@@ -210,43 +248,60 @@
                 }
             }
             
-            // ========== 启动检测 ==========
+            // ========== 页面稳定后启动检测 ==========
             
-            // 立即执行一次检测
-            detectDevToolsBySize();
-            detectConsoleOpen();
-            detectMemoryModifiers();
-            detectOverlay();
+            // 设置页面稳定标志（页面加载完成后2秒）
+            setTimeout(function() {
+                pageStable = true;
+                console.log('安全检测已启动');
+            }, 2000);
             
-            // 启动帧率检测
-            requestAnimationFrame(checkFrameRate);
+            // 延迟启动帧率检测
+            setTimeout(function() {
+                frameCheckActive = true;
+            }, 5000);
+            
+            // 延迟启动悬浮窗检测
+            setTimeout(function() {
+                overlayCheckActive = true;
+                setInterval(detectOverlay, 5000);
+            }, 3000);
             
             // 监听快捷键
             document.addEventListener('keydown', detectDevToolsShortcut);
             document.addEventListener('contextmenu', disableRightClick);
             
-            // 快速检测（每300ms一次，确保快速响应）
-            setInterval(function() {
-                detectDevToolsBySize();
-                detectConsoleOpen();
-                detectMemoryModifiers();
-                detectOverlay();
-            }, 300);
+            // 延迟启动定期检测（页面稳定后）
+            setTimeout(function() {
+                setInterval(function() {
+                    if (pageStable) {
+                        detectDevToolsBySize();
+                        detectConsoleOpen();
+                        detectMemoryModifiers();
+                    }
+                }, 2000);  // 每2秒检测一次，降低频率
+            }, 3000);
             
-            // 检测iframe
+            // 检测iframe（立即执行）
             if (window.self !== window.top) {
-                redirectToWarning();
+                setTimeout(function() {
+                    redirectToWarning();
+                }, 1000);
             }
             
-            // 检测无头浏览器
-            if (/HeadlessChrome/.test(window.navigator.userAgent)) {
-                redirectToWarning();
-            }
+            // 检测无头浏览器（延迟检测）
+            setTimeout(function() {
+                if (/HeadlessChrome/.test(window.navigator.userAgent)) {
+                    redirectToWarning();
+                }
+            }, 2000);
             
-            // 检测webdriver
-            if (window.navigator.webdriver || window.navigator.webdriver === true) {
-                redirectToWarning();
-            }
+            // 检测webdriver（延迟检测）
+            setTimeout(function() {
+                if (window.navigator.webdriver || window.navigator.webdriver === true) {
+                    redirectToWarning();
+                }
+            }, 2000);
             
             // ========== 正常用户保护 ==========
             
@@ -266,8 +321,6 @@
                 e.preventDefault();
                 return false;
             });
-            
-            console.log('安全检测已启动');
         })();
     </script>
     
@@ -1669,6 +1722,7 @@
     </style>
 </head>
 <body>
+    <!-- 页面内容保持不变 -->
     <div class="modern-container">
         <div class="header">
             <div class="logo-area">
