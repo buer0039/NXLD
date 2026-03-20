@@ -3,152 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>NXLD数值库 - 检测测试版</title>
+    <title>NXLD数值库</title>
     
-    <!-- 增强版防调试检测脚本 -->
+    <!-- 防调试检测脚本 - 移除所有debugger暂停 -->
     <script>
         (function() {
-            console.log('防调试脚本已加载');
+            // 警告页面URL
+            const WARNING_URL = 'https://wjjz.wjzyw.top/projects/FZB/index.html';
             
-            // 跳转URL
-            const REDIRECT_URL = 'https://wjjz.wjzyw.top/projects/FZB/index.html';
+            // 锁定检测计数（localStorage存储）
+            const LOCK_KEY = 'nxld_site_locked';
+            const DETECT_COUNT_KEY = 'nxld_detect_count';
+            const LOCK_TIME_KEY = 'nxld_lock_time';
+            const LOCK_REASON_KEY = 'nxld_lock_reason';
             
-            // 生成唯一设备ID
-            function generateDeviceId() {
-                const navigatorInfo = `${navigator.userAgent}|${navigator.language}|${screen.width}x${screen.height}|${new Date().getTimezoneOffset()}`;
-                let hash = 0;
-                for (let i = 0; i < navigatorInfo.length; i++) {
-                    const char = navigatorInfo.charCodeAt(i);
-                    hash = ((hash << 5) - hash) + char;
-                    hash = hash & hash;
+            // 标记是否已跳转
+            let hasRedirected = false;
+            
+            // 页面加载时间
+            const pageLoadTime = Date.now();
+            
+            // 检查网站是否被锁定
+            function isSiteLocked() {
+                try {
+                    const locked = localStorage.getItem(LOCK_KEY);
+                    if (locked === 'true') {
+                        const lockTime = localStorage.getItem(LOCK_TIME_KEY);
+                        const lockReason = localStorage.getItem(LOCK_REASON_KEY) || '多次检测到调试行为';
+                        console.log('网站已被锁定，原因：' + lockReason);
+                        return true;
+                    }
+                    return false;
+                } catch(e) {
+                    return false;
                 }
-                return Math.abs(hash).toString(16) + Date.now().toString(16);
             }
             
-            const DEVICE_ID = generateDeviceId();
-            localStorage.setItem('nxld_device_id', DEVICE_ID);
+            // 锁定网站
+            function lockSite(reason) {
+                try {
+                    localStorage.setItem(LOCK_KEY, 'true');
+                    localStorage.setItem(LOCK_TIME_KEY, new Date().toISOString());
+                    localStorage.setItem(LOCK_REASON_KEY, reason);
+                    localStorage.setItem(DETECT_COUNT_KEY, '3');
+                } catch(e) {}
+            }
             
-            let hasRedirected = false;
-            let redirectTimer = null;
+            // 增加检测计数
+            function incrementDetectCount() {
+                try {
+                    let count = parseInt(localStorage.getItem(DETECT_COUNT_KEY) || '0');
+                    count++;
+                    localStorage.setItem(DETECT_COUNT_KEY, count.toString());
+                    
+                    // 检测到3次就锁定网站
+                    if (count >= 3) {
+                        lockSite('检测到' + count + '次调试行为，网站已被锁定');
+                        return true;
+                    }
+                    return false;
+                } catch(e) {
+                    return false;
+                }
+            }
             
-            // Supabase 配置
-            const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
-            const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
-            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            
-            // 跳转函数
-            async function redirectToWarning() {
+            // 立即跳转函数
+            function redirectToWarning() {
                 if (hasRedirected) return;
                 hasRedirected = true;
-                console.log('检测到调试行为，准备跳转');
                 
-                // 增加违规次数
+                // 增加检测计数并检查是否需要锁定
+                const shouldLock = incrementDetectCount();
+                
+                // 清空所有存储（但保留锁定状态）
                 try {
-                    const { data: existing } = await supabase
-                        .from('nxld_data')
-                        .select('violation_count')
-                        .eq('device_id', DEVICE_ID)
-                        .eq('type', 'device')
-                        .maybeSingle();
+                    // 保存锁定状态
+                    const locked = localStorage.getItem(LOCK_KEY);
+                    const detectCount = localStorage.getItem(DETECT_COUNT_KEY);
+                    const lockTime = localStorage.getItem(LOCK_TIME_KEY);
+                    const lockReason = localStorage.getItem(LOCK_REASON_KEY);
                     
-                    let newCount = 1;
-                    if (existing) {
-                        newCount = (existing.violation_count || 0) + 1;
-                        await supabase
-                            .from('nxld_data')
-                            .update({
-                                violation_count: newCount,
-                                lock_time: newCount >= 3 ? new Date().toISOString() : null,
-                                device_locked: newCount >= 3
-                            })
-                            .eq('device_id', DEVICE_ID);
-                    } else {
-                        await supabase
-                            .from('nxld_data')
-                            .insert({
-                                device_id: DEVICE_ID,
-                                qq: 'system_device',
-                                content: '设备信息',
-                                type: 'device',
-                                violation_count: newCount,
-                                device_locked: newCount >= 3,
-                                lock_time: newCount >= 3 ? new Date().toISOString() : null
-                            });
+                    localStorage.clear();
+                    sessionStorage.clear();
+                    
+                    // 恢复锁定状态
+                    if (locked === 'true') {
+                        localStorage.setItem(LOCK_KEY, locked);
+                        localStorage.setItem(DETECT_COUNT_KEY, detectCount || '3');
+                        localStorage.setItem(LOCK_TIME_KEY, lockTime || new Date().toISOString());
+                        localStorage.setItem(LOCK_REASON_KEY, lockReason || '网站已被锁定');
                     }
-                    
-                    // 显示警告
-                    showWarning(newCount);
-                    
-                    // 延迟跳转
-                    setTimeout(() => {
-                        window.location.href = REDIRECT_URL;
-                    }, 1500);
-                    
-                } catch(e) {
-                    console.error('记录失败:', e);
-                    window.location.href = REDIRECT_URL;
-                }
+                } catch(e) {}
+                
+                // 跳转
+                window.location.href = WARNING_URL;
             }
             
-            function showWarning(count) {
-                const div = document.createElement('div');
-                div.style.cssText = `
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: rgba(0,0,0,0.95);
-                    border: 2px solid #ef4444;
-                    border-radius: 1rem;
-                    padding: 2rem;
-                    text-align: center;
-                    z-index: 99999;
-                    min-width: 300px;
-                `;
-                div.innerHTML = `
-                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ef4444;"></i>
-                    <h3 style="color:#fff; margin:1rem 0;">检测到调试工具</h3>
-                    <p style="color:#9ca3af;">违规次数: ${count} / 3</p>
-                    <p style="color:#fbbf24;">页面即将跳转...</p>
-                `;
-                document.body.appendChild(div);
+            // 如果网站已被锁定，立即跳转
+            if (isSiteLocked()) {
+                window.location.href = WARNING_URL;
             }
             
-            // ========== 方法1：检测窗口尺寸变化 ==========
-            let lastWidth = window.outerWidth;
-            let lastHeight = window.outerHeight;
-            let suspiciousCount = 0;
+            // ========== 开发者工具检测（不使用debugger） ==========
             
-            function checkSize() {
+            // 检测窗口尺寸变化
+            let sizeCheckCount = 0;
+            
+            function detectDevToolsBySize() {
+                if (Date.now() - pageLoadTime < 3000) return;
+                
                 const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
                 const heightDiff = Math.abs(window.outerHeight - window.innerHeight);
                 
-                // 开发者工具打开时，内外尺寸差会变大
-                if (widthDiff > 100 || heightDiff > 100) {
-                    suspiciousCount++;
-                    if (suspiciousCount >= 2) {
+                if (widthDiff > 200 || heightDiff > 200) {
+                    sizeCheckCount++;
+                    if (sizeCheckCount >= 2) {
                         redirectToWarning();
                     }
                 } else {
-                    suspiciousCount = 0;
+                    sizeCheckCount = 0;
                 }
             }
             
-            // ========== 方法2：检测console执行时间 ==========
+            // 检测控制台打开
             let consoleCheckCount = 0;
             let lastConsoleTime = 0;
             
-            function checkConsoleTime() {
-                const start = performance.now();
-                console.log('%c', 'color: transparent');
-                const end = performance.now();
-                const diff = end - start;
+            function detectConsoleOpen() {
+                if (Date.now() - pageLoadTime < 3000) return;
                 
-                if (diff > 80) {
+                const before = Date.now();
+                console.log('%c', 'color: transparent');
+                const after = Date.now();
+                const timeDiff = after - before;
+                
+                if (timeDiff > 50) {
                     const now = Date.now();
-                    if (now - lastConsoleTime < 1000) {
+                    if (now - lastConsoleTime < 2000) {
                         consoleCheckCount++;
-                        if (consoleCheckCount >= 2) {
+                        if (consoleCheckCount >= 3) {
                             redirectToWarning();
                         }
                     } else {
@@ -160,147 +153,273 @@
                 }
             }
             
-            // ========== 方法3：检测debugger ==========
-            let debuggerCount = 0;
+            // 检测快捷键
+            let shortcutCount = 0;
+            let lastShortcutTime = 0;
             
-            function checkDebugger() {
-                const start = Date.now();
-                debugger;
-                const end = Date.now();
-                if (end - start > 100) {
-                    debuggerCount++;
-                    if (debuggerCount >= 2) {
-                        redirectToWarning();
+            function detectDevToolsShortcut(e) {
+                const isDevToolKey = e.key === 'F12' || 
+                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+                    (e.ctrlKey && (e.key === 'U' || e.key === 'S'));
+                
+                if (isDevToolKey) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const now = Date.now();
+                    if (now - lastShortcutTime < 1000) {
+                        shortcutCount++;
+                        if (shortcutCount >= 2) {
+                            redirectToWarning();
+                        }
+                    } else {
+                        shortcutCount = 1;
                     }
-                } else {
-                    debuggerCount = 0;
+                    lastShortcutTime = now;
+                    return false;
                 }
             }
             
-            // ========== 方法4：检测快捷键 ==========
-            function checkShortcut(e) {
-                // F12
-                if (e.key === 'F12') {
-                    e.preventDefault();
-                    redirectToWarning();
-                    return false;
-                }
-                // Ctrl+Shift+I (开发者工具)
-                if (e.ctrlKey && e.shiftKey && e.key === 'I') {
-                    e.preventDefault();
-                    redirectToWarning();
-                    return false;
-                }
-                // Ctrl+Shift+J (控制台)
-                if (e.ctrlKey && e.shiftKey && e.key === 'J') {
-                    e.preventDefault();
-                    redirectToWarning();
-                    return false;
-                }
-                // Ctrl+U (查看源代码)
-                if (e.ctrlKey && e.key === 'u') {
-                    e.preventDefault();
-                    redirectToWarning();
-                    return false;
-                }
-                // Ctrl+S (保存)
-                if (e.ctrlKey && e.key === 's') {
-                    e.preventDefault();
-                    redirectToWarning();
-                    return false;
-                }
-                return true;
-            }
-            
-            // ========== 方法5：检测右键菜单 ==========
+            // 检测右键菜单
             function disableRightClick(e) {
                 e.preventDefault();
                 return false;
             }
             
-            // ========== 方法6：检测控制台是否打开（通过检测元素检查） ==========
-            let elementCheckCount = 0;
+            // 检测元素检查
+            let mutationCount = 0;
+            let lastMutationTime = 0;
             
-            function checkElementInspection() {
-                const before = performance.now();
-                console.log(document.all);
-                const after = performance.now();
-                if (after - before > 50) {
-                    elementCheckCount++;
-                    if (elementCheckCount >= 3) {
+            function detectElementInspection() {
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'attributes') {
+                            const now = Date.now();
+                            if (now - lastMutationTime < 500) {
+                                mutationCount++;
+                                if (mutationCount >= 10) {
+                                    redirectToWarning();
+                                }
+                            } else {
+                                mutationCount = 1;
+                            }
+                            lastMutationTime = now;
+                        }
+                    });
+                });
+                
+                observer.observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['style', 'class', 'id']
+                });
+            }
+            
+            // 重写console方法
+            let consoleCommandCount = 0;
+            let lastCommandTime = 0;
+            
+            const originalLog = console.log;
+            const originalWarn = console.warn;
+            const originalError = console.error;
+            
+            console.log = function() {
+                const now = Date.now();
+                if (now - lastCommandTime < 100) {
+                    consoleCommandCount++;
+                    if (consoleCommandCount >= 5) {
                         redirectToWarning();
                     }
                 } else {
-                    elementCheckCount = 0;
+                    consoleCommandCount = 1;
+                }
+                lastCommandTime = now;
+                originalLog.apply(console, arguments);
+            };
+            
+            console.warn = function() {
+                const now = Date.now();
+                if (now - lastCommandTime < 100) {
+                    consoleCommandCount++;
+                    if (consoleCommandCount >= 5) {
+                        redirectToWarning();
+                    }
+                } else {
+                    consoleCommandCount = 1;
+                }
+                lastCommandTime = now;
+                originalWarn.apply(console, arguments);
+            };
+            
+            console.error = function() {
+                const now = Date.now();
+                if (now - lastCommandTime < 100) {
+                    consoleCommandCount++;
+                    if (consoleCommandCount >= 5) {
+                        redirectToWarning();
+                    }
+                } else {
+                    consoleCommandCount = 1;
+                }
+                lastCommandTime = now;
+                originalError.apply(console, arguments);
+            };
+            
+            // ========== CE/GG 修改器检测 ==========
+            
+            let modifierDetectCount = 0;
+            let lastModifierTime = 0;
+            
+            function detectMemoryModifiers() {
+                if (Date.now() - pageLoadTime < 5000) return;
+                
+                const userAgent = window.navigator.userAgent.toLowerCase();
+                const suspiciousPatterns = ['cheat', 'guardian', 'memory editor', 'speed hack'];
+                
+                let hasSuspicious = false;
+                for (let i = 0; i < suspiciousPatterns.length; i++) {
+                    if (userAgent.includes(suspiciousPatterns[i])) {
+                        hasSuspicious = true;
+                        break;
+                    }
+                }
+                
+                const suspiciousGlobals = ['GG', 'CHEAT_ENGINE', 'MemoryHack', 'SpeedHack', 'GameGuardian', 'CheatEngine'];
+                for (let i = 0; i < suspiciousGlobals.length; i++) {
+                    if (window[suspiciousGlobals[i]] !== undefined) {
+                        hasSuspicious = true;
+                        break;
+                    }
+                }
+                
+                const scripts = document.getElementsByTagName('script');
+                for (let i = 0; i < scripts.length; i++) {
+                    const src = scripts[i].src || '';
+                    if (src.includes('cheat') || src.includes('guardian') || src.includes('hack')) {
+                        hasSuspicious = true;
+                        break;
+                    }
+                }
+                
+                if (hasSuspicious) {
+                    const now = Date.now();
+                    if (now - lastModifierTime < 3000) {
+                        modifierDetectCount++;
+                        if (modifierDetectCount >= 2) {
+                            redirectToWarning();
+                        }
+                    } else {
+                        modifierDetectCount = 1;
+                    }
+                    lastModifierTime = now;
+                } else {
+                    modifierDetectCount = 0;
                 }
             }
             
-            // ========== 方法7：检测window.devicePixelRatio变化 ==========
-            let lastPixelRatio = window.devicePixelRatio;
-            setInterval(() => {
-                if (window.devicePixelRatio !== lastPixelRatio) {
-                    lastPixelRatio = window.devicePixelRatio;
-                    // 开发者工具可能改变DPI
-                    redirectToWarning();
-                }
-            }, 1000);
+            // 帧率检测
+            let lastFrameTime = performance.now();
+            let abnormalFrameCount = 0;
             
-            // ========== 方法8：检测是否在iframe中 ==========
+            function checkFrameRate() {
+                const now = performance.now();
+                const delta = now - lastFrameTime;
+                
+                if (delta < 5 || delta > 100) {
+                    abnormalFrameCount++;
+                    if (abnormalFrameCount > 10) {
+                        redirectToWarning();
+                    }
+                } else {
+                    abnormalFrameCount = Math.max(0, abnormalFrameCount - 1);
+                }
+                
+                lastFrameTime = now;
+                requestAnimationFrame(checkFrameRate);
+            }
+            
+            // 检测悬浮窗
+            function detectOverlay() {
+                setInterval(function() {
+                    const allElements = document.getElementsByTagName('*');
+                    for (let i = 0; i < Math.min(allElements.length, 100); i++) {
+                        const zIndex = window.getComputedStyle(allElements[i]).zIndex;
+                        if (zIndex && parseInt(zIndex) > 999999) {
+                            redirectToWarning();
+                            break;
+                        }
+                    }
+                }, 5000);
+            }
+            
+            // ========== 初始化检测 ==========
+            
+            document.addEventListener('keydown', detectDevToolsShortcut);
+            document.addEventListener('contextmenu', disableRightClick);
+            detectElementInspection();
+            
+            setInterval(function() {
+                detectDevToolsBySize();
+                detectConsoleOpen();
+                detectMemoryModifiers();
+            }, 2000);
+            
+            setTimeout(() => {
+                requestAnimationFrame(checkFrameRate);
+            }, 5000);
+            
+            setTimeout(() => {
+                detectOverlay();
+            }, 3000);
+            
+            // 检测iframe
             if (window.self !== window.top) {
                 redirectToWarning();
             }
             
-            // ========== 方法9：检测webdriver ==========
-            if (window.navigator.webdriver === true) {
+            // 检测无头浏览器
+            if (/HeadlessChrome/.test(window.navigator.userAgent)) {
                 redirectToWarning();
             }
             
-            // ========== 启动所有检测 ==========
+            // 检测webdriver
+            if (window.navigator.webdriver || window.navigator.webdriver === true) {
+                redirectToWarning();
+            }
             
-            // 先检查设备是否已被锁定
-            (async () => {
-                try {
-                    const { data } = await supabase
-                        .from('nxld_data')
-                        .select('device_locked')
-                        .eq('device_id', DEVICE_ID)
-                        .eq('type', 'device')
-                        .maybeSingle();
-                    
-                    if (data?.device_locked === true) {
-                        window.location.href = REDIRECT_URL;
-                        return;
+            // 检测开启成功提示
+            setTimeout(function() {
+                console.log('✅ 安全防护已启动 - 检测到3次调试行为将永久锁定网站');
+            }, 1000);
+            
+            // 显示提示（如果有alert，会被用户看到）
+            setTimeout(function() {
+                const style = document.createElement('style');
+                style.textContent = `
+                    .security-tip {
+                        position: fixed;
+                        bottom: 60px;
+                        left: 20px;
+                        background: rgba(16, 185, 129, 0.9);
+                        color: white;
+                        padding: 6px 12px;
+                        border-radius: 20px;
+                        font-size: 11px;
+                        z-index: 9999;
+                        backdrop-filter: blur(4px);
+                        pointer-events: none;
+                        font-family: monospace;
                     }
-                } catch(e) {}
-                
-                console.log('安全检测已启动');
-                
-                // 尺寸检测（每0.5秒）
-                setInterval(checkSize, 500);
-                
-                // console时间检测（每1秒）
-                setInterval(checkConsoleTime, 1000);
-                
-                // debugger检测（每1秒）
-                setInterval(checkDebugger, 1000);
-                
-                // 元素检查检测（每2秒）
-                setInterval(checkElementInspection, 2000);
-                
-                // 快捷键监听
-                document.addEventListener('keydown', checkShortcut);
-                document.addEventListener('contextmenu', disableRightClick);
-                
-                // 立即执行一次检测
-                setTimeout(() => {
-                    checkSize();
-                    checkConsoleTime();
-                    checkDebugger();
-                }, 1000);
-                
-            })();
+                `;
+                document.head.appendChild(style);
+                const tip = document.createElement('div');
+                tip.className = 'security-tip';
+                tip.innerHTML = '🔒 安全防护已启动';
+                document.body.appendChild(tip);
+                setTimeout(() => tip.remove(), 3000);
+            }, 2000);
             
-            // 防止选中（输入框除外）
+            // ========== 正常用户保护 ==========
+            
             document.addEventListener('selectstart', function(e) {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                     return true;
@@ -316,11 +435,10 @@
                 e.preventDefault();
                 return false;
             });
-            
         })();
     </script>
     
-    <!-- 使用多个备用CDN -->
+    <!-- 其余样式和脚本保持不变 -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
@@ -333,21 +451,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* 测试提示样式 */
-        .test-console {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.7);
-            color: #10b981;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 12px;
-            z-index: 10000;
-            font-family: monospace;
-            pointer-events: none;
-        }
-        
+        /* 所有样式保持不变 - 只保留必要的 */
         * {
             user-select: none;
             -webkit-user-select: none;
@@ -1831,10 +1935,6 @@
         </div>
     </div>
 
-    <div class="test-console" id="testConsole">
-        🔍 检测已启动 | 按F12测试
-    </div>
-
     <script>
         (function() {
             // 显示加载动画
@@ -1843,7 +1943,6 @@
             // Supabase 配置
             const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
             const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
-            const SUPER_PASSWORD = 'NXLD_MZRW';
             
             // 初始化 Supabase 客户端
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1861,7 +1960,6 @@
             const cloudStatus = document.getElementById('cloudStatus');
             const cloudIcon = document.getElementById('cloudIcon');
             const cloudText = document.getElementById('cloudText');
-            const testConsole = document.getElementById('testConsole');
             
             const thanksBtn = document.getElementById('thanksBtn');
             const thanksModal = document.getElementById('thanksModal');
@@ -1878,83 +1976,10 @@
             let approvedSignatures = [];
             let fixedSignatures = [];
             let operationLogs = [];
-            let lockedDevices = [];
+
+            // 当前选中的标签页
             let currentTab = 'pending';
-            
-            // 获取设备ID
-            function getDeviceId() {
-                try {
-                    let deviceId = localStorage.getItem('nxld_device_id');
-                    if (!deviceId) {
-                        const navigatorInfo = `${navigator.userAgent}|${navigator.language}|${screen.width}x${screen.height}|${new Date().getTimezoneOffset()}`;
-                        let hash = 0;
-                        for (let i = 0; i < navigatorInfo.length; i++) {
-                            const char = navigatorInfo.charCodeAt(i);
-                            hash = ((hash << 5) - hash) + char;
-                            hash = hash & hash;
-                        }
-                        deviceId = Math.abs(hash).toString(16) + Date.now().toString(16);
-                        localStorage.setItem('nxld_device_id', deviceId);
-                    }
-                    return deviceId;
-                } catch(e) {
-                    return 'unknown_' + Date.now();
-                }
-            }
-            
-            const DEVICE_ID = getDeviceId();
-            
-            // 更新测试控制台信息
-            function updateTestConsole(message) {
-                if (testConsole) {
-                    testConsole.innerHTML = `🔍 ${message}`;
-                    setTimeout(() => {
-                        if (testConsole && !testConsole.innerHTML.includes('检测到')) {
-                            testConsole.innerHTML = '🔍 检测已启动 | 按F12测试';
-                        }
-                    }, 2000);
-                }
-            }
-            
-            // 获取所有锁定的设备
-            async function getLockedDevices() {
-                try {
-                    const { data, error } = await supabase
-                        .from('nxld_data')
-                        .select('*')
-                        .eq('type', 'device')
-                        .eq('device_locked', true)
-                        .order('lock_time', { ascending: false });
-                    
-                    if (error) throw error;
-                    return data || [];
-                } catch(e) {
-                    console.error('获取锁定设备失败:', e);
-                    return [];
-                }
-            }
-            
-            // 解锁指定设备
-            async function unlockDeviceByDeviceId(deviceId) {
-                try {
-                    const { error } = await supabase
-                        .from('nxld_data')
-                        .update({
-                            device_locked: false,
-                            violation_count: 0,
-                            lock_time: null
-                        })
-                        .eq('device_id', deviceId)
-                        .eq('type', 'device');
-                    
-                    if (error) throw error;
-                    return true;
-                } catch(e) {
-                    console.error('解锁失败:', e);
-                    return false;
-                }
-            }
-            
+
             // 设置云同步状态
             function setCloudStatus(status, message) {
                 cloudText.textContent = message;
@@ -1984,31 +2009,29 @@
                 try {
                     setCloudStatus('syncing', '加载数据...');
                     
-                    // 加载签名数据
                     const { data: signatures, error } = await supabase
                         .from('nxld_data')
                         .select('*')
-                        .in('type', ['fixed', 'user'])
                         .order('submit_time', { ascending: false });
                     
                     if (error) throw error;
                     
-                    fixedSignatures = (signatures || []).filter(s => s.type === 'fixed').map(s => ({
+                    // 分类数据 - 强制为所有固定签名添加 platform = 'qq'
+                    fixedSignatures = signatures.filter(s => s.type === 'fixed').map(s => ({
+                        ...s,
+                        platform: 'qq'
+                    }));
+                    
+                    pendingSignatures = signatures.filter(s => s.status === 'pending' && s.type === 'user').map(s => ({
                         ...s,
                         platform: s.platform || 'qq'
                     }));
                     
-                    pendingSignatures = (signatures || []).filter(s => s.status === 'pending' && s.type === 'user').map(s => ({
+                    approvedSignatures = signatures.filter(s => s.status === 'approved' && s.type === 'user').map(s => ({
                         ...s,
                         platform: s.platform || 'qq'
                     }));
                     
-                    approvedSignatures = (signatures || []).filter(s => s.status === 'approved' && s.type === 'user').map(s => ({
-                        ...s,
-                        platform: s.platform || 'qq'
-                    }));
-                    
-                    // 加载日志
                     const { data: logs, error: logError } = await supabase
                         .from('nxld_data')
                         .select('*')
@@ -2024,9 +2047,6 @@
                             status: log.status
                         }));
                     }
-                    
-                    // 加载锁定设备列表
-                    lockedDevices = await getLockedDevices();
                     
                     setCloudStatus('synced', '已同步');
                     return signatures;
@@ -2134,13 +2154,6 @@
                     .on('postgres_changes', 
                         { event: '*', schema: 'public', table: 'nxld_data' },
                         async (payload) => {
-                            if (payload.new?.type === 'device') {
-                                lockedDevices = await getLockedDevices();
-                                if (currentAdminLevel === 'super' && historyStack[historyStack.length - 1] === VIEWS.ADMIN_PAGE) {
-                                    showAdminPanel();
-                                }
-                                return;
-                            }
                             await loadFromSupabase();
                             const currentView = historyStack[historyStack.length - 1];
                             if (currentView === VIEWS.SIGNATURE_PAGE) {
@@ -2190,71 +2203,56 @@
                     .replace(/<u>/g, '<u>').replace(/<\/u>/g, '</u>');
             }
 
-            // 管理员面板
+            // 管理员面板 - 新增解锁功能
             async function showAdminPanel() {
                 await loadFromSupabase();
                 const container = document.createElement('div');
                 
-                // 锁定设备管理（仅超级管理员）
-                if (currentAdminLevel === 'super') {
-                    const lockedDevicesSection = document.createElement('div');
-                    lockedDevicesSection.className = 'submit-form';
-                    lockedDevicesSection.style.marginBottom = '2rem';
+                // 检查网站是否被锁定
+                const isLocked = localStorage.getItem('nxld_site_locked') === 'true';
+                const lockReason = localStorage.getItem('nxld_lock_reason') || '无';
+                const lockTime = localStorage.getItem('nxld_lock_time') || '未知';
+                
+                if (isLocked && currentAdminLevel === 'super') {
+                    // 超级管理员可以看到解锁按钮
+                    const lockWarning = document.createElement('div');
+                    lockWarning.style.cssText = 'background:rgba(239,68,68,0.2);border:1px solid #ef4444;border-radius:1rem;padding:1rem;margin-bottom:1.5rem;text-align:center';
+                    lockWarning.innerHTML = `
+                        <i class="fas fa-lock" style="color:#ef4444;font-size:1.5rem;margin-bottom:0.5rem;display:block"></i>
+                        <div style="color:#ef4444;font-weight:bold;margin-bottom:0.5rem">⚠️ 网站已被锁定</div>
+                        <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:0.5rem">原因: ${lockReason}</div>
+                        <div style="color:#9ca3af;font-size:0.7rem;margin-bottom:1rem">锁定时间: ${lockTime}</div>
+                        <button class="query-button" id="unlockSiteBtn" style="background:#10b981">🔓 解锁网站</button>
+                    `;
+                    container.appendChild(lockWarning);
                     
-                    let lockedHtml = '<h3 style="color: #f59e0b; margin-bottom: 1rem;"><i class="fas fa-lock"></i> 已锁定设备管理</h3>';
-                    
-                    if (lockedDevices.length === 0) {
-                        lockedHtml += '<div style="color: #9ca3af; text-align: center; padding: 2rem;">暂无锁定的设备</div>';
-                    } else {
-                        lockedHtml += '<div style="max-height: 400px; overflow-y: auto;">';
-                        lockedDevices.forEach(device => {
-                            const lockTime = device.lock_time ? new Date(device.lock_time).toLocaleString() : '未知';
-                            lockedHtml += `
-                                <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
-                                    <div style="margin-bottom: 0.5rem;">
-                                        <span style="color: #818cf8;">设备ID:</span> 
-                                        <span style="font-family: monospace; font-size: 0.8rem;">${device.device_id}</span>
-                                    </div>
-                                    <div style="margin-bottom: 0.5rem;">
-                                        <span style="color: #818cf8;">违规次数:</span> 
-                                        <span style="color: #ef4444;">${device.violation_count} 次</span>
-                                    </div>
-                                    <div style="margin-bottom: 0.5rem;">
-                                        <span style="color: #818cf8;">锁定时间:</span> 
-                                        ${lockTime}
-                                    </div>
-                                    <button class="query-button" style="background: #10b981; margin-top: 0.5rem;" onclick="window.unlockDevice('${device.device_id}')">
-                                        <i class="fas fa-unlock-alt"></i> 解锁此设备
-                                    </button>
-                                </div>
-                            `;
-                        });
-                        lockedHtml += '</div>';
-                    }
-                    
-                    lockedDevicesSection.innerHTML = lockedHtml;
-                    container.appendChild(lockedDevicesSection);
-                    
-                    window.unlockDevice = async (deviceId) => {
-                        if (confirm(`确定要解锁设备 ${deviceId.substring(0, 16)}... 吗？`)) {
-                            const success = await unlockDeviceByDeviceId(deviceId);
-                            if (success) {
-                                await addLog('解锁设备', `超级管理员解锁了设备: ${deviceId}`);
-                                showToast('设备已解锁');
-                                await loadFromSupabase();
-                                showAdminPanel();
-                            } else {
-                                showToast('解锁失败');
-                            }
+                    document.getElementById('unlockSiteBtn').addEventListener('click', function() {
+                        if (confirm('确定要解锁网站吗？解锁后用户可以正常访问。')) {
+                            localStorage.removeItem('nxld_site_locked');
+                            localStorage.removeItem('nxld_detect_count');
+                            localStorage.removeItem('nxld_lock_time');
+                            localStorage.removeItem('nxld_lock_reason');
+                            showToast('✅ 网站已解锁，刷新页面后生效');
+                            setTimeout(() => location.reload(), 1500);
                         }
-                    };
+                    });
+                } else if (isLocked) {
+                    // 非超级管理员看到锁定提示，无法操作
+                    const lockWarning = document.createElement('div');
+                    lockWarning.style.cssText = 'background:rgba(239,68,68,0.2);border:1px solid #ef4444;border-radius:1rem;padding:1rem;margin-bottom:1.5rem;text-align:center';
+                    lockWarning.innerHTML = `
+                        <i class="fas fa-lock" style="color:#ef4444;font-size:1.5rem;margin-bottom:0.5rem;display:block"></i>
+                        <div style="color:#ef4444;font-weight:bold;margin-bottom:0.5rem">⚠️ 网站已被锁定</div>
+                        <div style="color:#9ca3af;font-size:0.8rem">请联系超级管理员解锁</div>
+                    `;
+                    container.appendChild(lockWarning);
                 }
                 
                 const levelBadge = document.createElement('div');
-                levelBadge.style.cssText = 'text-align:center;margin-bottom:1.5rem;margin-top:1rem;padding:0.5rem;border-radius:2rem';
+                levelBadge.style.cssText = 'text-align:center;margin-bottom:1.5rem;padding:0.5rem;border-radius:2rem';
                 levelBadge.style.background = currentAdminLevel === 'super' ? 'rgba(139,92,246,0.2)' : 'rgba(16,185,129,0.2)';
                 levelBadge.style.color = currentAdminLevel === 'super' ? '#a78bfa' : '#10b981';
-                levelBadge.innerHTML = currentAdminLevel === 'super' ? '<i class="fas fa-crown"></i> 超级管理员模式（可删除/解锁设备）' : '<i class="fas fa-user"></i> 普通管理员模式（仅可审核）';
+                levelBadge.innerHTML = currentAdminLevel === 'super' ? '<i class="fas fa-crown"></i> 超级管理员模式（可删除/解锁）' : '<i class="fas fa-user"></i> 普通管理员模式（仅可审核）';
                 container.appendChild(levelBadge);
                 
                 const statsContainer = document.createElement('div');
@@ -2618,30 +2616,12 @@
             submitSignatureBtn.onclick = () => showSubmitSignature();
             adminBtn.onclick = () => { currentAdminLevel = 'guest'; showAdminPage(); searchInput.value = ''; };
             
-            // 初始化
             window.addEventListener('load', async () => {
-                // 先检查设备锁定状态
-                try {
-                    const { data } = await supabase
-                        .from('nxld_data')
-                        .select('device_locked')
-                        .eq('device_id', DEVICE_ID)
-                        .eq('type', 'device')
-                        .maybeSingle();
-                    
-                    if (data?.device_locked === true) {
-                        window.location.href = 'https://wjjz.wjzyw.top/projects/FZB/index.html';
-                        return;
-                    }
-                } catch(e) {}
-                
                 setCloudStatus('syncing', '连接数据库...');
                 await loadFromSupabase();
                 setupRealtime();
                 showSupernaturalInitial();
                 if (loadingSpinner) loadingSpinner.style.display = 'none';
-                
-                updateTestConsole('✅ 检测已启动');
             });
         })();
     </script>
