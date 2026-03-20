@@ -5,15 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>NXLD数值库</title>
     
-    <!-- 防调试检测脚本 - 超级管理员可远程解锁版 -->
+    <!-- 简化的防调试检测脚本 - 只检测开发者模式和快捷键 -->
     <script>
         (function() {
             // 跳转URL
             const REDIRECT_URL = 'https://wjjz.wjzyw.top/projects/FZB/index.html';
             
-            // 生成唯一设备ID（基于浏览器指纹）
+            // 生成唯一设备ID
             function generateDeviceId() {
-                const navigatorInfo = `${navigator.userAgent}|${navigator.language}|${screen.width}x${screen.height}|${screen.colorDepth}|${navigator.hardwareConcurrency || 0}|${new Date().getTimezoneOffset()}`;
+                const navigatorInfo = `${navigator.userAgent}|${navigator.language}|${screen.width}x${screen.height}|${new Date().getTimezoneOffset()}`;
                 let hash = 0;
                 for (let i = 0; i < navigatorInfo.length; i++) {
                     const char = navigatorInfo.charCodeAt(i);
@@ -25,80 +25,51 @@
             
             const DEVICE_ID = generateDeviceId();
             
-            // 存储到localStorage作为缓存
+            // 存储设备ID
             try {
                 localStorage.setItem('nxld_device_id', DEVICE_ID);
             } catch(e) {}
             
-            // 标记是否已触发跳转
             let hasRedirected = false;
             let redirectTimer = null;
             let violationTriggered = false;
-            let pageStable = false;
-            
-            // 设备锁定状态
-            let deviceLocked = false;
-            let currentViolationCount = 0;
+            let pageLoaded = false;
             
             // Supabase 配置
             const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
             const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
-            
-            // 初始化 Supabase 客户端
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             
-            // 从服务器获取设备锁定状态
-            async function fetchDeviceLockStatus() {
+            // 获取设备锁定状态
+            async function isDeviceLocked() {
                 try {
                     const { data, error } = await supabase
                         .from('nxld_data')
-                        .select('device_locked, violation_count, lock_time, id')
+                        .select('device_locked')
                         .eq('device_id', DEVICE_ID)
+                        .eq('type', 'device')
                         .maybeSingle();
-                    
-                    if (error && error.code !== 'PGRST116') {
-                        console.error('获取设备状态失败:', error);
-                        return false;
-                    }
-                    
-                    if (data) {
-                        deviceLocked = data.device_locked || false;
-                        currentViolationCount = data.violation_count || 0;
-                        
-                        // 如果设备被锁定，立即跳转
-                        if (deviceLocked) {
-                            window.location.href = REDIRECT_URL;
-                            return true;
-                        }
-                    }
-                    return false;
-                } catch (e) {
-                    console.error('获取设备状态异常:', e);
+                    if (error) return false;
+                    return data?.device_locked === true;
+                } catch(e) {
                     return false;
                 }
             }
             
-            // 增加违规次数（同步到服务器）
+            // 增加违规次数
             async function addViolation() {
                 try {
-                    // 先获取当前状态
-                    const { data: existing, error: queryError } = await supabase
+                    const { data: existing } = await supabase
                         .from('nxld_data')
-                        .select('violation_count, device_locked, id')
+                        .select('violation_count, id')
                         .eq('device_id', DEVICE_ID)
+                        .eq('type', 'device')
                         .maybeSingle();
                     
                     let newCount = 1;
-                    let recordId = null;
-                    
-                    if (existing && !queryError) {
+                    if (existing) {
                         newCount = (existing.violation_count || 0) + 1;
-                        recordId = existing.id;
-                    }
-                    
-                    // 更新或插入记录
-                    if (existing && !queryError) {
-                        const { error: updateError } = await supabase
+                        await supabase
                             .from('nxld_data')
                             .update({
                                 violation_count: newCount,
@@ -106,10 +77,8 @@
                                 device_locked: newCount >= 3
                             })
                             .eq('device_id', DEVICE_ID);
-                        
-                        if (updateError) throw updateError;
                     } else {
-                        const { error: insertError } = await supabase
+                        await supabase
                             .from('nxld_data')
                             .insert({
                                 device_id: DEVICE_ID,
@@ -120,52 +89,18 @@
                                 device_locked: newCount >= 3,
                                 lock_time: newCount >= 3 ? new Date().toISOString() : null
                             });
-                        
-                        if (insertError) throw insertError;
                     }
                     
-                    currentViolationCount = newCount;
-                    
-                    // 如果达到3次，锁定设备
                     if (newCount >= 3) {
-                        deviceLocked = true;
                         window.location.href = REDIRECT_URL;
-                        return;
                     }
-                    
                     return newCount;
-                } catch (e) {
-                    console.error('增加违规次数失败:', e);
+                } catch(e) {
                     return 0;
                 }
             }
             
-            // 跳转函数
-            async function redirectToWarning() {
-                if (hasRedirected) return;
-                if (violationTriggered) return;
-                
-                // 先检查设备是否已被锁定
-                const isLocked = await fetchDeviceLockStatus();
-                if (isLocked) return;
-                
-                violationTriggered = true;
-                hasRedirected = true;
-                
-                // 增加违规次数
-                const count = await addViolation();
-                
-                // 显示违规警告
-                showViolationWarning(count);
-                
-                // 延迟1秒后跳转
-                if (redirectTimer) clearTimeout(redirectTimer);
-                redirectTimer = setTimeout(function() {
-                    window.location.href = REDIRECT_URL;
-                }, 1000);
-            }
-            
-            // 显示违规警告
+            // 显示警告
             function showViolationWarning(count) {
                 const warningDiv = document.createElement('div');
                 warningDiv.style.cssText = `
@@ -181,52 +116,54 @@
                     text-align: center;
                     z-index: 10000;
                     min-width: 300px;
-                    animation: fadeInOut 2s ease;
                 `;
                 warningDiv.innerHTML = `
                     <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;"></i>
                     <h3 style="color: #fff; margin-bottom: 0.5rem;">⚠️ 检测到调试行为</h3>
                     <p style="color: #9ca3af; margin-bottom: 1rem;">违规次数: ${count} / 3</p>
-                    <p style="color: #fbbf24; font-size: 0.85rem;">${count >= 3 ? '设备已被永久锁定！' : '再次违规将永久锁定设备'}</p>
+                    <p style="color: #fbbf24;">${count >= 3 ? '设备已被永久锁定！' : '再次违规将永久锁定设备'}</p>
                     <div style="margin-top: 1rem; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, #ef4444, transparent);"></div>
-                    <p style="color: #6b7280; font-size: 0.7rem; margin-top: 1rem;">页面将在1秒后跳转</p>
+                    <p style="color: #6b7280; font-size: 0.7rem; margin-top: 1rem;">页面即将跳转...</p>
                 `;
                 document.body.appendChild(warningDiv);
-                
-                // 添加动画样式
-                const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes fadeInOut {
-                        0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
-                        15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-                        85% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-                        100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); visibility: hidden; }
-                    }
-                `;
-                document.head.appendChild(style);
                 
                 setTimeout(() => {
                     if (warningDiv && warningDiv.parentNode) {
                         warningDiv.remove();
                     }
-                }, 2000);
+                }, 1500);
             }
             
-            // ========== 开发者工具检测（加强版） ==========
-            
-            // 检测窗口尺寸变化
-            let sizeCheckCount = 0;
-            let lastSizeCheckTime = 0;
-            
-            function detectDevToolsBySize() {
-                if (!pageStable) return;
+            // 跳转函数
+            async function redirectToWarning() {
+                if (hasRedirected) return;
+                if (violationTriggered) return;
                 
+                violationTriggered = true;
+                hasRedirected = true;
+                
+                const count = await addViolation();
+                showViolationWarning(count);
+                
+                redirectTimer = setTimeout(function() {
+                    window.location.href = REDIRECT_URL;
+                }, 1500);
+            }
+            
+            // ========== 开发者模式检测 ==========
+            
+            // 检测窗口尺寸变化（开发者工具打开时）
+            let sizeCheckCount = 0;
+            let lastSizeCheck = 0;
+            
+            function checkDevToolsBySize() {
                 const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
                 const heightDiff = Math.abs(window.outerHeight - window.innerHeight);
                 
+                // 开发者工具打开时，内外尺寸差会变大
                 if (widthDiff > 150 || heightDiff > 150) {
                     const now = Date.now();
-                    if (now - lastSizeCheckTime < 1000) {
+                    if (now - lastSizeCheck < 500) {
                         sizeCheckCount++;
                         if (sizeCheckCount >= 2) {
                             redirectToWarning();
@@ -234,27 +171,26 @@
                     } else {
                         sizeCheckCount = 1;
                     }
-                    lastSizeCheckTime = now;
+                    lastSizeCheck = now;
                 } else {
                     sizeCheckCount = 0;
                 }
             }
             
-            // 检测控制台打开
+            // 检测 console 打开（通过执行时间）
             let consoleCheckCount = 0;
-            let lastConsoleTime = 0;
+            let lastConsoleCheck = 0;
             
-            function detectConsoleOpen() {
-                if (!pageStable) return;
-                
+            function checkDevToolsByConsole() {
                 const before = Date.now();
                 console.log('%c', 'color: transparent');
                 const after = Date.now();
-                const timeDiff = after - before;
+                const diff = after - before;
                 
-                if (timeDiff > 80) {
+                // 控制台打开时，console.log 执行时间会变长
+                if (diff > 80) {
                     const now = Date.now();
-                    if (now - lastConsoleTime < 2000) {
+                    if (now - lastConsoleCheck < 1000) {
                         consoleCheckCount++;
                         if (consoleCheckCount >= 2) {
                             redirectToWarning();
@@ -262,175 +198,101 @@
                     } else {
                         consoleCheckCount = 1;
                     }
-                    lastConsoleTime = now;
+                    lastConsoleCheck = now;
                 } else {
                     consoleCheckCount = 0;
                 }
             }
             
-            // 检测快捷键
-            let shortcutCount = 0;
-            let lastShortcutTime = 0;
+            // ========== 快捷键检测 ==========
             
-            function detectDevToolsShortcut(e) {
-                const isDevToolKey = e.key === 'F12' || 
-                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
-                    (e.ctrlKey && (e.key === 'U' || e.key === 'S'));
-                
-                if (isDevToolKey) {
+            let shortcutCount = 0;
+            let lastShortcut = 0;
+            
+            function detectShortcut(e) {
+                // F12
+                if (e.key === 'F12') {
                     e.preventDefault();
                     e.stopPropagation();
-                    
-                    setTimeout(function() {
-                        const now = Date.now();
-                        if (now - lastShortcutTime < 1000) {
-                            shortcutCount++;
-                            if (shortcutCount >= 1) {
-                                redirectToWarning();
-                            }
-                        } else {
-                            shortcutCount = 1;
-                        }
-                        lastShortcutTime = now;
-                    }, 100);
+                    redirectToWarning();
                     return false;
                 }
+                // Ctrl+Shift+I (开发者工具)
+                if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    redirectToWarning();
+                    return false;
+                }
+                // Ctrl+Shift+J (控制台)
+                if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    redirectToWarning();
+                    return false;
+                }
+                // Ctrl+U (查看源代码)
+                if (e.ctrlKey && e.key === 'u') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    redirectToWarning();
+                    return false;
+                }
+                // Ctrl+S (保存)
+                if (e.ctrlKey && e.key === 's') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    redirectToWarning();
+                    return false;
+                }
+                return true;
             }
             
+            // 禁用右键菜单
             function disableRightClick(e) {
                 e.preventDefault();
                 return false;
             }
             
-            // CE/GG 修改器检测
-            let modifierCheckCount = 0;
-            let lastModifierTime = 0;
+            // ========== 启动检测 ==========
             
-            function detectMemoryModifiers() {
-                if (!pageStable) return;
-                
-                const userAgent = window.navigator.userAgent.toLowerCase();
-                const suspiciousPatterns = ['cheat', 'guardian', 'memoryhack', 'speedhack', 'gameguardian', 'cheatengine'];
-                
-                for (let i = 0; i < suspiciousPatterns.length; i++) {
-                    if (userAgent.includes(suspiciousPatterns[i])) {
-                        redirectToWarning();
-                        return;
-                    }
-                }
-                
-                const suspiciousGlobals = ['GG', 'CHEAT_ENGINE', 'MemoryHack', 'GameGuardian', 'CheatEngine', 'SpeedHack'];
-                for (let i = 0; i < suspiciousGlobals.length; i++) {
-                    if (window[suspiciousGlobals[i]] !== undefined) {
-                        redirectToWarning();
-                        return;
-                    }
-                }
-                
-                // 检测是否有注入的脚本
-                const scripts = document.getElementsByTagName('script');
-                for (let i = 0; i < scripts.length; i++) {
-                    const src = scripts[i].src || '';
-                    if (src.includes('cheat') || src.includes('guardian') || src.includes('hack')) {
-                        redirectToWarning();
-                        return;
-                    }
-                }
-            }
-            
-            // 帧率异常检测
-            let frameCount = 0;
-            let lastFrameTime = performance.now();
-            let frameCheckActive = false;
-            
-            function checkFrameRate() {
-                if (!pageStable || !frameCheckActive) {
-                    requestAnimationFrame(checkFrameRate);
+            // 先检查设备是否已被锁定
+            isDeviceLocked().then(locked => {
+                if (locked) {
+                    window.location.href = REDIRECT_URL;
                     return;
                 }
                 
-                const now = performance.now();
-                const delta = now - lastFrameTime;
+                // 页面加载完成2秒后启动检测
+                setTimeout(() => {
+                    pageLoaded = true;
+                }, 2000);
                 
-                if (delta < 3 || delta > 120) {
-                    frameCount++;
-                    if (frameCount > 10) {
-                        redirectToWarning();
+                // 尺寸检测（每1秒）
+                setInterval(() => {
+                    if (pageLoaded) {
+                        checkDevToolsBySize();
                     }
-                } else {
-                    frameCount = 0;
-                }
+                }, 1000);
                 
-                lastFrameTime = now;
-                requestAnimationFrame(checkFrameRate);
-            }
-            
-            // 悬浮窗检测
-            let overlayCheckActive = false;
-            
-            function detectOverlay() {
-                if (!pageStable || !overlayCheckActive) return;
+                // console检测（每2秒）
+                setInterval(() => {
+                    if (pageLoaded) {
+                        checkDevToolsByConsole();
+                    }
+                }, 2000);
                 
-                const allElements = document.getElementsByTagName('*');
-                for (let i = 0; i < Math.min(allElements.length, 100); i++) {
-                    const zIndex = window.getComputedStyle(allElements[i]).zIndex;
-                    if (zIndex && parseInt(zIndex) > 999999) {
-                        redirectToWarning();
-                        break;
-                    }
-                }
-            }
-            
-            // ========== 启动检测 ==========
-            
-            // 先检查设备锁定状态
-            fetchDeviceLockStatus().then(isLocked => {
-                if (!isLocked) {
-                    // 延迟启动检测
-                    setTimeout(function() {
-                        pageStable = true;
-                    }, 1000);
-                    
-                    setTimeout(function() {
-                        frameCheckActive = true;
-                    }, 3000);
-                    
-                    setTimeout(function() {
-                        overlayCheckActive = true;
-                        setInterval(detectOverlay, 3000);
-                    }, 2000);
-                    
-                    document.addEventListener('keydown', detectDevToolsShortcut);
-                    document.addEventListener('contextmenu', disableRightClick);
-                    
-                    // 立即启动主要检测
-                    setInterval(function() {
-                        if (pageStable) {
-                            detectDevToolsBySize();
-                            detectConsoleOpen();
-                            detectMemoryModifiers();
-                        }
-                    }, 1000);
-                    
-                    // iframe检测
-                    if (window.self !== window.top) {
-                        redirectToWarning();
-                    }
-                    
-                    // 无头浏览器检测
-                    if (/HeadlessChrome/.test(window.navigator.userAgent)) {
-                        redirectToWarning();
-                    }
-                    
-                    // webdriver检测
-                    if (window.navigator.webdriver || window.navigator.webdriver === true) {
-                        redirectToWarning();
-                    }
+                // 快捷键监听
+                document.addEventListener('keydown', detectShortcut);
+                document.addEventListener('contextmenu', disableRightClick);
+                
+                // iframe检测
+                if (window.self !== window.top) {
+                    redirectToWarning();
                 }
             });
             
-            // ========== 正常用户保护 ==========
-            
+            // 防止选中（输入框除外）
             document.addEventListener('selectstart', function(e) {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                     return true;
@@ -462,6 +324,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
+        /* 样式保持不变 - 只保留必要的 */
         * {
             user-select: none;
             -webkit-user-select: none;
@@ -1995,7 +1858,7 @@
                 try {
                     let deviceId = localStorage.getItem('nxld_device_id');
                     if (!deviceId) {
-                        const navigatorInfo = `${navigator.userAgent}|${navigator.language}|${screen.width}x${screen.height}|${screen.colorDepth}|${navigator.hardwareConcurrency || 0}|${new Date().getTimezoneOffset()}`;
+                        const navigatorInfo = `${navigator.userAgent}|${navigator.language}|${screen.width}x${screen.height}|${new Date().getTimezoneOffset()}`;
                         let hash = 0;
                         for (let i = 0; i < navigatorInfo.length; i++) {
                             const char = navigatorInfo.charCodeAt(i);
@@ -2013,37 +1876,21 @@
             
             const DEVICE_ID = getDeviceId();
             
-            // 检查设备是否被锁定
-            async function isDeviceLocked() {
+            // 获取所有锁定的设备
+            async function getLockedDevices() {
                 try {
                     const { data, error } = await supabase
                         .from('nxld_data')
-                        .select('device_locked, violation_count')
-                        .eq('device_id', DEVICE_ID)
+                        .select('*')
                         .eq('type', 'device')
-                        .maybeSingle();
+                        .eq('device_locked', true)
+                        .order('lock_time', { ascending: false });
                     
-                    if (error) return false;
-                    return data?.device_locked === true;
+                    if (error) throw error;
+                    return data || [];
                 } catch(e) {
-                    return false;
-                }
-            }
-            
-            // 获取违规次数
-            async function getViolationCount() {
-                try {
-                    const { data, error } = await supabase
-                        .from('nxld_data')
-                        .select('violation_count')
-                        .eq('device_id', DEVICE_ID)
-                        .eq('type', 'device')
-                        .maybeSingle();
-                    
-                    if (error) return 0;
-                    return data?.violation_count || 0;
-                } catch(e) {
-                    return 0;
+                    console.error('获取锁定设备失败:', e);
+                    return [];
                 }
             }
             
@@ -2066,49 +1913,6 @@
                     console.error('解锁失败:', e);
                     return false;
                 }
-            }
-            
-            // 获取所有锁定的设备
-            async function getLockedDevices() {
-                try {
-                    const { data, error } = await supabase
-                        .from('nxld_data')
-                        .select('*')
-                        .eq('type', 'device')
-                        .eq('device_locked', true)
-                        .order('lock_time', { ascending: false });
-                    
-                    if (error) throw error;
-                    return data || [];
-                } catch(e) {
-                    console.error('获取锁定设备失败:', e);
-                    return [];
-                }
-            }
-            
-            // 检查设备锁定状态，如果锁定则显示锁定界面
-            async function checkAndShowLock() {
-                const locked = await isDeviceLocked();
-                if (locked) {
-                    const violationCount = await getViolationCount();
-                    const lockTime = new Date().toLocaleString();
-                    
-                    document.body.innerHTML = `
-                        <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #0c0f1e; font-family: sans-serif; padding: 2rem;">
-                            <div style="background: rgba(18,22,40,0.95); backdrop-filter: blur(20px); border-radius: 2rem; padding: 2.5rem; text-align: center; border: 2px solid #ef4444; max-width: 500px;">
-                                <i class="fas fa-lock" style="font-size: 4rem; color: #ef4444; margin-bottom: 1rem;"></i>
-                                <h2 style="color: #fff; margin-bottom: 1rem;">设备已被永久锁定</h2>
-                                <p style="color: #9ca3af; margin-bottom: 1rem;">检测到 ${violationCount} 次违规调试行为，该设备已被永久锁定。</p>
-                                <p style="color: #6b7280; font-size: 0.85rem;">设备ID: ${DEVICE_ID.substring(0, 16)}...</p>
-                                <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                                    <p style="color: #fbbf24; font-size: 0.8rem;">请联系超级管理员解锁</p>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    return true;
-                }
-                return false;
             }
             
             // 设置云同步状态
@@ -2292,7 +2096,6 @@
                         async (payload) => {
                             // 忽略设备锁定记录的变化
                             if (payload.new?.type === 'device') {
-                                // 刷新锁定设备列表
                                 lockedDevices = await getLockedDevices();
                                 if (currentAdminLevel === 'super' && historyStack[historyStack.length - 1] === VIEWS.ADMIN_PAGE) {
                                     showAdminPanel();
@@ -2353,21 +2156,6 @@
                 await loadFromSupabase();
                 const container = document.createElement('div');
                 
-                // 获取当前设备状态
-                const violationCount = await getViolationCount();
-                const locked = await isDeviceLocked();
-                
-                // 状态显示
-                const statusBadge = document.createElement('div');
-                statusBadge.style.cssText = 'text-align:center;margin-bottom:1rem;padding:0.5rem;border-radius:2rem;background:rgba(0,0,0,0.3);';
-                statusBadge.innerHTML = `
-                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                        <span style="color: ${violationCount > 0 ? '#f59e0b' : '#10b981'};">⚠️ 本机违规次数: ${violationCount} / 3</span>
-                        <span style="color: ${locked ? '#ef4444' : '#10b981'};">🔒 本机状态: ${locked ? '已锁定' : '正常'}</span>
-                    </div>
-                `;
-                container.appendChild(statusBadge);
-                
                 // 锁定设备管理（仅超级管理员）
                 if (currentAdminLevel === 'super') {
                     const lockedDevicesSection = document.createElement('div');
@@ -2381,7 +2169,7 @@
                     } else {
                         lockedHtml += '<div style="max-height: 400px; overflow-y: auto;">';
                         lockedDevices.forEach(device => {
-                            const lockTime = new Date(device.lock_time).toLocaleString();
+                            const lockTime = device.lock_time ? new Date(device.lock_time).toLocaleString() : '未知';
                             lockedHtml += `
                                 <div style="background: rgba(255,255,255,0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem;">
                                     <div style="margin-bottom: 0.5rem;">
@@ -2794,10 +2582,6 @@
             
             // 初始化
             window.addEventListener('load', async () => {
-                // 先检查设备锁定状态
-                const locked = await checkAndShowLock();
-                if (locked) return;
-                
                 setCloudStatus('syncing', '连接数据库...');
                 await loadFromSupabase();
                 setupRealtime();
