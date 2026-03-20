@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>NXLD数值库</title>
     
-    <!-- 防调试检测脚本 - 修复误判问题 -->
+    <!-- 防调试检测脚本 - 修复误判问题，新增CE/GG检测 -->
     <script>
         (function() {
             // 警告页面URL
@@ -14,13 +14,7 @@
             // 标记是否已跳转
             let hasRedirected = false;
             
-            // 标记是否已经通过检测（正常用户）
-            let isNormalUser = true;
-            
-            // 检测标志
-            let devToolsDetected = false;
-            
-            // 跳转到警告页面
+            // 立即跳转函数（无延迟）
             function redirectToWarning() {
                 if (hasRedirected) return;
                 hasRedirected = true;
@@ -31,9 +25,140 @@
                     sessionStorage.clear();
                 } catch(e) {}
                 
-                // 跳转
+                // 立即跳转
                 window.location.href = WARNING_URL;
             }
+            
+            // ========== CE/GG 修改器检测 ==========
+            
+            // 检测内存修改器特征（CE/GG）
+            function detectMemoryModifiers() {
+                // 检测常见的内存修改器特征
+                const suspiciousPatterns = [
+                    // CE 特征
+                    'cheat engine',
+                    'cheatengine',
+                    'Cheat Engine',
+                    'Memory Scanner',
+                    // GG 特征
+                    'game guardian',
+                    'gameguardian',
+                    'GameGuardian',
+                    'GG Modifier',
+                    // 通用特征
+                    'memory editor',
+                    'memory modifier',
+                    'speed hack',
+                    'memory scanner'
+                ];
+                
+                // 检测 navigator 中的异常属性
+                if (window.navigator.userAgent.toLowerCase().includes('cheat') ||
+                    window.navigator.userAgent.toLowerCase().includes('guardian')) {
+                    redirectToWarning();
+                }
+                
+                // 检测全局变量中的修改器特征
+                const suspiciousGlobals = [
+                    'GG', 'CHEAT_ENGINE', 'MemoryHack', 'SpeedHack',
+                    'GameGuardian', 'CheatEngine', 'memory_editor'
+                ];
+                
+                for (let i = 0; i < suspiciousGlobals.length; i++) {
+                    if (window[suspiciousGlobals[i]] !== undefined) {
+                        redirectToWarning();
+                    }
+                }
+                
+                // 检测页面是否被注入
+                const scripts = document.getElementsByTagName('script');
+                for (let i = 0; i < scripts.length; i++) {
+                    const src = scripts[i].src || '';
+                    if (src.includes('cheat') || src.includes('guardian') || 
+                        src.includes('memory') || src.includes('hack')) {
+                        redirectToWarning();
+                    }
+                }
+            }
+            
+            // 检测内存修改器导致的性能异常
+            function detectPerformanceAnomaly() {
+                // 检测帧率异常（修改器可能导致帧率变化）
+                let frameCount = 0;
+                let lastTime = performance.now();
+                
+                function checkFrame() {
+                    const now = performance.now();
+                    const delta = now - lastTime;
+                    
+                    // 正常帧率应该在 16ms 左右（60fps）
+                    // 如果帧率异常快（<5ms）或异常慢（>100ms），可能是修改器
+                    if (delta < 5 || delta > 100) {
+                        frameCount++;
+                        if (frameCount > 5) {
+                            redirectToWarning();
+                        }
+                    } else {
+                        frameCount = 0;
+                    }
+                    
+                    lastTime = now;
+                    requestAnimationFrame(checkFrame);
+                }
+                
+                // 延迟启动，避免误判
+                setTimeout(() => {
+                    requestAnimationFrame(checkFrame);
+                }, 2000);
+            }
+            
+            // 检测悬浮窗特征（GG 通常会有悬浮窗）
+            function detectOverlay() {
+                // 检测是否有异常的元素层级
+                const allElements = document.getElementsByTagName('*');
+                for (let i = 0; i < allElements.length; i++) {
+                    const zIndex = window.getComputedStyle(allElements[i]).zIndex;
+                    if (zIndex && parseInt(zIndex) > 999999) {
+                        redirectToWarning();
+                    }
+                }
+                
+                // 检测鼠标位置异常（修改器可能拦截鼠标）
+                let mouseX = 0, mouseY = 0;
+                document.addEventListener('mousemove', function(e) {
+                    const deltaX = Math.abs(e.clientX - mouseX);
+                    const deltaY = Math.abs(e.clientY - mouseY);
+                    
+                    // 异常跳跃（可能是修改器干扰）
+                    if (deltaX > 500 || deltaY > 500) {
+                        redirectToWarning();
+                    }
+                    
+                    mouseX = e.clientX;
+                    mouseY = e.clientY;
+                });
+            }
+            
+            // 检测内存访问异常
+            function detectMemoryAccess() {
+                try {
+                    // 尝试检测是否被调试器附加
+                    const memory = new ArrayBuffer(1024);
+                    const view = new DataView(memory);
+                    
+                    // 如果内存被修改器锁定，这里可能会异常
+                    for (let i = 0; i < 100; i++) {
+                        view.setInt32(i * 4, i);
+                        if (view.getInt32(i * 4) !== i) {
+                            redirectToWarning();
+                        }
+                    }
+                } catch(e) {
+                    redirectToWarning();
+                }
+            }
+            
+            // ========== 开发者工具检测 ==========
             
             // 精确检测开发者工具（通过时间差，需要多次确认）
             let debuggerTriggerCount = 0;
@@ -45,47 +170,24 @@
                 const endTime = performance.now();
                 const timeDiff = endTime - startTime;
                 
-                // 只有当时间差大于100ms时才记录（正常情况应该是0-1ms）
-                if (timeDiff > 100) {
-                    const now = Date.now();
-                    if (now - lastDebuggerTime < 1000) {
-                        debuggerTriggerCount++;
-                        if (debuggerTriggerCount >= 3) {
-                            devToolsDetected = true;
-                            redirectToWarning();
-                        }
-                    } else {
-                        debuggerTriggerCount = 1;
-                    }
-                    lastDebuggerTime = now;
-                } else {
-                    debuggerTriggerCount = 0;
+                // 立即检测，有异常就跳转
+                if (timeDiff > 50) {
+                    redirectToWarning();
                 }
             }
             
-            // 检测窗口尺寸变化（只有在开发者工具打开时才会触发）
-            let originalOuterWidth = window.outerWidth;
-            let originalOuterHeight = window.outerHeight;
-            let sizeCheckCount = 0;
-            
+            // 检测窗口尺寸变化（开发者工具打开时）
             function detectDevToolsBySize() {
-                // 只在用户可能打开开发者工具时才检测
                 const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
                 const heightDiff = Math.abs(window.outerHeight - window.innerHeight);
                 
-                // 检测控制台是否打开（通常打开后宽高差会大于100）
+                // 检测控制台是否打开
                 if (widthDiff > 150 || heightDiff > 150) {
-                    sizeCheckCount++;
-                    if (sizeCheckCount >= 2) {
-                        devToolsDetected = true;
-                        redirectToWarning();
-                    }
-                } else {
-                    sizeCheckCount = 0;
+                    redirectToWarning();
                 }
             }
             
-            // 检测快捷键（只阻止不跳转，避免误判）
+            // 检测快捷键
             function detectDevToolsShortcut(e) {
                 const isDevToolKey = e.key === 'F12' || 
                     (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
@@ -94,24 +196,18 @@
                 if (isDevToolKey) {
                     e.preventDefault();
                     e.stopPropagation();
-                    // 延迟检测，确保不是误触
-                    setTimeout(() => {
-                        preciseDevToolsDetection();
-                    }, 100);
+                    redirectToWarning();
                     return false;
                 }
             }
             
-            // 检测右键菜单（不跳转，只阻止）
+            // 检测右键菜单
             function disableRightClick(e) {
                 e.preventDefault();
                 return false;
             }
             
-            // 检测控制台打开（通过console.log执行时间，需要多次确认）
-            let consoleCheckCount = 0;
-            let lastConsoleTime = 0;
-            
+            // 检测控制台打开（通过console.log执行时间）
             function detectConsoleOpen() {
                 const before = Date.now();
                 console.log('%c', 'color: transparent');
@@ -119,41 +215,79 @@
                 const timeDiff = after - before;
                 
                 if (timeDiff > 50) {
-                    const now = Date.now();
-                    if (now - lastConsoleTime < 2000) {
-                        consoleCheckCount++;
-                        if (consoleCheckCount >= 3) {
-                            devToolsDetected = true;
-                            redirectToWarning();
-                        }
-                    } else {
-                        consoleCheckCount = 1;
-                    }
-                    lastConsoleTime = now;
-                } else {
-                    consoleCheckCount = 0;
+                    redirectToWarning();
                 }
+            }
+            
+            // 检测调试器附加
+            function detectDebugger() {
+                try {
+                    (function() {
+                        const a = new Function('debugger');
+                        a();
+                    })();
+                } catch(e) {
+                    redirectToWarning();
+                }
+            }
+            
+            // 检测console.clear
+            const originalClear = console.clear;
+            console.clear = function() {
+                redirectToWarning();
+                originalClear.apply(this, arguments);
+            };
+            
+            // 检测页面源代码查看
+            let viewSourceAttempts = 0;
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'F12' || (e.ctrlKey && e.key === 'u')) {
+                    redirectToWarning();
+                }
+            });
+            
+            // 检测无头浏览器
+            if (/HeadlessChrome/.test(window.navigator.userAgent)) {
+                redirectToWarning();
+            }
+            
+            // 检测webdriver
+            if (window.navigator.webdriver || window.navigator.webdriver === true) {
+                redirectToWarning();
+            }
+            
+            // 检测是否在iframe中
+            if (window.self !== window.top) {
+                redirectToWarning();
             }
             
             // 监听快捷键
             document.addEventListener('keydown', detectDevToolsShortcut);
             document.addEventListener('contextmenu', disableRightClick);
             
-            // 定期检测（每3秒一次，降低频率）
+            // 立即启动检测
+            preciseDevToolsDetection();
+            detectDevToolsBySize();
+            detectConsoleOpen();
+            detectDebugger();
+            detectMemoryModifiers();
+            detectMemoryAccess();
+            detectOverlay();
+            
+            // 定期检测
             setInterval(function() {
-                // 只检测开发者工具相关
                 preciseDevToolsDetection();
                 detectDevToolsBySize();
-            }, 3000);
-            
-            // 单独的console检测（频率稍低）
-            setInterval(function() {
                 detectConsoleOpen();
-            }, 5000);
+                detectMemoryModifiers();
+                detectMemoryAccess();
+            }, 1000); // 每秒检测一次
             
-            // 禁止选中和复制（不影响正常使用）
+            // 启动帧率检测
+            detectPerformanceAnomaly();
+            
+            // 禁止选中和复制（不影响输入框）
             document.addEventListener('selectstart', function(e) {
-                // 允许输入框内选中
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                     return true;
                 }
@@ -161,31 +295,13 @@
                 return false;
             });
             
-            // 禁止复制快捷键（不影响正常复制）
             document.addEventListener('copy', function(e) {
-                // 允许输入框内复制
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
                     return true;
                 }
                 e.preventDefault();
                 return false;
             });
-            
-            // 正常用户标志，避免误判
-            setTimeout(function() {
-                isNormalUser = true;
-            }, 1000);
-            
-            // 记录页面加载时间，避免刚加载就检测
-            let pageLoadTime = Date.now();
-            
-            // 延迟启动检测，避免页面刚加载时的误判
-            setTimeout(function() {
-                // 正常用户不会在页面加载时就打开开发者工具
-                if (Date.now() - pageLoadTime > 2000) {
-                    // 只有页面加载2秒后才开始检测
-                }
-            }, 2000);
         })();
     </script>
     
@@ -1589,6 +1705,7 @@
     </style>
 </head>
 <body>
+    <!-- 页面内容保持不变 -->
     <div class="modern-container">
         <div class="header">
             <div class="logo-area">
@@ -2376,7 +2493,7 @@
                     </div>
                 `;
                 
-                // 平台选择 - 新增快手
+                // 平台选择
                 const platformSelector = document.createElement('div');
                 platformSelector.className = 'platform-selector';
                 platformSelector.innerHTML = `
