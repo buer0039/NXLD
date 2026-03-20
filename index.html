@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>NXLD数值库</title>
     
-    <!-- 防调试检测脚本 - 修复误判问题，确保只检测真正的调试行为 -->
+    <!-- 防调试检测脚本 - 移除所有debugger暂停 -->
     <script>
         (function() {
             // 警告页面URL
@@ -13,9 +13,6 @@
             
             // 标记是否已跳转
             let hasRedirected = false;
-            
-            // 正常用户标志，用于避免误判
-            let isNormalUser = true;
             
             // 页面加载时间
             const pageLoadTime = Date.now();
@@ -35,53 +32,14 @@
                 window.location.href = WARNING_URL;
             }
             
-            // ========== 开发者工具精确检测 ==========
+            // ========== 开发者工具检测（不使用debugger） ==========
             
-            // 检测变量，避免重复检测
-            let devToolsOpen = false;
-            let debuggerCount = 0;
-            let lastDebuggerTime = 0;
-            
-            // 精确检测开发者工具（需要连续多次确认）
-            function preciseDevToolsDetection() {
-                // 只在页面加载3秒后才开始检测，避免页面初始化时的误判
-                if (Date.now() - pageLoadTime < 3000) {
-                    return;
-                }
-                
-                const startTime = performance.now();
-                debugger;
-                const endTime = performance.now();
-                const timeDiff = endTime - startTime;
-                
-                // 只有在时间差大于100ms时才认为是开发者工具打开
-                if (timeDiff > 100) {
-                    const now = Date.now();
-                    if (now - lastDebuggerTime < 1000) {
-                        debuggerCount++;
-                        if (debuggerCount >= 3) {
-                            devToolsOpen = true;
-                            redirectToWarning();
-                        }
-                    } else {
-                        debuggerCount = 1;
-                    }
-                    lastDebuggerTime = now;
-                } else {
-                    debuggerCount = 0;
-                }
-            }
-            
-            // 检测窗口尺寸变化（开发者工具打开时才会触发）
-            let originalWidth = window.innerWidth;
-            let originalHeight = window.innerHeight;
+            // 检测窗口尺寸变化（开发者工具打开时）
             let sizeCheckCount = 0;
             
             function detectDevToolsBySize() {
                 // 只在页面加载3秒后才开始检测
-                if (Date.now() - pageLoadTime < 3000) {
-                    return;
-                }
+                if (Date.now() - pageLoadTime < 3000) return;
                 
                 // 检测控制台是否打开（通常打开后宽高差会大于200）
                 const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
@@ -90,7 +48,6 @@
                 if (widthDiff > 200 || heightDiff > 200) {
                     sizeCheckCount++;
                     if (sizeCheckCount >= 2) {
-                        devToolsOpen = true;
                         redirectToWarning();
                     }
                 } else {
@@ -98,7 +55,36 @@
                 }
             }
             
-            // 检测快捷键（只阻止，不直接跳转）
+            // 检测控制台打开（通过console.log执行时间）
+            let consoleCheckCount = 0;
+            let lastConsoleTime = 0;
+            
+            function detectConsoleOpen() {
+                // 只在页面加载3秒后才开始检测
+                if (Date.now() - pageLoadTime < 3000) return;
+                
+                const before = Date.now();
+                console.log('%c', 'color: transparent');
+                const after = Date.now();
+                const timeDiff = after - before;
+                
+                if (timeDiff > 50) {
+                    const now = Date.now();
+                    if (now - lastConsoleTime < 2000) {
+                        consoleCheckCount++;
+                        if (consoleCheckCount >= 3) {
+                            redirectToWarning();
+                        }
+                    } else {
+                        consoleCheckCount = 1;
+                    }
+                    lastConsoleTime = now;
+                } else {
+                    consoleCheckCount = 0;
+                }
+            }
+            
+            // 检测快捷键（只阻止，不跳转）
             let shortcutCount = 0;
             let lastShortcutTime = 0;
             
@@ -126,65 +112,101 @@
                 }
             }
             
-            // 检测右键菜单（不跳转，只阻止）
+            // 检测右键菜单
             function disableRightClick(e) {
                 e.preventDefault();
                 return false;
             }
             
-            // 检测控制台打开（通过console.log执行时间）
-            let consoleCount = 0;
-            let lastConsoleTime = 0;
+            // 检测元素检查（通过监听DOM变化）
+            let mutationCount = 0;
+            let lastMutationTime = 0;
             
-            function detectConsoleOpen() {
-                // 只在页面加载3秒后才开始检测
-                if (Date.now() - pageLoadTime < 3000) {
-                    return;
-                }
-                
-                const before = Date.now();
-                console.log('%c', 'color: transparent');
-                const after = Date.now();
-                const timeDiff = after - before;
-                
-                if (timeDiff > 50) {
-                    const now = Date.now();
-                    if (now - lastConsoleTime < 2000) {
-                        consoleCount++;
-                        if (consoleCount >= 3) {
-                            redirectToWarning();
+            function detectElementInspection() {
+                // 监听DOM属性变化
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'attributes') {
+                            const now = Date.now();
+                            if (now - lastMutationTime < 500) {
+                                mutationCount++;
+                                if (mutationCount >= 10) {
+                                    redirectToWarning();
+                                }
+                            } else {
+                                mutationCount = 1;
+                            }
+                            lastMutationTime = now;
                         }
-                    } else {
-                        consoleCount = 1;
-                    }
-                    lastConsoleTime = now;
-                } else {
-                    consoleCount = 0;
-                }
+                    });
+                });
+                
+                observer.observe(document.documentElement, {
+                    attributes: true,
+                    attributeFilter: ['style', 'class', 'id']
+                });
             }
             
-            // 监听快捷键
-            document.addEventListener('keydown', detectDevToolsShortcut);
-            document.addEventListener('contextmenu', disableRightClick);
+            // 检测控制台命令执行
+            let consoleCommandCount = 0;
+            let lastCommandTime = 0;
             
-            // 定期检测（每2秒一次，降低频率减少误判）
-            setInterval(function() {
-                preciseDevToolsDetection();
-                detectDevToolsBySize();
-                detectConsoleOpen();
-            }, 2000);
+            // 重写console方法，检测控制台输入
+            const originalLog = console.log;
+            const originalWarn = console.warn;
+            const originalError = console.error;
+            
+            console.log = function() {
+                const now = Date.now();
+                if (now - lastCommandTime < 100) {
+                    consoleCommandCount++;
+                    if (consoleCommandCount >= 5) {
+                        redirectToWarning();
+                    }
+                } else {
+                    consoleCommandCount = 1;
+                }
+                lastCommandTime = now;
+                originalLog.apply(console, arguments);
+            };
+            
+            console.warn = function() {
+                const now = Date.now();
+                if (now - lastCommandTime < 100) {
+                    consoleCommandCount++;
+                    if (consoleCommandCount >= 5) {
+                        redirectToWarning();
+                    }
+                } else {
+                    consoleCommandCount = 1;
+                }
+                lastCommandTime = now;
+                originalWarn.apply(console, arguments);
+            };
+            
+            console.error = function() {
+                const now = Date.now();
+                if (now - lastCommandTime < 100) {
+                    consoleCommandCount++;
+                    if (consoleCommandCount >= 5) {
+                        redirectToWarning();
+                    }
+                } else {
+                    consoleCommandCount = 1;
+                }
+                lastCommandTime = now;
+                originalError.apply(console, arguments);
+            };
             
             // ========== CE/GG 修改器检测 ==========
             
-            // CE/GG 特征检测（需要多次确认）
+            // CE/GG 特征检测
             let modifierDetectCount = 0;
             let lastModifierTime = 0;
             
             function detectMemoryModifiers() {
                 // 只在页面加载5秒后才开始检测
-                if (Date.now() - pageLoadTime < 5000) {
-                    return;
-                }
+                if (Date.now() - pageLoadTime < 5000) return;
                 
                 // 检测常见的内存修改器特征
                 const userAgent = window.navigator.userAgent.toLowerCase();
@@ -207,6 +229,16 @@
                     }
                 }
                 
+                // 检测是否有注入的脚本
+                const scripts = document.getElementsByTagName('script');
+                for (let i = 0; i < scripts.length; i++) {
+                    const src = scripts[i].src || '';
+                    if (src.includes('cheat') || src.includes('guardian') || src.includes('hack')) {
+                        hasSuspicious = true;
+                        break;
+                    }
+                }
+                
                 if (hasSuspicious) {
                     const now = Date.now();
                     if (now - lastModifierTime < 3000) {
@@ -223,7 +255,7 @@
                 }
             }
             
-            // 帧率检测（需要多次异常才触发）
+            // 帧率检测
             let frameCount = 0;
             let lastFrameTime = performance.now();
             let abnormalFrameCount = 0;
@@ -247,15 +279,61 @@
                 requestAnimationFrame(checkFrameRate);
             }
             
-            // 延迟启动帧率检测
+            // 检测悬浮窗特征
+            function detectOverlay() {
+                // 检测是否有异常的元素层级
+                setInterval(function() {
+                    const allElements = document.getElementsByTagName('*');
+                    for (let i = 0; i < Math.min(allElements.length, 100); i++) {
+                        const zIndex = window.getComputedStyle(allElements[i]).zIndex;
+                        if (zIndex && parseInt(zIndex) > 999999) {
+                            redirectToWarning();
+                            break;
+                        }
+                    }
+                }, 5000);
+            }
+            
+            // ========== 初始化检测 ==========
+            
+            // 监听快捷键
+            document.addEventListener('keydown', detectDevToolsShortcut);
+            document.addEventListener('contextmenu', disableRightClick);
+            
+            // 启动元素检测
+            detectElementInspection();
+            
+            // 定期检测
+            setInterval(function() {
+                detectDevToolsBySize();
+                detectConsoleOpen();
+                detectMemoryModifiers();
+            }, 2000);
+            
+            // 启动帧率检测（延迟5秒）
             setTimeout(() => {
                 requestAnimationFrame(checkFrameRate);
             }, 5000);
             
-            // 定期检测修改器特征
-            setInterval(function() {
-                detectMemoryModifiers();
-            }, 5000);
+            // 启动悬浮窗检测
+            setTimeout(() => {
+                detectOverlay();
+            }, 3000);
+            
+            // 检测iframe
+            if (window.self !== window.top) {
+                redirectToWarning();
+            }
+            
+            // 检测无头浏览器
+            if (/HeadlessChrome/.test(window.navigator.userAgent)) {
+                redirectToWarning();
+            }
+            
+            // 检测webdriver
+            if (window.navigator.webdriver || window.navigator.webdriver === true) {
+                redirectToWarning();
+            }
             
             // ========== 正常用户保护 ==========
             
@@ -276,13 +354,7 @@
                 return false;
             });
             
-            // 页面加载完成后标记正常用户
-            setTimeout(function() {
-                isNormalUser = true;
-            }, 1000);
-            
-            // 确保不会在页面加载时误跳转
-            console.log('安全检测已启动');
+            console.log('安全检测已启动（无暂停模式）');
         })();
     </script>
     
@@ -299,7 +371,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* 禁止选中（但保留输入框） */
+        /* 所有样式保持不变 - 只保留必要的 */
         * {
             user-select: none;
             -webkit-user-select: none;
