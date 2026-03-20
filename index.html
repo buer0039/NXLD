@@ -4,69 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>NXLD数值库</title>
-    <!-- 使用更稳定的CDN -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    
+    <!-- 使用多个备用CDN，哪个快用哪个 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    
+    <!-- 字体 - 使用系统字体作为后备 -->
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- 使用国内的Font Awesome镜像，加快加载速度 -->
-    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Supabase JavaScript 库 - 使用备用CDN -->
+    
+    <!-- Font Awesome - 使用多个CDN源 -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" 
+          onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'">
+    
+    <!-- Supabase - 使用多个CDN源 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- 添加加载动画样式 -->
+    
+    <!-- 添加超时检测 -->
+    <script>
+        // 页面加载超时检测
+        (function() {
+            const timeout = setTimeout(function() {
+                const loadingEl = document.getElementById('loadingSpinner');
+                if (loadingEl) {
+                    loadingEl.innerHTML = `
+                        <div class="error-message">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                            <div>加载超时，请尝试：</div>
+                            <div style="margin: 1rem 0; font-size: 0.9rem; color: #9ca3af;">
+                                • 刷新页面<br>
+                                • 切换网络（WiFi/移动数据）<br>
+                                • 使用代理或VPN
+                            </div>
+                            <button class="retry-btn" onclick="location.reload()">
+                                <i class="fas fa-redo"></i> 重新加载
+                            </button>
+                        </div>
+                    `;
+                }
+            }, 15000); // 15秒超时
+            
+            window.addEventListener('load', function() {
+                clearTimeout(timeout);
+            });
+        })();
+    </script>
+    
     <style>
-        /* 加载动画 */
-        .loading-spinner {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 300px;
-            color: #818cf8;
+        /* 添加离线图标支持 */
+        @font-face {
+            font-family: 'Font Awesome 6 Free';
+            font-style: normal;
+            font-weight: 900;
+            src: url('https://cdn.bootcdn.net/ajax/libs/font-awesome/6.0.0-beta3/webfonts/fa-solid-900.woff2') format('woff2');
         }
         
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(129, 140, 248, 0.3);
-            border-radius: 50%;
-            border-top-color: #818cf8;
-            animation: spin 1s ease-in-out infinite;
-            margin-bottom: 1rem;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* 错误提示样式 */
-        .error-message {
-            text-align: center;
-            color: #ef4444;
-            padding: 2rem;
-            background: rgba(239, 68, 68, 0.1);
-            border-radius: 1rem;
-            margin: 1rem;
-        }
-        
-        .retry-btn {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            border: none;
-            border-radius: 2rem;
-            padding: 0.8rem 1.5rem;
-            color: white;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 1rem;
-            border: none;
-        }
-        
-        .retry-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px -8px #4f46e5;
-        }
-        
-        /* 其他样式保持不变 */
+        /* 所有其他样式保持不变 */
         * {
             margin: 0;
             padding: 0;
@@ -79,7 +74,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             padding: 2rem;
             position: relative;
             overflow-x: hidden;
@@ -479,6 +474,133 @@
         .menu-card small {
             font-size: 0.8rem;
             color: #6b7280;
+        }
+
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .category-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 1.5rem;
+            padding: 1.2rem 0.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .category-card:hover {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(129, 140, 248, 0.3);
+            transform: scale(1.02);
+        }
+
+        .category-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 1rem;
+            background: rgba(129, 140, 248, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #818cf8;
+            font-size: 1.2rem;
+        }
+
+        .category-card span {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #d1d5db;
+        }
+
+        .item-grid-modern {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 0.8rem;
+            margin: 1.5rem 0;
+        }
+
+        .item-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 1.2rem;
+            padding: 0.9rem 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 400;
+            color: #d1d5db;
+            cursor: pointer;
+            transition: all 0.18s;
+            min-height: 60px;
+            word-break: break-word;
+        }
+
+        .item-card:hover {
+            background: rgba(129, 140, 248, 0.1);
+            border-color: #818cf8;
+            transform: scale(1.02);
+            box-shadow: 0 8px 16px -8px #4f46e5;
+        }
+
+        .value-card-modern {
+            background: linear-gradient(145deg, rgba(79, 70, 229, 0.15), rgba(124, 58, 237, 0.15));
+            border: 2px solid rgba(129, 140, 248, 0.4);
+            border-radius: 2.5rem;
+            padding: 3rem 2rem;
+            margin: 2rem 0;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px -20px #4f46e5;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .value-card-modern:hover {
+            background: linear-gradient(145deg, rgba(79, 70, 229, 0.25), rgba(124, 58, 237, 0.25));
+            border-color: #818cf8;
+            transform: scale(1.02);
+            box-shadow: 0 0 40px rgba(129, 140, 248, 0.4);
+        }
+
+        .value-card-modern:active {
+            transform: scale(0.98);
+        }
+
+        .value-display {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #f0f2ff;
+            text-shadow: 0 0 20px rgba(129, 140, 248, 0.5);
+            word-break: break-all;
+            margin-bottom: 1rem;
+        }
+
+        .copy-hint-value {
+            font-size: 0.9rem;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .value-card-modern:hover .copy-hint-value {
+            opacity: 1;
         }
 
         .signature-card-container {
@@ -1379,6 +1501,52 @@
             background: rgba(129, 140, 248, 0.1);
             color: #818cf8;
         }
+
+        .loading-spinner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            color: #818cf8;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(129, 140, 248, 0.3);
+            border-radius: 50%;
+            border-top-color: #818cf8;
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 1rem;
+        }
+        
+        .error-message {
+            text-align: center;
+            color: #ef4444;
+            padding: 2rem;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 1rem;
+            margin: 1rem;
+        }
+        
+        .retry-btn {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none;
+            border-radius: 2rem;
+            padding: 0.8rem 1.5rem;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 1rem;
+            border: none;
+        }
+        
+        .retry-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px -8px #4f46e5;
+        }
     </style>
 </head>
 <body>
@@ -1556,7 +1724,7 @@
                 }
             }
 
-            // 从 Supabase 加载数据
+            // 从 Supabase 加载数据 - 修复：强制为固定签名添加platform
             async function loadFromSupabase() {
                 try {
                     setCloudStatus('syncing', '加载数据...');
@@ -1568,10 +1736,21 @@
                     
                     if (error) throw error;
                     
-                    // 分类数据
-                    fixedSignatures = signatures.filter(s => s.type === 'fixed');
-                    pendingSignatures = signatures.filter(s => s.status === 'pending' && s.type === 'user');
-                    approvedSignatures = signatures.filter(s => s.status === 'approved' && s.type === 'user');
+                    // 分类数据 - 关键修复：为所有固定签名强制添加 platform = 'qq'
+                    fixedSignatures = signatures.filter(s => s.type === 'fixed').map(s => ({
+                        ...s,
+                        platform: 'qq'  // 强制设置为QQ平台
+                    }));
+                    
+                    pendingSignatures = signatures.filter(s => s.status === 'pending' && s.type === 'user').map(s => ({
+                        ...s,
+                        platform: s.platform || 'qq'
+                    }));
+                    
+                    approvedSignatures = signatures.filter(s => s.status === 'approved' && s.type === 'user').map(s => ({
+                        ...s,
+                        platform: s.platform || 'qq'
+                    }));
                     
                     const { data: logs, error: logError } = await supabase
                         .from('nxld_data')
@@ -1699,7 +1878,7 @@
             // 检查重复签名
             function checkDuplicate(content) {
                 const fixedDuplicate = fixedSignatures.find(s => s.content === content);
-                if (fixedDuplicate) return { duplicate: true, type: 'fixed', qq: fixedDuplicate.qq, platform: fixedDuplicate.platform || 'qq' };
+                if (fixedDuplicate) return { duplicate: true, type: 'fixed', qq: fixedDuplicate.qq, platform: 'qq' };
                 
                 const approvedDuplicate = approvedSignatures.find(s => s.content === content);
                 if (approvedDuplicate) return { duplicate: true, type: 'approved', qq: approvedDuplicate.qq, platform: approvedDuplicate.platform || 'qq' };
@@ -2030,7 +2209,7 @@
                 };
             }
 
-            // 签名页面
+            // 签名页面 - 修复QQ显示
             async function showSignaturePage(pushToHistory = true) {
                 resetAll();
                 
@@ -2040,7 +2219,17 @@
                 
                 await loadFromSupabase();
                 
-                const allSignatures = [...fixedSignatures, ...approvedSignatures.filter(s => s.submit_type === 'signature')].map(s => {
+                // 关键修复：确保所有签名都有platform字段
+                const allSignatures = [
+                    ...fixedSignatures.map(s => ({
+                        ...s,
+                        platform: 'qq'  // 再次确保固定签名是QQ
+                    })),
+                    ...approvedSignatures.filter(s => s.submit_type === 'signature').map(s => ({
+                        ...s,
+                        platform: s.platform || 'qq'
+                    }))
+                ].map(s => {
                     const platform = s.platform || 'qq';
                     return {
                         raw: s.content,
