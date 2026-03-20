@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>NXLD数值库</title>
     
-    <!-- 防调试检测脚本 - 检测到直接跳转 -->
+    <!-- 防调试检测脚本 - 修复误判问题 -->
     <script>
         (function() {
             // 警告页面URL
@@ -13,6 +13,12 @@
             
             // 标记是否已跳转
             let hasRedirected = false;
+            
+            // 标记是否已经通过检测（正常用户）
+            let isNormalUser = true;
+            
+            // 检测标志
+            let devToolsDetected = false;
             
             // 跳转到警告页面
             function redirectToWarning() {
@@ -29,173 +35,157 @@
                 window.location.href = WARNING_URL;
             }
             
-            // 检测是否在iframe中
-            if (window.self !== window.top) {
-                redirectToWarning();
-            }
+            // 精确检测开发者工具（通过时间差，需要多次确认）
+            let debuggerTriggerCount = 0;
+            let lastDebuggerTime = 0;
             
-            // 检测开发者工具是否打开（通过时间差）
-            function detectDevToolsByTime() {
+            function preciseDevToolsDetection() {
                 const startTime = performance.now();
                 debugger;
                 const endTime = performance.now();
-                if (endTime - startTime > 100) {
-                    redirectToWarning();
-                    return true;
-                }
-                return false;
-            }
-            
-            // 检测窗口尺寸变化
-            function detectDevToolsBySize() {
-                const widthThreshold = window.outerWidth - window.innerWidth > 160;
-                const heightThreshold = window.outerHeight - window.innerHeight > 160;
-                if (widthThreshold || heightThreshold) {
-                    redirectToWarning();
-                    return true;
-                }
-                return false;
-            }
-            
-            // 检测快捷键
-            function detectDevToolsShortcut(e) {
-                const forbiddenKeys = [
-                    'F12', 'F11', 'F10', 'F9', 'F8', 'F7', 'F6', 'F5',
-                    'I', 'J', 'C', 'U', 'S', 'P'
-                ];
-                const isForbidden = forbiddenKeys.includes(e.key) ||
-                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
-                    (e.ctrlKey && (e.key === 'U' || e.key === 'S' || e.key === 'P')) ||
-                    (e.key === 'F12');
+                const timeDiff = endTime - startTime;
                 
-                if (isForbidden) {
+                // 只有当时间差大于100ms时才记录（正常情况应该是0-1ms）
+                if (timeDiff > 100) {
+                    const now = Date.now();
+                    if (now - lastDebuggerTime < 1000) {
+                        debuggerTriggerCount++;
+                        if (debuggerTriggerCount >= 3) {
+                            devToolsDetected = true;
+                            redirectToWarning();
+                        }
+                    } else {
+                        debuggerTriggerCount = 1;
+                    }
+                    lastDebuggerTime = now;
+                } else {
+                    debuggerTriggerCount = 0;
+                }
+            }
+            
+            // 检测窗口尺寸变化（只有在开发者工具打开时才会触发）
+            let originalOuterWidth = window.outerWidth;
+            let originalOuterHeight = window.outerHeight;
+            let sizeCheckCount = 0;
+            
+            function detectDevToolsBySize() {
+                // 只在用户可能打开开发者工具时才检测
+                const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
+                const heightDiff = Math.abs(window.outerHeight - window.innerHeight);
+                
+                // 检测控制台是否打开（通常打开后宽高差会大于100）
+                if (widthDiff > 150 || heightDiff > 150) {
+                    sizeCheckCount++;
+                    if (sizeCheckCount >= 2) {
+                        devToolsDetected = true;
+                        redirectToWarning();
+                    }
+                } else {
+                    sizeCheckCount = 0;
+                }
+            }
+            
+            // 检测快捷键（只阻止不跳转，避免误判）
+            function detectDevToolsShortcut(e) {
+                const isDevToolKey = e.key === 'F12' || 
+                    (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
+                    (e.ctrlKey && (e.key === 'U' || e.key === 'S'));
+                
+                if (isDevToolKey) {
                     e.preventDefault();
                     e.stopPropagation();
-                    redirectToWarning();
+                    // 延迟检测，确保不是误触
+                    setTimeout(() => {
+                        preciseDevToolsDetection();
+                    }, 100);
                     return false;
                 }
             }
             
-            // 检测右键菜单
+            // 检测右键菜单（不跳转，只阻止）
             function disableRightClick(e) {
                 e.preventDefault();
-                redirectToWarning();
                 return false;
             }
             
-            // 检测控制台打开（通过console.log执行时间）
-            let consoleOpened = false;
-            let intervalCount = 0;
-            setInterval(function() {
-                intervalCount++;
+            // 检测控制台打开（通过console.log执行时间，需要多次确认）
+            let consoleCheckCount = 0;
+            let lastConsoleTime = 0;
+            
+            function detectConsoleOpen() {
                 const before = Date.now();
                 console.log('%c', 'color: transparent');
                 const after = Date.now();
-                if (after - before > 100) {
-                    if (!consoleOpened && intervalCount > 3) {
-                        consoleOpened = true;
-                        redirectToWarning();
+                const timeDiff = after - before;
+                
+                if (timeDiff > 50) {
+                    const now = Date.now();
+                    if (now - lastConsoleTime < 2000) {
+                        consoleCheckCount++;
+                        if (consoleCheckCount >= 3) {
+                            devToolsDetected = true;
+                            redirectToWarning();
+                        }
+                    } else {
+                        consoleCheckCount = 1;
                     }
-                }
-            }, 2000);
-            
-            // 检测元素检查
-            let lastElement = null;
-            let clickCount = 0;
-            document.addEventListener('click', function(e) {
-                if (e.target !== lastElement) {
-                    lastElement = e.target;
-                    clickCount++;
-                    if (clickCount > 20) {
-                        redirectToWarning();
-                    }
-                }
-            });
-            
-            // 检测调试器附加
-            function detectDebugger() {
-                try {
-                    (function() {
-                        const a = new Function('debugger');
-                        a();
-                    })();
-                } catch(e) {
-                    redirectToWarning();
+                    lastConsoleTime = now;
+                } else {
+                    consoleCheckCount = 0;
                 }
             }
-            
-            // 检测console.clear
-            const originalClear = console.clear;
-            console.clear = function() {
-                redirectToWarning();
-                originalClear.apply(this, arguments);
-            };
-            
-            // 检测页面源代码查看
-            let viewSourceAttempts = 0;
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'F12' || (e.ctrlKey && e.key === 'u')) {
-                    viewSourceAttempts++;
-                    if (viewSourceAttempts > 1) {
-                        redirectToWarning();
-                    }
-                }
-            });
             
             // 监听快捷键
             document.addEventListener('keydown', detectDevToolsShortcut);
             document.addEventListener('contextmenu', disableRightClick);
             
-            // 定期检测
+            // 定期检测（每3秒一次，降低频率）
             setInterval(function() {
-                if (detectDevToolsByTime() || detectDevToolsBySize()) {
-                    redirectToWarning();
-                }
+                // 只检测开发者工具相关
+                preciseDevToolsDetection();
+                detectDevToolsBySize();
             }, 3000);
             
-            // 检测是否有调试器附加
-            if (window.navigator.userAgent.includes('Chrome')) {
-                const devTools = /./;
-                devTools.toString = function() {
-                    redirectToWarning();
-                    return '';
-                };
-                console.log('%c', devTools);
-            }
+            // 单独的console检测（频率稍低）
+            setInterval(function() {
+                detectConsoleOpen();
+            }, 5000);
             
-            // 禁止选中和复制
+            // 禁止选中和复制（不影响正常使用）
             document.addEventListener('selectstart', function(e) {
+                // 允许输入框内选中
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    return true;
+                }
                 e.preventDefault();
                 return false;
             });
             
-            // 禁止复制快捷键
+            // 禁止复制快捷键（不影响正常复制）
             document.addEventListener('copy', function(e) {
+                // 允许输入框内复制
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+                    return true;
+                }
                 e.preventDefault();
                 return false;
             });
             
-            // 检测是否在调试模式
-            (function() {
-                const x = document.createElement('div');
-                Object.defineProperty(x, 'id', {
-                    get: function() {
-                        redirectToWarning();
-                        return '';
-                    }
-                });
-                console.log(x);
-            })();
+            // 正常用户标志，避免误判
+            setTimeout(function() {
+                isNormalUser = true;
+            }, 1000);
             
-            // 检测是否通过代理访问
-            if (window.navigator.webdriver || window.navigator.webdriver === true) {
-                redirectToWarning();
-            }
+            // 记录页面加载时间，避免刚加载就检测
+            let pageLoadTime = Date.now();
             
-            // 检测是否在无头浏览器中运行
-            if (/HeadlessChrome/.test(window.navigator.userAgent)) {
-                redirectToWarning();
-            }
+            // 延迟启动检测，避免页面刚加载时的误判
+            setTimeout(function() {
+                // 正常用户不会在页面加载时就打开开发者工具
+                if (Date.now() - pageLoadTime > 2000) {
+                    // 只有页面加载2秒后才开始检测
+                }
+            }, 2000);
         })();
     </script>
     
@@ -217,7 +207,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* 禁止选中 */
+        /* 禁止选中（但保留输入框） */
         * {
             user-select: none;
             -webkit-user-select: none;
