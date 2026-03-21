@@ -481,6 +481,12 @@
         .unban-btn { background: #10b981; border: none; border-radius: 1.5rem; padding: 0.5rem 1rem; color: white; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
         .unban-btn:hover { background: #059669; transform: scale(1.02); }
         .current-user-badge { background: rgba(129, 140, 248, 0.2); color: #818cf8; padding: 0.2rem 0.5rem; border-radius: 1rem; font-size: 0.7rem; margin-left: 0.5rem; }
+        
+        /* 添加账号输入框样式 */
+        .add-account-area { margin-top: 1.5rem; padding: 1rem; background: rgba(255, 255, 255, 0.02); border-radius: 1rem; }
+        .add-account-input-group { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+        .add-account-input { flex: 1; padding: 0.8rem; border-radius: 1.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #f0f2ff; }
+        .add-account-btn { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 1.5rem; padding: 0.8rem 1.5rem; color: white; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -542,9 +548,46 @@
             // 被禁用的QQ号列表（存储在localStorage，后期可迁移到云端）
             let bannedQQList = JSON.parse(localStorage.getItem('banned_qq_list') || '[]');
             
+            // 存储所有登录过的用户账号（用于账号管理显示）
+            let allLoggedUsers = JSON.parse(localStorage.getItem('all_logged_users') || '[]');
+            
             // 保存禁用列表到本地
             function saveBannedList() {
                 localStorage.setItem('banned_qq_list', JSON.stringify(bannedQQList));
+            }
+            
+            // 保存所有登录用户列表
+            function saveLoggedUsersList() {
+                localStorage.setItem('all_logged_users', JSON.stringify(allLoggedUsers));
+            }
+            
+            // 记录用户登录
+            function recordUserLogin(qq) {
+                if (!allLoggedUsers.includes(qq)) {
+                    allLoggedUsers.push(qq);
+                    saveLoggedUsersList();
+                }
+            }
+            
+            // 获取所有用户账号（包括已登录的、提交过内容的、被封禁的）
+            function getAllUserAccounts() {
+                const allAccountsSet = new Set();
+                
+                // 添加所有登录过的用户
+                allLoggedUsers.forEach(qq => allAccountsSet.add(qq));
+                
+                // 添加当前登录用户
+                if (currentUser) allAccountsSet.add(currentUser);
+                
+                // 添加提交过内容的用户
+                [...pendingSignatures, ...approvedSignatures].forEach(s => {
+                    if (s.qq && s.qq !== 'system') allAccountsSet.add(s.qq);
+                });
+                
+                // 添加被封禁的用户
+                bannedQQList.forEach(qq => allAccountsSet.add(qq));
+                
+                return Array.from(allAccountsSet).sort();
             }
             
             // 检查QQ是否被禁用
@@ -584,6 +627,8 @@
                         return false;
                     }
                     currentUser = savedQQ;
+                    // 记录登录用户
+                    recordUserLogin(savedQQ);
                     document.getElementById('mainApp').style.display = 'block';
                     document.getElementById('loginModal').style.display = 'none';
                     return true;
@@ -633,6 +678,8 @@
                 setTimeout(() => {
                     currentUser = qq;
                     localStorage.setItem('user_qq', qq);
+                    // 记录登录用户
+                    recordUserLogin(qq);
                     document.getElementById('mainApp').style.display = 'block';
                     document.getElementById('loginModal').style.display = 'none';
                     showToast(`欢迎回来，QQ: ${qq}`);
@@ -649,7 +696,7 @@
                 }
             }
             
-            // 管理员面板 - 修复手机端显示问题
+            // 管理员面板 - 修复手机端显示问题，包含所有登录用户
             async function showAdminPanel() {
                 await loadFromSupabase();
                 const container = document.createElement('div');
@@ -732,41 +779,89 @@
                     html += '</div>';
                     contentDiv.innerHTML = html;
                 } else if (currentTab === 'accounts' && currentAdminLevel === 'super') {
-                    // 账号管理页面（仅超级管理员可见）
-                    const allQQSet = new Set();
-                    [...pendingSignatures, ...approvedSignatures].forEach(s => {
-                        if (s.qq && s.qq !== 'system') allQQSet.add(s.qq);
-                    });
-                    if (currentUser) allQQSet.add(currentUser);
-                    bannedQQList.forEach(qq => allQQSet.add(qq));
-                    
-                    const allQQ = Array.from(allQQSet).sort();
+                    // 账号管理页面（仅超级管理员可见）- 显示所有用户
+                    const allAccounts = getAllUserAccounts();
                     
                     let html = '<h3 style="color:#818cf8;margin-bottom:1rem;"><i class="fas fa-users"></i> 账号管理</h3>';
+                    html += '<div style="margin-bottom:1rem;padding:0.5rem;background:rgba(129,140,248,0.1);border-radius:1rem;font-size:0.8rem;color:#9ca3af;"><i class="fas fa-info-circle"></i> 共 ' + allAccounts.length + ' 个账号</div>';
                     html += '<div class="account-list">';
-                    allQQ.forEach(qq => {
-                        const isBanned = isQQBanned(qq);
-                        const isCurrent = qq === currentUser;
-                        html += `
-                            <div class="account-item">
-                                <div class="account-info">
-                                    <div class="account-qq">
-                                        QQ: ${qq}
-                                        ${isCurrent ? '<span class="current-user-badge"><i class="fas fa-user-check"></i> 当前账号</span>' : ''}
+                    
+                    if (allAccounts.length === 0) {
+                        html += '<div style="color:#9ca3af;text-align:center;padding:2rem;">暂无账号数据</div>';
+                    } else {
+                        allAccounts.forEach(qq => {
+                            const isBanned = isQQBanned(qq);
+                            const isCurrent = qq === currentUser;
+                            html += `
+                                <div class="account-item">
+                                    <div class="account-info">
+                                        <div class="account-qq">
+                                            QQ: ${qq}
+                                            ${isCurrent ? '<span class="current-user-badge"><i class="fas fa-user-check"></i> 当前账号</span>' : ''}
+                                        </div>
+                                        <div class="account-status">
+                                            状态: <span class="${isBanned ? 'status-banned' : 'status-normal'}">${isBanned ? '已封禁' : '正常'}</span>
+                                        </div>
                                     </div>
-                                    <div class="account-status">
-                                        状态: <span class="${isBanned ? 'status-banned' : 'status-normal'}">${isBanned ? '已封禁' : '正常'}</span>
-                                    </div>
+                                    ${isBanned ? 
+                                        `<button class="unban-btn" onclick="window.unbanAccount('${qq}')"><i class="fas fa-unlock-alt"></i> 解封</button>` :
+                                        `<button class="ban-btn" onclick="window.banAccount('${qq}')"><i class="fas fa-ban"></i> 封禁</button>`
+                                    }
                                 </div>
-                                ${isBanned ? 
-                                    `<button class="unban-btn" onclick="window.unbanAccount('${qq}')"><i class="fas fa-unlock-alt"></i> 解封</button>` :
-                                    `<button class="ban-btn" onclick="window.banAccount('${qq}')"><i class="fas fa-ban"></i> 封禁</button>`
-                                }
-                            </div>
-                        `;
-                    });
+                            `;
+                        });
+                    }
                     html += '</div>';
+                    
+                    // 添加手动添加账号的功能
+                    html += `
+                        <div class="add-account-area">
+                            <div style="font-size:0.85rem;color:#818cf8;"><i class="fas fa-plus-circle"></i> 手动添加账号</div>
+                            <div class="add-account-input-group">
+                                <input type="text" id="manualAccountInput" class="add-account-input" placeholder="输入QQ号">
+                                <button id="addAccountBtn" class="add-account-btn"><i class="fas fa-plus"></i> 添加</button>
+                            </div>
+                        </div>
+                    `;
                     contentDiv.innerHTML = html;
+                    
+                    // 绑定手动添加账号事件
+                    setTimeout(() => {
+                        const addBtn = document.getElementById('addAccountBtn');
+                        const manualInput = document.getElementById('manualAccountInput');
+                        if (addBtn) {
+                            addBtn.onclick = () => {
+                                const newQQ = manualInput.value.trim();
+                                if (!newQQ) {
+                                    showToast('请输入QQ号');
+                                    return;
+                                }
+                                if (!/^\d+$/.test(newQQ)) {
+                                    showToast('QQ号必须为数字');
+                                    return;
+                                }
+                                if (newQQ.length < 5 || newQQ.length > 12) {
+                                    showToast('请输入正确的QQ号（5-12位数字）');
+                                    return;
+                                }
+                                if (!allLoggedUsers.includes(newQQ)) {
+                                    allLoggedUsers.push(newQQ);
+                                    saveLoggedUsersList();
+                                    showToast(`✅ 已添加账号: ${newQQ}`);
+                                    showAdminPanel();
+                                } else {
+                                    showToast('该账号已存在');
+                                }
+                            };
+                        }
+                        if (manualInput) {
+                            manualInput.addEventListener('keypress', (e) => {
+                                if (e.key === 'Enter') {
+                                    addBtn.click();
+                                }
+                            });
+                        }
+                    }, 100);
                 }
                 container.appendChild(contentDiv);
                 
@@ -900,15 +995,12 @@
             // 修复搜索补位问题 - 搜索时不会自动补位，只高亮匹配项
             function performGlobalSearch() {
                 const term = searchInput.value.toLowerCase().trim();
-                // 获取当前可见的内容区域内的可搜索元素
                 const searchArea = document.getElementById('innerDynamic');
                 if (!searchArea) return;
                 
-                // 清除之前的高亮和提示
                 const existingTip = document.getElementById('searchNoResultTip');
                 if (existingTip) existingTip.remove();
                 
-                // 移除所有高亮class
                 const allSearchItems = searchArea.querySelectorAll('.menu-card, .signature-card, .signature-card-container');
                 allSearchItems.forEach(item => {
                     item.classList.remove('search-highlight');
@@ -929,7 +1021,6 @@
                     }
                 });
                 
-                // 如果没有匹配项，显示提示（但不自动跳转或补位）
                 if (!hasMatch && allSearchItems.length > 0) {
                     const tip = document.createElement('div');
                     tip.id = 'searchNoResultTip';
@@ -971,7 +1062,6 @@
                 innerDynamic.innerHTML = '';
                 innerDynamic.appendChild(container);
                 refreshBackButton();
-                // 延迟执行搜索，确保DOM已渲染
                 setTimeout(performGlobalSearch, 100);
             }
             
@@ -1092,7 +1182,6 @@
                             else if (pwd === 'NXLD_MZRW') { currentAdminLevel = 'super'; showAdminPanel(); document.getElementById('adminLoginInfo').textContent = '登录成功（超级管理员）'; }
                             else { document.getElementById('adminLoginInfo').textContent = '密码错误'; document.getElementById('adminLoginInfo').style.color = '#ef4444'; }
                         };
-                        // 添加回车登录
                         const pwdInput = document.getElementById('adminPassword');
                         if (pwdInput) {
                             pwdInput.addEventListener('keypress', (e) => {
