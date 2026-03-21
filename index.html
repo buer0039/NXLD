@@ -326,7 +326,7 @@
             pointer-events: none;
         }
         
-        /* ==================== 模态框完整样式 ==================== */
+        /* ==================== 模态框样式 ==================== */
         .agreement-modal, .thanks-modal {
             position: fixed;
             top: 0;
@@ -413,18 +413,6 @@
             text-align: center;
         }
         
-        .agreement-body p, .thanks-body p {
-            margin: 0.8rem 0;
-        }
-        
-        .agreement-body p:first-child, .thanks-body p:first-child {
-            margin-top: 0;
-        }
-        
-        .agreement-body p:last-child, .thanks-body p:last-child {
-            margin-bottom: 0;
-        }
-        
         .agreement-footer, .thanks-footer {
             display: flex;
             justify-content: center;
@@ -464,11 +452,7 @@
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
         
-        .agreement-close:active, .thanks-close:active {
-            transform: translateY(0);
-        }
-        
-        /* 按钮统一样式 */
+        /* ==================== 按钮样式 ==================== */
         .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn, .year-badge {
             padding: 0.6rem 1.2rem;
             font-size: 0.9rem;
@@ -488,9 +472,7 @@
             backdrop-filter: blur(5px);
         }
         
-        .agreement-btn i {
-            color: #818cf8;
-        }
+        .agreement-btn i { color: #818cf8; }
         
         .agreement-btn:hover {
             background: rgba(129, 140, 248, 0.2);
@@ -517,9 +499,7 @@
             backdrop-filter: blur(5px);
         }
         
-        .admin-btn i {
-            color: #f59e0b;
-        }
+        .admin-btn i { color: #f59e0b; }
         
         .admin-btn:hover {
             background: rgba(245, 158, 11, 0.15);
@@ -535,9 +515,7 @@
             backdrop-filter: blur(5px);
         }
         
-        .thanks-btn i {
-            color: #fbbf24;
-        }
+        .thanks-btn i { color: #fbbf24; }
         
         .thanks-btn:hover {
             background: rgba(251, 191, 36, 0.15);
@@ -553,7 +531,299 @@
             cursor: default;
         }
         
-        /* 其余样式保持不变 */
+        /* ==================== 提交投稿页面样式 ==================== */
+        .submit-form {
+            background: rgba(18, 22, 40, 0.6);
+            border-radius: 2rem;
+            padding: 2rem;
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            backdrop-filter: blur(10px);
+            max-width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            color: #c7d2fe;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            color: #f0f2ff;
+            font-size: 0.95rem;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: all 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #818cf8;
+            background: rgba(129, 140, 248, 0.1);
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
+        }
+        
+        .form-input::placeholder {
+            color: #6b7280;
+        }
+        
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        /* 类型选择器样式 */
+        .type-selector, .platform-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .type-option, .platform-option {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            border-radius: 1rem;
+            padding: 1rem 0.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .type-option:hover, .platform-option:hover {
+            background: rgba(129, 140, 248, 0.1);
+            border-color: rgba(129, 140, 248, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .type-option.selected, .platform-option.selected {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+        }
+        
+        .type-option.selected .type-icon, .type-option.selected .type-name,
+        .platform-option.selected .platform-icon, .platform-option.selected .platform-name {
+            color: white;
+        }
+        
+        .type-icon, .platform-icon {
+            font-size: 1.5rem;
+            color: #818cf8;
+            margin-bottom: 0.3rem;
+        }
+        
+        .platform-icon {
+            font-size: 1.2rem;
+        }
+        
+        .type-name, .platform-name {
+            font-size: 0.9rem;
+            color: #d1d5db;
+        }
+        
+        .type-desc {
+            font-size: 0.7rem;
+            color: #9ca3af;
+            margin-top: 0.2rem;
+        }
+        
+        /* 图片上传区域 */
+        .image-upload-area {
+            border: 2px dashed rgba(129, 140, 248, 0.4);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: rgba(129, 140, 248, 0.05);
+        }
+        
+        .image-upload-area:hover {
+            border-color: #818cf8;
+            background: rgba(129, 140, 248, 0.1);
+            transform: scale(1.01);
+        }
+        
+        .image-upload-area i {
+            font-size: 2rem;
+            color: #818cf8;
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-text {
+            color: #d1d5db;
+            font-size: 0.9rem;
+        }
+        
+        .upload-hint {
+            color: #9ca3af;
+            font-size: 0.7rem;
+            margin-top: 0.3rem;
+        }
+        
+        .image-preview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .preview-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 0.8rem;
+            overflow: hidden;
+            border: 1px solid rgba(129, 140, 248, 0.3);
+        }
+        
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .preview-item .remove-image {
+            position: absolute;
+            top: 0.2rem;
+            right: 0.2rem;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            width: 1.2rem;
+            height: 1.2rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .preview-item .remove-image:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+        
+        /* 提交按钮 */
+        .submit-button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+            border-radius: 2rem;
+            padding: 1rem;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+        
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        .submit-button.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            pointer-events: none;
+        }
+        
+        /* 查询区域 */
+        .query-section {
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(129, 140, 248, 0.2);
+        }
+        
+        .query-input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .query-button {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none;
+            border-radius: 2rem;
+            padding: 0.8rem 1.5rem;
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .query-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px -8px #4f46e5;
+        }
+        
+        .query-result {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 1.5rem;
+            padding: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .query-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .query-item:last-child {
+            border-bottom: none;
+        }
+        
+        .query-item-qq {
+            color: #818cf8;
+            font-size: 0.8rem;
+        }
+        
+        .query-item-status {
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 1rem;
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+        
+        .query-item-status.pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: #f59e0b;
+        }
+        
+        .submit-info {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            background: rgba(129, 140, 248, 0.05);
+            border-radius: 1rem;
+        }
+        
+        /* 其余样式 */
         .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1.5rem; }
         .logo-area { display: flex; align-items: center; gap: 1rem; }
         .logo-icon { width: 3.5rem; height: 3.5rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 1.2rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.8rem; }
@@ -586,24 +856,6 @@
         .signature-text { font-size: 0.8rem; line-height: 1.4; margin-bottom: 0.3rem; }
         .signature-qq { color: rgba(255, 255, 255, 0.5); font-size: 0.6rem; }
         .copy-hint { margin-top: 0.2rem; font-size: 0.5rem; color: #9ca3af; opacity: 0.4; display: flex; align-items: center; justify-content: center; gap: 0.2rem; }
-        .submit-form { background: rgba(255, 255, 255, 0.03); border-radius: 2rem; padding: 2rem; border: 1px solid rgba(129, 140, 248, 0.2); max-width: 600px; margin: 0 auto; }
-        .form-group { margin-bottom: 1.5rem; }
-        .form-label { display: block; color: #d1d5db; margin-bottom: 0.5rem; }
-        .form-input { width: 100%; padding: 1rem; border-radius: 1.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #f0f2ff; }
-        .form-input:focus { outline: none; border-color: #818cf8; }
-        .submit-button { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 2rem; padding: 1rem; color: white; font-weight: 600; cursor: pointer; width: 100%; }
-        .submit-button.disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
-        .type-selector, .platform-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
-        .type-option, .platform-option { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1rem; padding: 0.8rem; text-align: center; cursor: pointer; transition: all 0.2s; }
-        .type-option.selected, .platform-option.selected { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
-        .type-icon { font-size: 1.5rem; color: #818cf8; margin-bottom: 0.3rem; }
-        .query-input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-        .query-button { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem 1.5rem; color: white; cursor: pointer; }
-        .query-result { background: rgba(255, 255, 255, 0.02); border-radius: 1.5rem; padding: 1rem; max-height: 300px; overflow-y: auto; }
-        .log-container { background: rgba(255, 255, 255, 0.02); border-radius: 1.5rem; padding: 1rem; max-height: 300px; overflow-y: auto; }
-        .log-item { padding: 0.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); font-size: 0.85rem; }
-        .log-time { color: #818cf8; font-size: 0.7rem; margin-right: 0.5rem; }
-        .top-hint { text-align: center; color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; margin-bottom: 1.2rem; padding: 0.5rem; background: rgba(129, 140, 248, 0.05); border-radius: 2rem; }
         
         .login-modal {
             position: fixed;
@@ -663,6 +915,16 @@
         .add-account-input { flex: 1; padding: 0.8rem; border-radius: 1.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #f0f2ff; }
         .add-account-btn { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 1.5rem; padding: 0.8rem 1.5rem; color: white; cursor: pointer; }
         
+        .top-hint {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            margin-bottom: 1.2rem;
+            padding: 0.5rem;
+            background: rgba(129, 140, 248, 0.05);
+            border-radius: 2rem;
+        }
+        
         @media (max-width: 768px) {
             body { padding: 0.8rem; }
             .modern-container { padding: 1.2rem; }
@@ -672,18 +934,14 @@
             .anti-cheat-bar { font-size: 0.65rem; padding: 5px 12px; }
             .cloud-status { font-size: 0.6rem; padding: 4px 10px; }
             .copyright-modern { left: 180px; font-size: 0.6rem; }
-            .agreement-content, .thanks-content { padding: 1.5rem; }
-            .agreement-header h3, .thanks-header h3 { font-size: 1.2rem; }
-            .agreement-body, .thanks-body { font-size: 0.9rem; }
-            .agreement-header i, .thanks-header i { font-size: 1.5rem; padding: 0.4rem; }
+            .submit-form { padding: 1.2rem; }
         }
         @media (max-width: 480px) {
             .signature-grid { grid-template-columns: 1fr; }
             .anti-cheat-bar { font-size: 0.55rem; padding: 4px 10px; left: 12px; bottom: 12px; }
             .cloud-status { font-size: 0.5rem; padding: 3px 8px; right: 12px; bottom: 12px; }
             .copyright-modern { left: 150px; font-size: 0.5rem; }
-            .agreement-content, .thanks-content { padding: 1.2rem; }
-            .agreement-header h3, .thanks-header h3 { font-size: 1rem; }
+            .submit-form { padding: 1rem; }
         }
     </style>
 </head>
@@ -1127,7 +1385,7 @@
                     <div class="platform-selector"><div class="platform-option selected" data-platform="qq"><div class="platform-icon"><i class="fab fa-qq"></i></div><div class="platform-name">QQ</div></div><div class="platform-option" data-platform="douyin"><div class="platform-icon"><i class="fab fa-tiktok"></i></div><div class="platform-name">抖音</div></div><div class="platform-option" data-platform="kuaishou"><div class="platform-icon"><i class="fas fa-video"></i></div><div class="platform-name">快手</div></div></div>
                     <div class="form-group"><label class="form-label" id="accountLabel">你的QQ号</label><input type="text" class="form-input" id="submitAccount" placeholder="请输入账号"></div>
                     <div class="form-group" id="contentGroup"><label class="form-label" id="contentLabel">签名内容</label><textarea class="form-input form-textarea" id="submitContent" placeholder="请输入内容" rows="4"></textarea></div>
-                    <div class="form-group" id="imageUploadGroup" style="display:none;"><div class="image-upload-area" id="imageUploadArea"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">点击上传图片证据</div></div><input type="file" id="fileInput" multiple accept="image/*" style="display:none;"><div class="image-preview" id="imagePreview"></div></div>
+                    <div class="form-group" id="imageUploadGroup" style="display:none;"><div class="image-upload-area" id="imageUploadArea"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">点击上传图片证据</div><div class="upload-hint">支持多张，最多9张</div></div><input type="file" id="fileInput" multiple accept="image/*" style="display:none;"><div class="image-preview" id="imagePreview"></div></div>
                     <button class="submit-button" id="doSubmitBtn">提交</button>
                     <div class="submit-info" id="submitInfo"></div>
                     <div class="query-section"><div class="query-input-group"><input type="text" class="form-input" id="queryAccount" placeholder="输入账号查询提交状态"><button class="query-button" id="queryBtn">查询</button></div><div class="query-result" id="queryResult"></div></div>
@@ -1168,7 +1426,7 @@
                             uploadedImages.push(ev.target.result);
                             const item = document.createElement('div');
                             item.className = 'preview-item';
-                            item.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;"><div class="remove-image" style="position:absolute;top:2px;right:2px;background:#ef4444;color:white;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;">×</div>`;
+                            item.innerHTML = `<img src="${ev.target.result}" style="width:100%;height:100%;object-fit:cover;"><div class="remove-image">×</div>`;
                             item.querySelector('.remove-image').onclick = () => item.remove();
                             if (preview) preview.appendChild(item);
                         };
