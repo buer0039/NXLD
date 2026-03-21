@@ -328,6 +328,7 @@
         .form-textarea { min-height: 120px; }
         .submit-button { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 2rem; padding: 1rem 2rem; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%; }
         .submit-button:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px #10b981; }
+        .submit-button.disabled { opacity: 0.6; cursor: not-allowed; transform: none; pointer-events: none; }
         .submit-info { text-align: center; color: #9ca3af; font-size: 0.9rem; margin-top: 1rem; padding: 0.5rem; background: rgba(129, 140, 248, 0.05); border-radius: 1rem; }
         .type-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
         .type-option { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1.5rem; padding: 1rem 0.5rem; text-align: center; cursor: pointer; transition: all 0.2s; }
@@ -357,6 +358,7 @@
         .query-input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
         .query-button { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem 1.5rem; color: white; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
         .query-button:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px #4f46e5; }
+        .query-button.disabled { opacity: 0.6; cursor: not-allowed; transform: none; pointer-events: none; }
         .query-result { background: rgba(255, 255, 255, 0.02); border-radius: 1.5rem; padding: 1rem; max-height: 300px; overflow-y: auto; }
         .query-item { display: flex; align-items: center; justify-content: space-between; padding: 0.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
         .query-item:last-child { border-bottom: none; }
@@ -460,13 +462,14 @@
         .login-input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1); }
         .login-btn { width: 100%; background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px #4f46e5; }
+        .login-btn.disabled { opacity: 0.6; cursor: not-allowed; transform: none; pointer-events: none; }
         .login-error { color: #ef4444; font-size: 0.8rem; margin-top: 0.5rem; }
         
         /* 搜索高亮 */
         .search-highlight { background: rgba(129, 140, 248, 0.15); border-color: #818cf8; transform: scale(1.01); }
         
         /* 按钮禁用状态 */
-        .login-btn.disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .disabled { opacity: 0.6; cursor: not-allowed; transform: none; pointer-events: none; }
         
         /* 账号管理样式 */
         .account-list { max-height: 500px; overflow-y: auto; }
@@ -487,6 +490,7 @@
         .add-account-input-group { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
         .add-account-input { flex: 1; padding: 0.8rem; border-radius: 1.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #f0f2ff; }
         .add-account-btn { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 1.5rem; padding: 0.8rem 1.5rem; color: white; cursor: pointer; }
+        .add-account-btn.disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -580,9 +584,11 @@
                 if (currentUser) allAccountsSet.add(currentUser);
                 
                 // 添加提交过内容的用户
-                [...pendingSignatures, ...approvedSignatures].forEach(s => {
-                    if (s.qq && s.qq !== 'system') allAccountsSet.add(s.qq);
-                });
+                if (pendingSignatures && approvedSignatures) {
+                    [...pendingSignatures, ...approvedSignatures].forEach(s => {
+                        if (s.qq && s.qq !== 'system') allAccountsSet.add(s.qq);
+                    });
+                }
                 
                 // 添加被封禁的用户
                 bannedQQList.forEach(qq => allAccountsSet.add(qq));
@@ -696,7 +702,7 @@
                 }
             }
             
-            // 管理员面板 - 修复手机端显示问题，包含所有登录用户
+            // 管理员面板 - 修复手机端显示问题
             async function showAdminPanel() {
                 await loadFromSupabase();
                 const container = document.createElement('div');
@@ -715,7 +721,7 @@
                 statsContainer.innerHTML = `<div class="stat-card"><div class="stat-number">${pendingSignatures.length + approvedSignatures.length}</div><div class="stat-label">总提交</div></div><div class="stat-card"><div class="stat-number" style="color:#f59e0b;">${pendingSignatures.length}</div><div class="stat-label">待审核</div></div><div class="stat-card"><div class="stat-number" style="color:#10b981;">${approvedSignatures.length}</div><div class="stat-label">已通过</div></div>`;
                 container.appendChild(statsContainer);
                 
-                // 标签页切换 - 普通管理员只有待审核和已通过，超级管理员才有账号管理
+                // 标签页切换
                 const tabContainer = document.createElement('div');
                 tabContainer.className = 'tab-container';
                 if (currentAdminLevel === 'super') {
@@ -779,7 +785,7 @@
                     html += '</div>';
                     contentDiv.innerHTML = html;
                 } else if (currentTab === 'accounts' && currentAdminLevel === 'super') {
-                    // 账号管理页面（仅超级管理员可见）- 显示所有用户
+                    // 账号管理页面
                     const allAccounts = getAllUserAccounts();
                     
                     let html = '<h3 style="color:#818cf8;margin-bottom:1rem;"><i class="fas fa-users"></i> 账号管理</h3>';
@@ -813,7 +819,6 @@
                     }
                     html += '</div>';
                     
-                    // 添加手动添加账号的功能
                     html += `
                         <div class="add-account-area">
                             <div style="font-size:0.85rem;color:#818cf8;"><i class="fas fa-plus-circle"></i> 手动添加账号</div>
@@ -825,23 +830,27 @@
                     `;
                     contentDiv.innerHTML = html;
                     
-                    // 绑定手动添加账号事件
                     setTimeout(() => {
                         const addBtn = document.getElementById('addAccountBtn');
                         const manualInput = document.getElementById('manualAccountInput');
                         if (addBtn) {
                             addBtn.onclick = () => {
+                                if (addBtn.classList.contains('disabled')) return;
+                                addBtn.classList.add('disabled');
                                 const newQQ = manualInput.value.trim();
                                 if (!newQQ) {
                                     showToast('请输入QQ号');
+                                    addBtn.classList.remove('disabled');
                                     return;
                                 }
                                 if (!/^\d+$/.test(newQQ)) {
                                     showToast('QQ号必须为数字');
+                                    addBtn.classList.remove('disabled');
                                     return;
                                 }
                                 if (newQQ.length < 5 || newQQ.length > 12) {
                                     showToast('请输入正确的QQ号（5-12位数字）');
+                                    addBtn.classList.remove('disabled');
                                     return;
                                 }
                                 if (!allLoggedUsers.includes(newQQ)) {
@@ -851,13 +860,15 @@
                                     showAdminPanel();
                                 } else {
                                     showToast('该账号已存在');
+                                    addBtn.classList.remove('disabled');
                                 }
                             };
                         }
                         if (manualInput) {
                             manualInput.addEventListener('keypress', (e) => {
                                 if (e.key === 'Enter') {
-                                    addBtn.click();
+                                    const addBtn = document.getElementById('addAccountBtn');
+                                    if (addBtn) addBtn.click();
                                 }
                             });
                         }
@@ -928,7 +939,7 @@
                 };
             }
             
-            // 其他辅助函数（保持不变）
+            // 其他辅助函数
             let historyStack = [];
             let pendingSignatures = [];
             let approvedSignatures = [];
@@ -953,6 +964,9 @@
             const submitSignatureBtn = document.getElementById('submitSignatureBtn');
             const adminBtn = document.getElementById('adminBtn');
             const supernaturalBtn = document.getElementById('supernaturalBtn');
+            
+            // 防重复提交标志
+            let isSubmitting = false;
             
             function setCloudStatus(status, message) {
                 cloudText.textContent = message;
@@ -992,7 +1006,7 @@
             function showToast(msg) { const toast = document.createElement('div'); toast.className = 'copy-toast'; toast.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`; toastContainer.appendChild(toast); setTimeout(() => toast.remove(), 1500); }
             function convertToHtml(content) { if (!content) return ''; return content.replace(/<color=#([A-Fa-f0-9]{6})>/g, '<span style="color:#$1;">').replace(/<color=#([A-Fa-f0-9]{3})>/g, '<span style="color:#$1;">').replace(/<size=(\d+)>/g, (m,s) => `<span style="font-size:${parseInt(s)/16}rem;">`).replace(/<\/color>/g, '</span>').replace(/<\/size>/g, '</span>').replace(/<b>/g, '<b>').replace(/<\/b>/g, '</b>').replace(/<i>/g, '<i>').replace(/<\/i>/g, '</i>').replace(/<u>/g, '<u>').replace(/<\/u>/g, '</u>'); }
             
-            // 修复搜索补位问题 - 搜索时不会自动补位，只高亮匹配项
+            // 修复搜索补位问题
             function performGlobalSearch() {
                 const term = searchInput.value.toLowerCase().trim();
                 const searchArea = document.getElementById('innerDynamic');
@@ -1120,37 +1134,78 @@
                     });
                 };
                 const submitBtn = document.getElementById('doSubmitBtn');
-                if (submitBtn) submitBtn.onclick = async () => {
-                    const acc = document.getElementById('submitAccount').value.trim();
-                    const cont = document.getElementById('submitContent').value.trim();
-                    const info = document.getElementById('submitInfo');
-                    
-                    if (!acc) {
-                        let platformName = currentPlatform === 'qq' ? 'QQ号' : (currentPlatform === 'douyin' ? '抖音号' : '快手号');
-                        info.textContent = `请输入${platformName}`;
-                        info.style.color = '#ef4444';
-                        return;
-                    }
-                    
-                    if (currentType === 'signature') {
-                        if (!cont) { info.textContent = '请输入签名内容'; info.style.color = '#ef4444'; return; }
-                        const dup = checkDuplicate(cont);
-                        if (dup.duplicate) {
-                            let platformName = dup.platform === 'qq' ? 'QQ' : (dup.platform === 'douyin' ? 'dy' : 'ks');
-                            info.textContent = `该签名已存在 (${platformName}：${dup.qq})`;
-                            info.style.color = '#f59e0b'; return;
+                if (submitBtn) {
+                    submitBtn.onclick = async () => {
+                        // 防重复提交检查
+                        if (isSubmitting) {
+                            showToast('请勿重复提交');
+                            return;
                         }
-                    }
-                    if (currentType === 'report' && !cont) { info.textContent = '请输入举报说明'; info.style.color = '#ef4444'; return; }
-                    if (currentType === 'bug' && !cont) { info.textContent = '请输入Bug描述'; info.style.color = '#ef4444'; return; }
-                    
-                    if (await saveToSupabase({ qq: acc, content: cont || '无内容', platform: currentPlatform, status: 'pending', type: 'user', submit_type: currentType, images: uploadedImages, submit_time: new Date().toISOString() })) {
-                        await addLog('提交', `${currentPlatform === 'qq' ? 'QQ' : (currentPlatform === 'douyin' ? 'dy' : 'ks')}:${acc} 提交了${currentType === 'signature' ? '签名' : (currentType === 'report' ? '举报' : 'Bug反馈')}`);
-                        info.textContent = '提交成功！管理员审核后将显示'; info.style.color = '#10b981';
-                        document.getElementById('submitAccount').value = ''; document.getElementById('submitContent').value = ''; uploadedImages = []; if (preview) preview.innerHTML = '';
-                        await loadFromSupabase();
-                    } else { info.textContent = '提交失败，请重试'; info.style.color = '#ef4444'; }
-                };
+                        isSubmitting = true;
+                        submitBtn.classList.add('disabled');
+                        const originalText = submitBtn.innerHTML;
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
+                        
+                        try {
+                            const acc = document.getElementById('submitAccount').value.trim();
+                            const cont = document.getElementById('submitContent').value.trim();
+                            const info = document.getElementById('submitInfo');
+                            
+                            if (!acc) {
+                                let platformName = currentPlatform === 'qq' ? 'QQ号' : (currentPlatform === 'douyin' ? '抖音号' : '快手号');
+                                info.textContent = `请输入${platformName}`;
+                                info.style.color = '#ef4444';
+                                resetSubmitButton();
+                                return;
+                            }
+                            
+                            if (currentType === 'signature') {
+                                if (!cont) { info.textContent = '请输入签名内容'; info.style.color = '#ef4444'; resetSubmitButton(); return; }
+                                const dup = checkDuplicate(cont);
+                                if (dup.duplicate) {
+                                    let platformName = dup.platform === 'qq' ? 'QQ' : (dup.platform === 'douyin' ? 'dy' : 'ks');
+                                    info.textContent = `该签名已存在 (${platformName}：${dup.qq})`;
+                                    info.style.color = '#f59e0b';
+                                    resetSubmitButton();
+                                    return;
+                                }
+                            }
+                            if (currentType === 'report' && !cont) { info.textContent = '请输入举报说明'; info.style.color = '#ef4444'; resetSubmitButton(); return; }
+                            if (currentType === 'bug' && !cont) { info.textContent = '请输入Bug描述'; info.style.color = '#ef4444'; resetSubmitButton(); return; }
+                            
+                            if (await saveToSupabase({ qq: acc, content: cont || '无内容', platform: currentPlatform, status: 'pending', type: 'user', submit_type: currentType, images: uploadedImages, submit_time: new Date().toISOString() })) {
+                                await addLog('提交', `${currentPlatform === 'qq' ? 'QQ' : (currentPlatform === 'douyin' ? 'dy' : 'ks')}:${acc} 提交了${currentType === 'signature' ? '签名' : (currentType === 'report' ? '举报' : 'Bug反馈')}`);
+                                info.textContent = '提交成功！管理员审核后将显示';
+                                info.style.color = '#10b981';
+                                document.getElementById('submitAccount').value = '';
+                                document.getElementById('submitContent').value = '';
+                                uploadedImages = [];
+                                if (preview) preview.innerHTML = '';
+                                await loadFromSupabase();
+                            } else {
+                                info.textContent = '提交失败，请重试';
+                                info.style.color = '#ef4444';
+                            }
+                        } catch (error) {
+                            console.error('提交出错:', error);
+                            const info = document.getElementById('submitInfo');
+                            if (info) {
+                                info.textContent = '提交出错，请重试';
+                                info.style.color = '#ef4444';
+                            }
+                        } finally {
+                            resetSubmitButton();
+                        }
+                        
+                        function resetSubmitButton() {
+                            setTimeout(() => {
+                                submitBtn.innerHTML = originalText;
+                                submitBtn.classList.remove('disabled');
+                                isSubmitting = false;
+                            }, 1000);
+                        }
+                    };
+                }
                 const queryBtn = document.getElementById('queryBtn');
                 if (queryBtn) queryBtn.onclick = () => {
                     const acc = document.getElementById('queryAccount').value.trim(), res = document.getElementById('queryResult');
