@@ -14,13 +14,11 @@
             // 生成唯一设备码（基于浏览器指纹，重新部署后保持不变）
             function generateDeviceId() {
                 try {
-                    // 获取持久化的设备特征
                     let deviceId = localStorage.getItem('nxld_device_id_permanent');
                     if (deviceId) {
                         return deviceId;
                     }
                     
-                    // 获取多个设备特征（重新部署后这些特征不变）
                     const screenRes = `${screen.width}x${screen.height}`;
                     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
                     const language = navigator.language;
@@ -30,10 +28,8 @@
                     const touchPoints = navigator.maxTouchPoints || 0;
                     const userAgent = navigator.userAgent;
                     
-                    // 组合特征
                     const features = `${screenRes}|${timezone}|${language}|${platform}|${cores}|${memory}|${touchPoints}|${userAgent.substring(0, 200)}`;
                     
-                    // 简单哈希
                     let hash = 0;
                     for (let i = 0; i < features.length; i++) {
                         const char = features.charCodeAt(i);
@@ -42,7 +38,6 @@
                     }
                     
                     deviceId = Math.abs(hash).toString(16).toUpperCase();
-                    // 持久化存储设备码
                     localStorage.setItem('nxld_device_id_permanent', deviceId);
                     return deviceId;
                 } catch(e) {
@@ -54,20 +49,14 @@
                 }
             }
             
-            // 设备码
             const DEVICE_ID = generateDeviceId();
             
-            // 云端锁定状态存储key（使用持久化key）
             const LOCKED_DEVICES_KEY = 'nxld_locked_devices_permanent';
             const DETECT_COUNT_KEY_PREFIX = 'nxld_detect_count_perm_';
             
-            // 标记是否已跳转
             let hasRedirected = false;
-            
-            // 页面加载时间
             const pageLoadTime = Date.now();
             
-            // 检查当前设备是否被锁定
             function isDeviceLocked() {
                 try {
                     const lockedDevices = JSON.parse(localStorage.getItem(LOCKED_DEVICES_KEY) || '[]');
@@ -77,7 +66,6 @@
                 }
             }
             
-            // 锁定当前设备
             function lockDevice(reason) {
                 try {
                     let lockedDevices = JSON.parse(localStorage.getItem(LOCKED_DEVICES_KEY) || '[]');
@@ -94,7 +82,6 @@
                 }
             }
             
-            // 解锁指定设备
             function unlockDevice(deviceId) {
                 try {
                     let lockedDevices = JSON.parse(localStorage.getItem(LOCKED_DEVICES_KEY) || '[]');
@@ -109,7 +96,6 @@
                 }
             }
             
-            // 获取所有被锁定的设备
             function getLockedDevices() {
                 try {
                     return JSON.parse(localStorage.getItem(LOCKED_DEVICES_KEY) || '[]');
@@ -118,7 +104,6 @@
                 }
             }
             
-            // 获取设备锁定信息
             function getDeviceLockInfo(deviceId) {
                 try {
                     return {
@@ -131,7 +116,6 @@
                 }
             }
             
-            // 获取设备检测次数
             function getDeviceDetectCount() {
                 try {
                     return parseInt(localStorage.getItem(DETECT_COUNT_KEY_PREFIX + DEVICE_ID) || '0');
@@ -140,14 +124,11 @@
                 }
             }
             
-            // 增加检测计数
             function incrementDetectCount() {
                 try {
                     let count = getDeviceDetectCount();
                     count++;
                     localStorage.setItem(DETECT_COUNT_KEY_PREFIX + DEVICE_ID, count.toString());
-                    
-                    // 检测到3次就锁定设备
                     if (count >= 3) {
                         lockDevice('检测到' + count + '次调试行为，设备已被锁定');
                         return true;
@@ -158,113 +139,69 @@
                 }
             }
             
-            // 立即跳转函数
             function redirectToWarning() {
                 if (hasRedirected) return;
                 hasRedirected = true;
-                
-                // 增加检测计数并检查是否需要锁定
                 incrementDetectCount();
-                
-                // 跳转
-                window.location.href = WARNING_URL;
+                window.location.href = WARNING_URL + '?device=' + DEVICE_ID;
             }
             
-            // 如果当前设备已被锁定，立即跳转
             if (isDeviceLocked()) {
-                window.location.href = WARNING_URL;
+                window.location.href = WARNING_URL + '?device=' + DEVICE_ID;
             }
             
-            // ========== PC端检测功能 ==========
-            
-            // 检测控制台打开
-            let consoleCheckCount = 0;
-            let lastConsoleTime = 0;
-            
+            // ========== 检测功能 ==========
+            let consoleCheckCount = 0, lastConsoleTime = 0;
             function detectConsoleOpen() {
                 const before = Date.now();
                 console.log('%c', 'color: transparent');
                 const after = Date.now();
-                const timeDiff = after - before;
-                
-                if (timeDiff > 50) {
+                if (after - before > 50) {
                     const now = Date.now();
                     if (now - lastConsoleTime < 2000) {
                         consoleCheckCount++;
-                        if (consoleCheckCount >= 3) {
-                            redirectToWarning();
-                        }
-                    } else {
-                        consoleCheckCount = 1;
-                    }
+                        if (consoleCheckCount >= 3) redirectToWarning();
+                    } else consoleCheckCount = 1;
                     lastConsoleTime = now;
-                } else {
-                    consoleCheckCount = 0;
-                }
+                } else consoleCheckCount = 0;
             }
             
-            // 检测窗口尺寸变化
-            let sizeCheckCount = 0;
-            let lastSizeCheck = 0;
-            
+            let sizeCheckCount = 0, lastSizeCheck = 0;
             function detectDevToolsBySize() {
                 const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
                 const heightDiff = Math.abs(window.outerHeight - window.innerHeight);
-                
                 if (widthDiff > 150 || heightDiff > 150) {
                     const now = Date.now();
                     if (now - lastSizeCheck < 500) {
                         sizeCheckCount++;
-                        if (sizeCheckCount >= 2) {
-                            redirectToWarning();
-                        }
-                    } else {
-                        sizeCheckCount = 1;
-                    }
+                        if (sizeCheckCount >= 2) redirectToWarning();
+                    } else sizeCheckCount = 1;
                     lastSizeCheck = now;
-                } else {
-                    sizeCheckCount = 0;
-                }
+                } else sizeCheckCount = 0;
             }
             
-            // 检测快捷键（包括Ctrl+R和Ctrl+U）
-            let shortcutCount = 0;
-            let lastShortcutTime = 0;
-            
+            let shortcutCount = 0, lastShortcutTime = 0;
             function detectDevToolsShortcut(e) {
                 const isDevToolKey = e.key === 'F12' || 
                     (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
                     (e.ctrlKey && (e.key === 'U' || e.key === 'R')) ||
                     (e.ctrlKey && e.key === 'r');
-                
                 if (isDevToolKey) {
                     e.preventDefault();
                     e.stopPropagation();
-                    
                     const now = Date.now();
                     if (now - lastShortcutTime < 1000) {
                         shortcutCount++;
-                        if (shortcutCount >= 2) {
-                            redirectToWarning();
-                        }
-                    } else {
-                        shortcutCount = 1;
-                    }
+                        if (shortcutCount >= 2) redirectToWarning();
+                    } else shortcutCount = 1;
                     lastShortcutTime = now;
                     return false;
                 }
             }
             
-            // 检测右键菜单
-            function disableRightClick(e) {
-                e.preventDefault();
-                return false;
-            }
+            function disableRightClick(e) { e.preventDefault(); return false; }
             
-            // 检测元素检查
-            let mutationCount = 0;
-            let lastMutationTime = 0;
-            
+            let mutationCount = 0, lastMutationTime = 0;
             function detectElementInspection() {
                 const observer = new MutationObserver(function(mutations) {
                     mutations.forEach(function(mutation) {
@@ -272,184 +209,95 @@
                             const now = Date.now();
                             if (now - lastMutationTime < 500) {
                                 mutationCount++;
-                                if (mutationCount >= 5) {
-                                    redirectToWarning();
-                                }
-                            } else {
-                                mutationCount = 1;
-                            }
+                                if (mutationCount >= 5) redirectToWarning();
+                            } else mutationCount = 1;
                             lastMutationTime = now;
                         }
                     });
                 });
-                
-                observer.observe(document.documentElement, {
-                    attributes: true,
-                    attributeFilter: ['style', 'class', 'id']
-                });
+                observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class', 'id'] });
             }
             
-            // 重写console方法
-            let consoleCommandCount = 0;
-            let lastCommandTime = 0;
-            
-            const originalLog = console.log;
-            const originalWarn = console.warn;
-            const originalError = console.error;
-            
+            let consoleCommandCount = 0, lastCommandTime = 0;
+            const originalLog = console.log, originalWarn = console.warn, originalError = console.error;
             console.log = function() {
                 const now = Date.now();
-                if (now - lastCommandTime < 100) {
-                    consoleCommandCount++;
-                    if (consoleCommandCount >= 5) {
-                        redirectToWarning();
-                    }
-                } else {
-                    consoleCommandCount = 1;
-                }
+                if (now - lastCommandTime < 100) { consoleCommandCount++; if (consoleCommandCount >= 5) redirectToWarning(); } else consoleCommandCount = 1;
                 lastCommandTime = now;
                 originalLog.apply(console, arguments);
             };
-            
             console.warn = function() {
                 const now = Date.now();
-                if (now - lastCommandTime < 100) {
-                    consoleCommandCount++;
-                    if (consoleCommandCount >= 5) {
-                        redirectToWarning();
-                    }
-                } else {
-                    consoleCommandCount = 1;
-                }
+                if (now - lastCommandTime < 100) { consoleCommandCount++; if (consoleCommandCount >= 5) redirectToWarning(); } else consoleCommandCount = 1;
                 lastCommandTime = now;
                 originalWarn.apply(console, arguments);
             };
-            
             console.error = function() {
                 const now = Date.now();
-                if (now - lastCommandTime < 100) {
-                    consoleCommandCount++;
-                    if (consoleCommandCount >= 5) {
-                        redirectToWarning();
-                    }
-                } else {
-                    consoleCommandCount = 1;
-                }
+                if (now - lastCommandTime < 100) { consoleCommandCount++; if (consoleCommandCount >= 5) redirectToWarning(); } else consoleCommandCount = 1;
                 lastCommandTime = now;
                 originalError.apply(console, arguments);
             };
             
-            // ========== CE/GG 修改器检测 ==========
-            let modifierDetectCount = 0;
-            let lastModifierTime = 0;
-            
+            let modifierDetectCount = 0, lastModifierTime = 0;
             function detectMemoryModifiers() {
                 const userAgent = window.navigator.userAgent.toLowerCase();
                 const suspiciousPatterns = ['cheat', 'guardian', 'memory editor', 'speed hack'];
-                
                 let hasSuspicious = false;
                 for (let i = 0; i < suspiciousPatterns.length; i++) {
-                    if (userAgent.includes(suspiciousPatterns[i])) {
-                        hasSuspicious = true;
-                        break;
-                    }
+                    if (userAgent.includes(suspiciousPatterns[i])) { hasSuspicious = true; break; }
                 }
-                
                 const suspiciousGlobals = ['GG', 'CHEAT_ENGINE', 'MemoryHack', 'SpeedHack', 'GameGuardian', 'CheatEngine'];
                 for (let i = 0; i < suspiciousGlobals.length; i++) {
-                    if (window[suspiciousGlobals[i]] !== undefined) {
-                        hasSuspicious = true;
-                        break;
-                    }
+                    if (window[suspiciousGlobals[i]] !== undefined) { hasSuspicious = true; break; }
                 }
-                
                 if (hasSuspicious) {
                     const now = Date.now();
-                    if (now - lastModifierTime < 3000) {
-                        modifierDetectCount++;
-                        if (modifierDetectCount >= 2) {
-                            redirectToWarning();
-                        }
-                    } else {
-                        modifierDetectCount = 1;
-                    }
+                    if (now - lastModifierTime < 3000) { modifierDetectCount++; if (modifierDetectCount >= 2) redirectToWarning(); } else modifierDetectCount = 1;
                     lastModifierTime = now;
-                } else {
-                    modifierDetectCount = 0;
-                }
+                } else modifierDetectCount = 0;
             }
             
-            // 帧率检测
-            let lastFrameTime = performance.now();
-            let abnormalFrameCount = 0;
-            
+            let lastFrameTime = performance.now(), abnormalFrameCount = 0;
             function checkFrameRate() {
                 const now = performance.now();
                 const delta = now - lastFrameTime;
-                
-                if (delta < 5 || delta > 100) {
-                    abnormalFrameCount++;
-                    if (abnormalFrameCount > 10) {
-                        redirectToWarning();
-                    }
-                } else {
-                    abnormalFrameCount = Math.max(0, abnormalFrameCount - 1);
-                }
-                
+                if (delta < 5 || delta > 100) { abnormalFrameCount++; if (abnormalFrameCount > 10) redirectToWarning(); } else abnormalFrameCount = Math.max(0, abnormalFrameCount - 1);
                 lastFrameTime = now;
                 requestAnimationFrame(checkFrameRate);
             }
             
-            // 检测悬浮窗
             function detectOverlay() {
                 setInterval(function() {
                     const allElements = document.getElementsByTagName('*');
                     for (let i = 0; i < Math.min(allElements.length, 100); i++) {
                         const zIndex = window.getComputedStyle(allElements[i]).zIndex;
-                        if (zIndex && parseInt(zIndex) > 999999) {
-                            redirectToWarning();
-                            break;
-                        }
+                        if (zIndex && parseInt(zIndex) > 999999) { redirectToWarning(); break; }
                     }
                 }, 2000);
             }
             
-            // ========== 初始化检测 ==========
-            
             document.addEventListener('keydown', detectDevToolsShortcut);
             document.addEventListener('contextmenu', disableRightClick);
             detectElementInspection();
-            
-            setInterval(function() {
-                detectDevToolsBySize();
-                detectConsoleOpen();
-                detectMemoryModifiers();
-            }, 500);
-            
+            setInterval(function() { detectDevToolsBySize(); detectConsoleOpen(); detectMemoryModifiers(); }, 500);
             requestAnimationFrame(checkFrameRate);
             detectOverlay();
-            
             if (window.self !== window.top) redirectToWarning();
             if (/HeadlessChrome/.test(window.navigator.userAgent)) redirectToWarning();
             if (window.navigator.webdriver) redirectToWarning();
-            
-            setTimeout(function() {
-                console.log('✅ 安全防护已启动 - 设备码: ' + DEVICE_ID);
-            }, 1000);
             
             document.addEventListener('selectstart', function(e) {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return true;
                 e.preventDefault();
                 return false;
             });
-            
             document.addEventListener('copy', function(e) {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return true;
                 e.preventDefault();
                 return false;
             });
             
-            // 导出全局函数供管理员使用
             window.__getDeviceId = function() { return DEVICE_ID; };
             window.__getLockedDevices = getLockedDevices;
             window.__getDeviceLockInfo = getDeviceLockInfo;
@@ -559,7 +407,7 @@
         .menu-card span { font-size: 1.1rem; font-weight: 600; color: #e5e7eb; }
         .menu-card small { font-size: 0.8rem; color: #6b7280; }
         
-        /* 设备码显示区域 - 显眼位置 */
+        /* 设备码显示区域 */
         .device-card {
             background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
             border: 1px solid rgba(129, 140, 248, 0.3);
@@ -580,48 +428,12 @@
             border-color: #818cf8;
             transform: scale(1.01);
         }
-        .device-card-left {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-        }
-        .device-icon {
-            width: 2.5rem;
-            height: 2.5rem;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            border-radius: 0.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.2rem;
-        }
-        .device-info-text {
-            display: flex;
-            flex-direction: column;
-        }
-        .device-label {
-            font-size: 0.7rem;
-            color: #9ca3af;
-            letter-spacing: 1px;
-        }
-        .device-id {
-            font-family: monospace;
-            font-size: 1rem;
-            font-weight: 600;
-            color: #a5b4fc;
-            letter-spacing: 1px;
-        }
-        .device-copy-hint {
-            font-size: 0.7rem;
-            color: #6b7280;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-        }
-        .device-copy-hint i {
-            font-size: 0.6rem;
-        }
+        .device-card-left { display: flex; align-items: center; gap: 0.8rem; }
+        .device-icon { width: 2.5rem; height: 2.5rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 0.8rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; }
+        .device-info-text { display: flex; flex-direction: column; }
+        .device-label { font-size: 0.7rem; color: #9ca3af; letter-spacing: 1px; }
+        .device-id { font-family: monospace; font-size: 1rem; font-weight: 600; color: #a5b4fc; letter-spacing: 1px; }
+        .device-copy-hint { font-size: 0.7rem; color: #6b7280; display: flex; align-items: center; gap: 0.3rem; }
         
         .signature-card-container { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; }
         .signature-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 182, 193, 0.3); border-radius: 1.2rem; padding: 1rem 0.8rem 0.4rem 0.8rem; text-align: center; backdrop-filter: blur(10px); cursor: pointer; transition: all 0.3s; box-shadow: 0 0 10px rgba(255, 192, 203, 0.1); line-height: 1.4; position: relative; z-index: 10; width: 100%; display: flex; flex-direction: column; min-height: 130px; justify-content: space-between; }
@@ -751,6 +563,12 @@
         .device-item-time { font-size: 0.6rem; color: #6b7280; }
         .unlock-device-btn { background: #ef4444; border: none; border-radius: 1rem; padding: 0.3rem 0.8rem; color: white; font-size: 0.7rem; cursor: pointer; transition: all 0.2s; }
         .unlock-device-btn:hover { background: #dc2626; transform: scale(1.05); }
+        .manual-unlock-section { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 1rem; padding: 1rem; margin-top: 1rem; }
+        .manual-unlock-input-group { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+        .manual-unlock-input { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 2rem; padding: 0.6rem 1rem; color: #f0f2ff; font-size: 0.85rem; font-family: monospace; outline: none; }
+        .manual-unlock-input:focus { border-color: #10b981; }
+        .manual-unlock-btn { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 2rem; padding: 0.6rem 1.2rem; color: white; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; }
+        .manual-unlock-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px #10b981; }
     </style>
 </head>
 <body>
@@ -770,20 +588,16 @@
             </div>
         </div>
         
-        <!-- 设备码显示区域 - 显眼位置（放在阵营切换下方） -->
+        <!-- 设备码显示区域 -->
         <div class="device-card" id="deviceCard" style="cursor: pointer;">
             <div class="device-card-left">
-                <div class="device-icon">
-                    <i class="fas fa-microchip"></i>
-                </div>
+                <div class="device-icon"><i class="fas fa-microchip"></i></div>
                 <div class="device-info-text">
                     <div class="device-label">当前设备唯一识别码</div>
                     <div class="device-id" id="deviceIdDisplay">加载中...</div>
                 </div>
             </div>
-            <div class="device-copy-hint">
-                <i class="fas fa-copy"></i> 点击复制设备码
-            </div>
+            <div class="device-copy-hint"><i class="fas fa-copy"></i> 点击复制设备码</div>
         </div>
         
         <div class="faction-switch"><button class="faction-btn active" id="supernaturalBtn"><i class="fas fa-hand-sparkles"></i> 超自然行动组</button></div>
@@ -804,7 +618,6 @@
             const deviceIdDisplay = document.getElementById('deviceIdDisplay');
             const deviceCard = document.getElementById('deviceCard');
             
-            // 显示设备码并添加复制功能
             setTimeout(() => {
                 const deviceId = window.__getDeviceId ? window.__getDeviceId() : 'unknown';
                 if (deviceIdDisplay) deviceIdDisplay.textContent = deviceId;
@@ -907,8 +720,9 @@
                 tabContainer.innerHTML = `<button class="tab-btn ${currentTab === 'pending' ? 'active' : ''}" data-tab="pending">待审核 (${pendingSignatures.length})</button><button class="tab-btn ${currentTab === 'approved' ? 'active' : ''}" data-tab="approved">已通过 (${approvedSignatures.length})</button><button class="tab-btn ${currentTab === 'logs' ? 'active' : ''}" data-tab="logs">操作日志</button>`;
                 container.appendChild(tabContainer);
                 
-                // 超级管理员：显示被锁定的设备
+                // 超级管理员：显示被锁定的设备列表 + 手动解锁功能
                 if (currentAdminLevel === 'super') {
+                    // 被锁定的设备列表
                     if (lockedDevices.length > 0) {
                         const lockSection = document.createElement('div');
                         lockSection.className = 'unlock-section';
@@ -958,6 +772,50 @@
                         noLockSection.innerHTML = `<div class="unlock-info"><div class="title" style="color:#10b981;"><i class="fas fa-check-circle"></i> 暂无被锁定的设备</div></div>`;
                         container.appendChild(noLockSection);
                     }
+                    
+                    // 手动解锁功能（输入设备码解锁）
+                    const manualUnlockSection = document.createElement('div');
+                    manualUnlockSection.className = 'manual-unlock-section';
+                    manualUnlockSection.innerHTML = `
+                        <div class="unlock-info">
+                            <div class="title" style="color:#10b981;"><i class="fas fa-key"></i> 手动解锁设备</div>
+                            <div class="manual-unlock-input-group">
+                                <input type="text" class="manual-unlock-input" id="manualUnlockDeviceId" placeholder="输入要解锁的设备码">
+                                <button class="manual-unlock-btn" id="manualUnlockBtn"><i class="fas fa-unlock-alt"></i> 解锁设备</button>
+                            </div>
+                            <div id="manualUnlockResult" style="font-size:0.7rem; color:#9ca3af; margin-top:0.5rem;"></div>
+                        </div>
+                    `;
+                    container.appendChild(manualUnlockSection);
+                    
+                    setTimeout(() => {
+                        const manualUnlockBtn = document.getElementById('manualUnlockBtn');
+                        const manualUnlockInput = document.getElementById('manualUnlockDeviceId');
+                        const manualUnlockResult = document.getElementById('manualUnlockResult');
+                        
+                        if (manualUnlockBtn) {
+                            manualUnlockBtn.addEventListener('click', () => {
+                                const deviceId = manualUnlockInput.value.trim();
+                                if (!deviceId) {
+                                    manualUnlockResult.innerHTML = '<i class="fas fa-exclamation-circle"></i> 请输入设备码';
+                                    manualUnlockResult.style.color = '#ef4444';
+                                    return;
+                                }
+                                if (window.__unlockDevice && window.__unlockDevice(deviceId)) {
+                                    manualUnlockResult.innerHTML = '<i class="fas fa-check-circle"></i> 设备已成功解锁！';
+                                    manualUnlockResult.style.color = '#10b981';
+                                    manualUnlockInput.value = '';
+                                    setTimeout(() => showAdminPanel(), 1000);
+                                } else {
+                                    manualUnlockResult.innerHTML = '<i class="fas fa-times-circle"></i> 未找到该设备码或设备未被锁定';
+                                    manualUnlockResult.style.color = '#ef4444';
+                                }
+                            });
+                            manualUnlockInput.addEventListener('keypress', (e) => {
+                                if (e.key === 'Enter') manualUnlockBtn.click();
+                            });
+                        }
+                    }, 100);
                 }
                 
                 const contentDiv = document.createElement('div');
