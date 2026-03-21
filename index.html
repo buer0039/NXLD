@@ -467,6 +467,20 @@
         
         /* 按钮禁用状态 */
         .login-btn.disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        
+        /* 账号管理样式 */
+        .account-list { max-height: 500px; overflow-y: auto; }
+        .account-item { background: rgba(255, 255, 255, 0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+        .account-info { flex: 1; }
+        .account-qq { font-size: 1rem; font-weight: 600; color: #a5b4fc; font-family: monospace; }
+        .account-status { font-size: 0.7rem; margin-top: 0.3rem; }
+        .status-banned { color: #ef4444; }
+        .status-normal { color: #10b981; }
+        .ban-btn { background: #ef4444; border: none; border-radius: 1.5rem; padding: 0.5rem 1rem; color: white; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+        .ban-btn:hover { background: #dc2626; transform: scale(1.02); }
+        .unban-btn { background: #10b981; border: none; border-radius: 1.5rem; padding: 0.5rem 1rem; color: white; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+        .unban-btn:hover { background: #059669; transform: scale(1.02); }
+        .current-user-badge { background: rgba(129, 140, 248, 0.2); color: #818cf8; padding: 0.2rem 0.5rem; border-radius: 1rem; font-size: 0.7rem; margin-left: 0.5rem; }
     </style>
 </head>
 <body>
@@ -635,10 +649,12 @@
                 }
             }
             
-            // 管理员面板 - 移除普通管理员的账号管理，只有超级管理员才有账号管理
+            // 管理员面板 - 修复手机端显示问题
             async function showAdminPanel() {
                 await loadFromSupabase();
                 const container = document.createElement('div');
+                container.style.width = '100%';
+                container.style.overflow = 'visible';
                 
                 const levelBadge = document.createElement('div');
                 levelBadge.style.cssText = 'text-align:center;margin-bottom:1rem;padding:0.5rem;border-radius:2rem';
@@ -674,6 +690,9 @@
                 const contentDiv = document.createElement('div');
                 contentDiv.className = 'submit-form';
                 contentDiv.style.maxWidth = '800px';
+                contentDiv.style.width = '100%';
+                contentDiv.style.boxSizing = 'border-box';
+                contentDiv.style.overflow = 'auto';
                 
                 if (currentTab === 'pending') {
                     let html = '<h3 style="color:#f59e0b;">待审核列表</h3>';
@@ -687,7 +706,7 @@
                             else preview = `<div style="color:#f59e0b;">Bug反馈: ${sig.content}</div>`;
                             let platformText = sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks');
                             let authorText = sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`);
-                            html += `<div style="background:rgba(255,255,255,0.03);border-radius:1rem;padding:1rem;margin-bottom:1rem;"><div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;"><span><span style="color:#818cf8;">${platformText}:</span> ${authorText}</span>${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}</div><div style="background:rgba(0,0,0,0.2);padding:0.5rem;border-radius:0.5rem;">${preview}</div><div style="color:#9ca3af;font-size:0.8rem;margin:0.5rem 0;">提交: ${new Date(sig.submit_time).toLocaleString()}</div><div style="display:flex;gap:0.5rem;"><button class="query-button" style="background:#10b981;" onclick="window.approveSignature(${sig.id})">通过</button><button class="query-button" style="background:#ef4444;" onclick="window.rejectSignature(${sig.id})">拒绝</button></div></div>`;
+                            html += `<div style="background:rgba(255,255,255,0.03);border-radius:1rem;padding:1rem;margin-bottom:1rem;"><div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.5rem;"><span><span style="color:#818cf8;">${platformText}:</span> ${authorText}</span>${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}</div><div style="background:rgba(0,0,0,0.2);padding:0.5rem;border-radius:0.5rem;">${preview}</div><div style="color:#9ca3af;font-size:0.8rem;margin:0.5rem 0;">提交: ${new Date(sig.submit_time).toLocaleString()}</div><div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="query-button" style="background:#10b981;flex:1;min-width:80px;" onclick="window.approveSignature(${sig.id})">通过</button><button class="query-button" style="background:#ef4444;flex:1;min-width:80px;" onclick="window.rejectSignature(${sig.id})">拒绝</button></div></div>`;
                         });
                         html += '</div>';
                     }
@@ -701,7 +720,7 @@
                         approvedItems.forEach(sig => {
                             let platformText = sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks');
                             let authorText = sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`);
-                            html += `<div style="background:rgba(255,255,255,0.03);border-radius:1rem;padding:1rem;margin-bottom:1rem;"><div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;"><span><span style="color:#818cf8;">${platformText}:</span> ${authorText}</span>${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}</div><div style="background:rgba(0,0,0,0.2);padding:0.5rem;border-radius:0.5rem;"><span style="color:#818cf8;">预览:</span><div style="margin-top:0.3rem;">${convertToHtml(sig.content)}</div></div></div>`;
+                            html += `<div style="background:rgba(255,255,255,0.03);border-radius:1rem;padding:1rem;margin-bottom:1rem;"><div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.5rem;"><span><span style="color:#818cf8;">${platformText}:</span> ${authorText}</span>${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}</div><div style="background:rgba(0,0,0,0.2);padding:0.5rem;border-radius:0.5rem;"><span style="color:#818cf8;">预览:</span><div style="margin-top:0.3rem;">${convertToHtml(sig.content)}</div></div></div>`;
                         });
                         html += '</div>';
                     }
@@ -1058,18 +1077,31 @@
                 if (pushToHistory) historyStack.push('admin');
                 statusTag.textContent = '管理员系统';
                 const container = document.createElement('div');
-                if (currentAdminLevel !== 'guest') showAdminPanel();
-                else {
-                    container.innerHTML = `<div class="submit-form"><div class="form-group"><label class="form-label">管理员密码</label><input type="password" class="form-input" id="adminPassword" placeholder="请输入密码"></div><button class="submit-button" id="adminLoginBtn">登录</button><div class="submit-info" id="adminLoginInfo"></div></div>`;
+                container.style.width = '100%';
+                if (currentAdminLevel !== 'guest') {
+                    showAdminPanel();
+                } else {
+                    container.innerHTML = `<div class="submit-form" style="width:100%;"><div class="form-group"><label class="form-label">管理员密码</label><input type="password" class="form-input" id="adminPassword" placeholder="请输入密码"></div><button class="submit-button" id="adminLoginBtn">登录</button><div class="submit-info" id="adminLoginInfo"></div></div>`;
                     innerDynamic.innerHTML = '';
                     innerDynamic.appendChild(container);
                     const adminLoginBtn = document.getElementById('adminLoginBtn');
-                    if (adminLoginBtn) adminLoginBtn.onclick = () => {
-                        const pwd = document.getElementById('adminPassword').value;
-                        if (pwd === 'NXLD_RX') { currentAdminLevel = 'admin'; showAdminPanel(); document.getElementById('adminLoginInfo').textContent = '登录成功（普通管理员）'; }
-                        else if (pwd === 'NXLD_MZRW') { currentAdminLevel = 'super'; showAdminPanel(); document.getElementById('adminLoginInfo').textContent = '登录成功（超级管理员）'; }
-                        else { document.getElementById('adminLoginInfo').textContent = '密码错误'; document.getElementById('adminLoginInfo').style.color = '#ef4444'; }
-                    };
+                    if (adminLoginBtn) {
+                        adminLoginBtn.onclick = () => {
+                            const pwd = document.getElementById('adminPassword').value;
+                            if (pwd === 'NXLD_RX') { currentAdminLevel = 'admin'; showAdminPanel(); document.getElementById('adminLoginInfo').textContent = '登录成功（普通管理员）'; }
+                            else if (pwd === 'NXLD_MZRW') { currentAdminLevel = 'super'; showAdminPanel(); document.getElementById('adminLoginInfo').textContent = '登录成功（超级管理员）'; }
+                            else { document.getElementById('adminLoginInfo').textContent = '密码错误'; document.getElementById('adminLoginInfo').style.color = '#ef4444'; }
+                        };
+                        // 添加回车登录
+                        const pwdInput = document.getElementById('adminPassword');
+                        if (pwdInput) {
+                            pwdInput.addEventListener('keypress', (e) => {
+                                if (e.key === 'Enter') {
+                                    adminLoginBtn.click();
+                                }
+                            });
+                        }
+                    }
                 }
                 refreshBackButton();
             }
@@ -1086,7 +1118,7 @@
                     else if (v === 'submit') showSubmitSignature(false);
                     else if (v === 'admin') showAdminPage(false);
                     else showSupernaturalInitial(false);
-                    searchInput.value = '';
+                    if (searchInput) searchInput.value = '';
                     setTimeout(() => {
                         if (document.querySelector('.content-area')) document.querySelector('.content-area').scrollTop = 0;
                         performGlobalSearch();
@@ -1117,7 +1149,7 @@
             }
             
             // 绑定事件
-            if (supernaturalBtn) supernaturalBtn.onclick = () => { if (historyStack.length === 0 || historyStack[historyStack.length - 1] !== 'main') { historyStack = []; showSupernaturalInitial(); searchInput.value = ''; performGlobalSearch(); } };
+            if (supernaturalBtn) supernaturalBtn.onclick = () => { if (historyStack.length === 0 || historyStack[historyStack.length - 1] !== 'main') { historyStack = []; showSupernaturalInitial(); if (searchInput) searchInput.value = ''; performGlobalSearch(); } };
             if (agreementBtn) agreementBtn.onclick = () => agreementModal.classList.add('show');
             if (closeAgreement) closeAgreement.onclick = () => agreementModal.classList.remove('show');
             if (agreementModal) agreementModal.onclick = (e) => { if (e.target === agreementModal) agreementModal.classList.remove('show'); };
@@ -1125,13 +1157,20 @@
             if (closeThanks) closeThanks.onclick = () => thanksModal.classList.remove('show');
             if (thanksModal) thanksModal.onclick = (e) => { if (e.target === thanksModal) thanksModal.classList.remove('show'); };
             if (submitSignatureBtn) submitSignatureBtn.onclick = () => showSubmitSignature();
-            if (adminBtn) adminBtn.onclick = () => { currentAdminLevel = 'guest'; showAdminPage(); searchInput.value = ''; performGlobalSearch(); };
+            if (adminBtn) adminBtn.onclick = () => { currentAdminLevel = 'guest'; showAdminPage(); if (searchInput) searchInput.value = ''; performGlobalSearch(); };
             
-            // 初始化
+            // 初始化 - 添加登录弹窗回车事件
             const loginBtn = document.getElementById('loginBtn');
             const loginQQ = document.getElementById('loginQQ');
             if (loginBtn) loginBtn.addEventListener('click', handleLogin);
-            if (loginQQ) loginQQ.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+            if (loginQQ) {
+                loginQQ.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleLogin();
+                    }
+                });
+            }
             
             window.addEventListener('load', async () => {
                 if (!checkLogin()) {
