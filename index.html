@@ -11,10 +11,19 @@
             // 标记是否已提示
             let hasWarned = false;
             
+            // 反作弊状态显示
+            window.antiCheatStatus = {
+                isRunning: true,
+                startTime: Date.now(),
+                checksPerformed: 0,
+                warningsIssued: 0
+            };
+            
             // 只做检测和提示，不封禁
             function showWarning() {
                 if (hasWarned) return;
                 hasWarned = true;
+                window.antiCheatStatus.warningsIssued++;
                 
                 const style = document.createElement('style');
                 style.textContent = `
@@ -65,6 +74,7 @@
                 console.log('%c', 'color: transparent');
                 const after = Date.now();
                 if (after - before > 50) {
+                    window.antiCheatStatus.checksPerformed++;
                     const now = Date.now();
                     if (now - lastConsoleTime < 2000) {
                         consoleCheckCount++;
@@ -79,6 +89,7 @@
                 const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
                 const heightDiff = Math.abs(window.outerHeight - window.innerHeight);
                 if (widthDiff > 150 || heightDiff > 150) {
+                    window.antiCheatStatus.checksPerformed++;
                     const now = Date.now();
                     if (now - lastSizeCheck < 500) {
                         sizeCheckCount++;
@@ -95,6 +106,7 @@
                     (e.ctrlKey && (e.key === 'U' || e.key === 'R')) ||
                     (e.ctrlKey && e.key === 'r');
                 if (isDevToolKey) {
+                    window.antiCheatStatus.checksPerformed++;
                     e.preventDefault();
                     e.stopPropagation();
                     const now = Date.now();
@@ -114,6 +126,7 @@
                 const observer = new MutationObserver(function(mutations) {
                     mutations.forEach(function(mutation) {
                         if (mutation.type === 'attributes') {
+                            window.antiCheatStatus.checksPerformed++;
                             const now = Date.now();
                             if (now - lastMutationTime < 500) {
                                 mutationCount++;
@@ -129,18 +142,21 @@
             let consoleCommandCount = 0, lastCommandTime = 0;
             const originalLog = console.log, originalWarn = console.warn, originalError = console.error;
             console.log = function() {
+                window.antiCheatStatus.checksPerformed++;
                 const now = Date.now();
                 if (now - lastCommandTime < 100) { consoleCommandCount++; if (consoleCommandCount >= 5) showWarning(); } else consoleCommandCount = 1;
                 lastCommandTime = now;
                 originalLog.apply(console, arguments);
             };
             console.warn = function() {
+                window.antiCheatStatus.checksPerformed++;
                 const now = Date.now();
                 if (now - lastCommandTime < 100) { consoleCommandCount++; if (consoleCommandCount >= 5) showWarning(); } else consoleCommandCount = 1;
                 lastCommandTime = now;
                 originalWarn.apply(console, arguments);
             };
             console.error = function() {
+                window.antiCheatStatus.checksPerformed++;
                 const now = Date.now();
                 if (now - lastCommandTime < 100) { consoleCommandCount++; if (consoleCommandCount >= 5) showWarning(); } else consoleCommandCount = 1;
                 lastCommandTime = now;
@@ -160,6 +176,7 @@
                     if (window[suspiciousGlobals[i]] !== undefined) { hasSuspicious = true; break; }
                 }
                 if (hasSuspicious) {
+                    window.antiCheatStatus.checksPerformed++;
                     const now = Date.now();
                     if (now - lastModifierTime < 3000) { modifierDetectCount++; if (modifierDetectCount >= 2) showWarning(); } else modifierDetectCount = 1;
                     lastModifierTime = now;
@@ -170,7 +187,11 @@
             function checkFrameRate() {
                 const now = performance.now();
                 const delta = now - lastFrameTime;
-                if (delta < 5 || delta > 100) { abnormalFrameCount++; if (abnormalFrameCount > 10) showWarning(); } else abnormalFrameCount = Math.max(0, abnormalFrameCount - 1);
+                if (delta < 5 || delta > 100) { 
+                    window.antiCheatStatus.checksPerformed++;
+                    abnormalFrameCount++; 
+                    if (abnormalFrameCount > 10) showWarning(); 
+                } else abnormalFrameCount = Math.max(0, abnormalFrameCount - 1);
                 lastFrameTime = now;
                 requestAnimationFrame(checkFrameRate);
             }
@@ -180,7 +201,11 @@
                     const allElements = document.getElementsByTagName('*');
                     for (let i = 0; i < Math.min(allElements.length, 100); i++) {
                         const zIndex = window.getComputedStyle(allElements[i]).zIndex;
-                        if (zIndex && parseInt(zIndex) > 999999) { showWarning(); break; }
+                        if (zIndex && parseInt(zIndex) > 999999) { 
+                            window.antiCheatStatus.checksPerformed++;
+                            showWarning(); 
+                            break; 
+                        }
                     }
                 }, 2000);
             }
@@ -206,7 +231,20 @@
                 return false;
             });
             
-            console.log('✅ 安全防护已启动（仅提示模式）');
+            // 定期更新反作弊状态显示
+            setInterval(function() {
+                const statusElement = document.getElementById('antiCheatStatus');
+                if (statusElement && window.antiCheatStatus) {
+                    const runtime = Math.floor((Date.now() - window.antiCheatStatus.startTime) / 1000);
+                    const hours = Math.floor(runtime / 3600);
+                    const minutes = Math.floor((runtime % 3600) / 60);
+                    const seconds = runtime % 60;
+                    const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m ${seconds}s`;
+                    statusElement.innerHTML = `<i class="fas fa-shield-alt" style="color: #10b981; animation: pulse 2s infinite;"></i> 反作弊运行中 | 检测: ${window.antiCheatStatus.checksPerformed}次 | 运行: ${timeStr}`;
+                }
+            }, 1000);
+            
+            console.log('✅ 反作弊系统已启动（仅提示模式）');
         })();
     </script>
     
@@ -223,7 +261,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
     <style>
-        /* 保持原有样式不变 */
         * { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; margin: 0; padding: 0; box-sizing: border-box; }
         input, textarea { user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; }
         
@@ -264,7 +301,32 @@
             transition: all 0.3s ease;
         }
         
-        /* 其他样式保持不变... */
+        /* 反作弊状态栏 */
+        .anti-cheat-bar {
+            position: fixed;
+            bottom: 15px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 6px 15px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            z-index: 100;
+            font-family: monospace;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
         .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1.5rem; }
         .logo-area { display: flex; align-items: center; gap: 1rem; }
         .logo-icon { width: 3.5rem; height: 3.5rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 1.2rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.8rem; box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3); }
@@ -408,7 +470,7 @@
         @keyframes fadeInOut { 0% { opacity: 0; transform: translate(-50%, 20px); } 15% { opacity: 1; transform: translate(-50%, 0); } 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -20px); } }
         @media (max-width: 768px) { body { padding: 0.8rem; } .modern-container { padding: 1.2rem; border-radius: 2rem; } .header { flex-direction: column; align-items: flex-start; gap: 1rem; } .search-wrapper { width: 100%; } .header-actions { width: 100%; flex-wrap: wrap; justify-content: space-between; } .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn { flex: 1; justify-content: center; min-width: 100px; font-size: 0.8rem; padding: 0.5rem 0.8rem; } .year-badge { flex: 1; justify-content: center; font-size: 0.8rem; padding: 0.5rem 0.8rem; } .main-menu-grid { grid-template-columns: 1fr; } .signature-grid { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; } .signature-card { min-height: 120px; padding: 0.8rem 0.5rem 0.3rem 0.5rem; } .signature-text { font-size: 0.7rem; } .signature-qq { font-size: 0.55rem; } .copy-hint { font-size: 0.45rem; } .content-area { padding: 1.2rem; max-height: 70vh; } .top-hint { font-size: 0.8rem; padding: 0.4rem; } .query-input-group { flex-direction: column; } .type-selector { grid-template-columns: 1fr; } .platform-selector { grid-template-columns: repeat(3, 1fr); } }
         @media (max-width: 480px) { .signature-grid { grid-template-columns: 1fr; } .logo-text h1 { font-size: 1.5rem; } .faction-btn { padding: 0.6rem 1.2rem; font-size: 0.9rem; } .signature-card { min-height: 110px; } .platform-selector { grid-template-columns: 1fr; } }
-        .cloud-status { position: fixed; bottom: 15px; left: 20px; color: rgba(156, 163, 175, 0.6); font-size: 0.7rem; z-index: 100; backdrop-filter: blur(4px); padding: 4px 12px; border-radius: 30px; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.03); display: flex; align-items: center; gap: 5px; }
+        .cloud-status { position: fixed; bottom: 15px; left: 220px; color: rgba(156, 163, 175, 0.6); font-size: 0.7rem; z-index: 100; backdrop-filter: blur(4px); padding: 4px 12px; border-radius: 30px; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.03); display: flex; align-items: center; gap: 5px; }
         .cloud-status i { color: #10b981; font-size: 0.6rem; }
         .cloud-status.syncing i { color: #f59e0b; animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
@@ -520,6 +582,11 @@
         </div>
     </div>
     
+    <!-- 反作弊状态栏 -->
+    <div class="anti-cheat-bar" id="antiCheatStatus">
+        <i class="fas fa-shield-alt" style="color: #10b981; animation: pulse 2s infinite;"></i> 反作弊运行中 | 初始化...
+    </div>
+    
     <!-- 登录弹窗 -->
     <div class="login-modal" id="loginModal">
         <div class="login-card">
@@ -540,11 +607,18 @@
     
     <script>
         (function() {
-            // ==================== 加密配置 ====================
-            // 加密密钥（生产环境应从环境变量或安全存储获取）
+            // Supabase配置
+            const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
+            const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            
+            // 封禁页面URL
+            const BAN_URL = 'https://wjjz.wjzyw.top/projects/FZB/index.html';
+            
+            // 加密密钥
             const ENCRYPTION_KEY = 'nxld_secure_key_2024_encryption';
             
-            // 简单的AES加密函数（使用CryptoJS）
+            // 加密函数
             function encryptData(data) {
                 try {
                     const encrypted = CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString();
@@ -565,64 +639,47 @@
                 }
             }
             
-            // 简单的哈希函数（用于本地数据验证）
-            function hashData(data) {
-                return CryptoJS.SHA256(data + ENCRYPTION_KEY).toString();
-            }
-            
-            // Supabase配置
-            const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
-            const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
-            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            
-            // 封禁页面URL
-            const BAN_URL = 'https://wjjz.wjzyw.top/projects/FZB/index.html';
-            
-            // 当前登录用户（用于访问控制）
+            // 当前登录用户
             let currentUser = null;
             let currentAdminLevel = 'guest';
             
-            // 被禁用的QQ号列表（存储在localStorage，使用哈希存储）
+            // 被禁用的QQ号列表
             let bannedQQList = [];
             try {
                 const stored = localStorage.getItem('banned_qq_list_encrypted');
                 if (stored) {
                     const decrypted = decryptData(stored);
                     bannedQQList = JSON.parse(decrypted) || [];
-                } else {
-                    bannedQQList = [];
                 }
             } catch (e) {
                 bannedQQList = [];
             }
             
-            // 存储所有登录过的用户账号（使用加密存储）
+            // 存储所有登录过的用户账号
             let allLoggedUsers = [];
             try {
                 const stored = localStorage.getItem('all_logged_users_encrypted');
                 if (stored) {
                     const decrypted = decryptData(stored);
                     allLoggedUsers = JSON.parse(decrypted) || [];
-                } else {
-                    allLoggedUsers = [];
                 }
             } catch (e) {
                 allLoggedUsers = [];
             }
             
-            // 保存禁用列表到本地（加密）
+            // 保存禁用列表
             function saveBannedList() {
                 const encrypted = encryptData(JSON.stringify(bannedQQList));
                 localStorage.setItem('banned_qq_list_encrypted', encrypted);
             }
             
-            // 保存所有登录用户列表（加密）
+            // 保存所有登录用户列表
             function saveLoggedUsersList() {
                 const encrypted = encryptData(JSON.stringify(allLoggedUsers));
                 localStorage.setItem('all_logged_users_encrypted', encrypted);
             }
             
-            // 记录用户登录（加密存储）
+            // 记录用户登录
             function recordUserLogin(qq) {
                 if (!allLoggedUsers.includes(qq)) {
                     allLoggedUsers.push(qq);
@@ -693,7 +750,7 @@
                 return false;
             }
             
-            // 登录处理（加密存储）
+            // 登录处理
             let isLoggingIn = false;
             function handleLogin() {
                 if (isLoggingIn) return;
@@ -732,7 +789,6 @@
                 
                 setTimeout(() => {
                     currentUser = qq;
-                    // 加密存储QQ号
                     const encryptedQQ = encryptData(qq);
                     localStorage.setItem('user_qq_encrypted', encryptedQQ);
                     recordUserLogin(qq);
@@ -752,11 +808,10 @@
                 }
             }
             
-            // 云端管理员验证函数（使用哈希验证）
+            // 云端管理员验证函数
             async function verifyAdminCloud(username, password) {
                 try {
                     setCloudStatus('syncing', '验证中...');
-                    // 调用数据库中的 verify_admin 函数进行哈希验证
                     const { data, error } = await supabase
                         .rpc('verify_admin', {
                             p_username: username,
@@ -784,247 +839,15 @@
                 }
             }
             
-            // 管理员面板
-            async function showAdminPanel() {
-                await loadFromSupabase();
-                const container = document.createElement('div');
-                container.style.width = '100%';
-                container.style.overflow = 'visible';
-                
-                const levelBadge = document.createElement('div');
-                levelBadge.style.cssText = 'text-align:center;margin-bottom:1rem;padding:0.5rem;border-radius:2rem';
-                levelBadge.style.background = currentAdminLevel === 'super' ? 'rgba(139,92,246,0.2)' : 'rgba(16,185,129,0.2)';
-                levelBadge.style.color = currentAdminLevel === 'super' ? '#a78bfa' : '#10b981';
-                levelBadge.innerHTML = currentAdminLevel === 'super' ? '<i class="fas fa-crown"></i> 超级管理员模式（可删除/封禁账号）' : '<i class="fas fa-user"></i> 普通管理员模式（仅可审核）';
-                container.appendChild(levelBadge);
-                
-                const statsContainer = document.createElement('div');
-                statsContainer.className = 'admin-stats';
-                statsContainer.innerHTML = `<div class="stat-card"><div class="stat-number">${pendingSignatures.length + approvedSignatures.length}</div><div class="stat-label">总提交</div></div><div class="stat-card"><div class="stat-number" style="color:#f59e0b;">${pendingSignatures.length}</div><div class="stat-label">待审核</div></div><div class="stat-card"><div class="stat-number" style="color:#10b981;">${approvedSignatures.length}</div><div class="stat-label">已通过</div></div>`;
-                container.appendChild(statsContainer);
-                
-                const tabContainer = document.createElement('div');
-                tabContainer.className = 'tab-container';
-                if (currentAdminLevel === 'super') {
-                    tabContainer.innerHTML = `
-                        <button class="tab-btn ${currentTab === 'pending' ? 'active' : ''}" data-tab="pending">待审核 (${pendingSignatures.length})</button>
-                        <button class="tab-btn ${currentTab === 'approved' ? 'active' : ''}" data-tab="approved">已通过 (${approvedSignatures.length})</button>
-                        <button class="tab-btn ${currentTab === 'logs' ? 'active' : ''}" data-tab="logs">操作日志</button>
-                        <button class="tab-btn ${currentTab === 'accounts' ? 'active' : ''}" data-tab="accounts">账号管理</button>
-                    `;
-                } else {
-                    tabContainer.innerHTML = `
-                        <button class="tab-btn ${currentTab === 'pending' ? 'active' : ''}" data-tab="pending">待审核 (${pendingSignatures.length})</button>
-                        <button class="tab-btn ${currentTab === 'approved' ? 'active' : ''}" data-tab="approved">已通过 (${approvedSignatures.length})</button>
-                        <button class="tab-btn ${currentTab === 'logs' ? 'active' : ''}" data-tab="logs">操作日志</button>
-                    `;
-                }
-                container.appendChild(tabContainer);
-                
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'submit-form';
-                contentDiv.style.maxWidth = '800px';
-                contentDiv.style.width = '100%';
-                contentDiv.style.boxSizing = 'border-box';
-                contentDiv.style.overflow = 'auto';
-                
-                if (currentTab === 'pending') {
-                    let html = '<h3 style="color:#f59e0b;">待审核列表</h3>';
-                    if (!pendingSignatures.length) html += '<div style="color:#9ca3af;text-align:center;padding:2rem;">暂无待审核内容</div>';
-                    else {
-                        html += '<div style="max-height:500px;overflow-y:auto;">';
-                        pendingSignatures.forEach(sig => {
-                            let preview = '';
-                            if (sig.submit_type === 'signature') preview = `<div style="margin-top:0.3rem;">${convertToHtml(sig.content)}</div>`;
-                            else if (sig.submit_type === 'report') preview = `<div style="color:#ef4444;">倒卖举报 - 证据:${sig.images?.length||0}张</div>`;
-                            else preview = `<div style="color:#f59e0b;">Bug反馈: ${sig.content}</div>`;
-                            let platformText = sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks');
-                            let authorText = sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`);
-                            html += `<div style="background:rgba(255,255,255,0.03);border-radius:1rem;padding:1rem;margin-bottom:1rem;"><div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.5rem;"><span><span style="color:#818cf8;">${platformText}:</span> ${authorText}</span>${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}</div><div style="background:rgba(0,0,0,0.2);padding:0.5rem;border-radius:0.5rem;">${preview}</div><div style="color:#9ca3af;font-size:0.8rem;margin:0.5rem 0;">提交: ${new Date(sig.submit_time).toLocaleString()}</div><div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="query-button" style="background:#10b981;flex:1;min-width:80px;" onclick="window.approveSignature(${sig.id})">通过</button><button class="query-button" style="background:#ef4444;flex:1;min-width:80px;" onclick="window.rejectSignature(${sig.id})">拒绝</button></div></div>`;
-                        });
-                        html += '</div>';
-                    }
-                    contentDiv.innerHTML = html;
-                } else if (currentTab === 'approved') {
-                    let html = '<h3 style="color:#10b981;">已通过列表</h3>';
-                    const approvedItems = approvedSignatures.filter(s => s.submit_type === 'signature');
-                    if (!approvedItems.length) html += '<div style="color:#9ca3af;text-align:center;padding:2rem;">暂无已通过签名</div>';
-                    else {
-                        html += '<div style="max-height:500px;overflow-y:auto;">';
-                        approvedItems.forEach(sig => {
-                            let platformText = sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks');
-                            let authorText = sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`);
-                            html += `<div style="background:rgba(255,255,255,0.03);border-radius:1rem;padding:1rem;margin-bottom:1rem;"><div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.5rem;"><span><span style="color:#818cf8;">${platformText}:</span> ${authorText}</span>${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}</div><div style="background:rgba(0,0,0,0.2);padding:0.5rem;border-radius:0.5rem;"><span style="color:#818cf8;">预览:</span><div style="margin-top:0.3rem;">${convertToHtml(sig.content)}</div></div></div>`;
-                        });
-                        html += '</div>';
-                    }
-                    contentDiv.innerHTML = html;
-                } else if (currentTab === 'logs') {
-                    let html = '<h3 style="color:#818cf8;">操作日志</h3><div class="log-container">';
-                    if (!operationLogs.length) html += '<div style="color:#9ca3af;text-align:center;padding:1rem;">暂无日志</div>';
-                    else operationLogs.forEach(l => html += `<div class="log-item"><span class="log-time">[${l.time}]</span><span class="log-content">${l.action}: ${l.details}</span></div>`);
-                    html += '</div>';
-                    contentDiv.innerHTML = html;
-                } else if (currentTab === 'accounts' && currentAdminLevel === 'super') {
-                    const allAccounts = getAllUserAccounts();
-                    
-                    let html = '<h3 style="color:#818cf8;margin-bottom:1rem;"><i class="fas fa-users"></i> 账号管理</h3>';
-                    html += '<div style="margin-bottom:1rem;padding:0.5rem;background:rgba(129,140,248,0.1);border-radius:1rem;font-size:0.8rem;color:#9ca3af;"><i class="fas fa-info-circle"></i> 共 ' + allAccounts.length + ' 个账号</div>';
-                    html += '<div class="account-list">';
-                    
-                    if (allAccounts.length === 0) {
-                        html += '<div style="color:#9ca3af;text-align:center;padding:2rem;">暂无账号数据</div>';
-                    } else {
-                        allAccounts.forEach(qq => {
-                            const isBanned = isQQBanned(qq);
-                            const isCurrent = qq === currentUser;
-                            html += `
-                                <div class="account-item">
-                                    <div class="account-info">
-                                        <div class="account-qq">
-                                            QQ: ${qq}
-                                            ${isCurrent ? '<span class="current-user-badge"><i class="fas fa-user-check"></i> 当前账号</span>' : ''}
-                                        </div>
-                                        <div class="account-status">
-                                            状态: <span class="${isBanned ? 'status-banned' : 'status-normal'}">${isBanned ? '已封禁' : '正常'}</span>
-                                        </div>
-                                    </div>
-                                    ${isBanned ? 
-                                        `<button class="unban-btn" onclick="window.unbanAccount('${qq}')"><i class="fas fa-unlock-alt"></i> 解封</button>` :
-                                        `<button class="ban-btn" onclick="window.banAccount('${qq}')"><i class="fas fa-ban"></i> 封禁</button>`
-                                    }
-                                </div>
-                            `;
-                        });
-                    }
-                    html += '</div>';
-                    
-                    html += `
-                        <div class="add-account-area">
-                            <div style="font-size:0.85rem;color:#818cf8;"><i class="fas fa-plus-circle"></i> 手动添加账号</div>
-                            <div class="add-account-input-group">
-                                <input type="text" id="manualAccountInput" class="add-account-input" placeholder="输入QQ号">
-                                <button id="addAccountBtn" class="add-account-btn"><i class="fas fa-plus"></i> 添加</button>
-                            </div>
-                        </div>
-                    `;
-                    contentDiv.innerHTML = html;
-                    
-                    setTimeout(() => {
-                        const addBtn = document.getElementById('addAccountBtn');
-                        const manualInput = document.getElementById('manualAccountInput');
-                        if (addBtn) {
-                            addBtn.onclick = () => {
-                                if (addBtn.classList.contains('disabled')) return;
-                                addBtn.classList.add('disabled');
-                                const newQQ = manualInput.value.trim();
-                                if (!newQQ) {
-                                    showToast('请输入QQ号');
-                                    addBtn.classList.remove('disabled');
-                                    return;
-                                }
-                                if (!/^\d+$/.test(newQQ)) {
-                                    showToast('QQ号必须为数字');
-                                    addBtn.classList.remove('disabled');
-                                    return;
-                                }
-                                if (newQQ.length < 5 || newQQ.length > 12) {
-                                    showToast('请输入正确的QQ号（5-12位数字）');
-                                    addBtn.classList.remove('disabled');
-                                    return;
-                                }
-                                if (!allLoggedUsers.includes(newQQ)) {
-                                    allLoggedUsers.push(newQQ);
-                                    saveLoggedUsersList();
-                                    showToast(`✅ 已添加账号: ${newQQ}`);
-                                    showAdminPanel();
-                                } else {
-                                    showToast('该账号已存在');
-                                    addBtn.classList.remove('disabled');
-                                }
-                            };
-                        }
-                        if (manualInput) {
-                            manualInput.addEventListener('keypress', (e) => {
-                                if (e.key === 'Enter') {
-                                    const addBtn = document.getElementById('addAccountBtn');
-                                    if (addBtn) addBtn.click();
-                                }
-                            });
-                        }
-                    }, 100);
-                }
-                container.appendChild(contentDiv);
-                
-                if (currentAdminLevel === 'super') {
-                    const syncBtn = document.createElement('button');
-                    syncBtn.className = 'download-html-btn';
-                    syncBtn.style.cssText = 'margin-top:1rem;background:linear-gradient(135deg,#f59e0b,#d97706);padding:0.8rem 1.5rem;border:none;border-radius:2rem;color:white;cursor:pointer;width:100%;font-weight:600;';
-                    syncBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 强制刷新云端';
-                    syncBtn.onclick = async () => { await loadFromSupabase(); showAdminPanel(); showToast('已刷新'); };
-                    container.appendChild(syncBtn);
-                }
-                
-                innerDynamic.innerHTML = '';
-                innerDynamic.appendChild(container);
-                document.querySelectorAll('.tab-btn').forEach(btn => btn.onclick = () => { currentTab = btn.dataset.tab; showAdminPanel(); });
-                
-                window.banAccount = (qq) => {
-                    if (confirm(`确定要封禁账号 ${qq} 吗？封禁后该账号将无法登录。`)) {
-                        if (banQQ(qq)) {
-                            showToast(`✅ 账号 ${qq} 已封禁`);
-                            if (qq === currentUser) {
-                                localStorage.removeItem('user_qq_encrypted');
-                                window.location.href = BAN_URL + '?device=' + qq;
-                            } else {
-                                showAdminPanel();
-                            }
-                        }
-                    }
-                };
-                window.unbanAccount = (qq) => {
-                    if (confirm(`确定要解封账号 ${qq} 吗？`)) {
-                        if (unbanQQ(qq)) {
-                            showToast(`✅ 账号 ${qq} 已解封`);
-                            showAdminPanel();
-                        }
-                    }
-                };
-                
-                window.approveSignature = async (id) => {
-                    const sig = pendingSignatures.find(s => s.id === id);
-                    if (await updateInSupabase(id, { status: 'approved', review_time: new Date().toISOString(), reviewed_by: currentAdminLevel })) {
-                        await addLog('通过', `${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:${sig.qq} 的签名已通过`);
-                        showToast('已通过');
-                        await loadFromSupabase();
-                        showAdminPanel();
-                    }
-                };
-                window.rejectSignature = async (id) => {
-                    const sig = pendingSignatures.find(s => s.id === id);
-                    if (await updateInSupabase(id, { status: 'rejected', review_time: new Date().toISOString(), reviewed_by: currentAdminLevel })) {
-                        await addLog('拒绝', `${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:${sig.qq} 的签名被拒绝`);
-                        showToast('已拒绝');
-                        await loadFromSupabase();
-                        showAdminPanel();
-                    }
-                };
-                window.deleteAnyItem = async (id) => {
-                    if (confirm('确定删除？不可恢复！') && await deleteFromSupabase(id)) {
-                        showToast('已删除');
-                        await loadFromSupabase();
-                        showAdminPanel();
-                    }
-                };
-            }
-            
-            // 其他辅助函数保持不变...
+            // 其他变量
             let historyStack = [];
             let pendingSignatures = [];
             let approvedSignatures = [];
             let fixedSignatures = [];
             let operationLogs = [];
             let currentTab = 'pending';
+            let isSubmitting = false;
+            
             const loadingSpinner = document.getElementById('loadingSpinner');
             const innerDynamic = document.getElementById('innerDynamic');
             const backContainer = document.getElementById('backButtonContainer');
@@ -1043,8 +866,6 @@
             const submitSignatureBtn = document.getElementById('submitSignatureBtn');
             const adminBtn = document.getElementById('adminBtn');
             const supernaturalBtn = document.getElementById('supernaturalBtn');
-            
-            let isSubmitting = false;
             
             function setCloudStatus(status, message) {
                 cloudText.textContent = message;
@@ -1291,6 +1112,239 @@
                     else res.innerHTML = items.map(s => `<div class="query-item"><div><div>${s.submit_type === 'signature' ? '签名投稿' : (s.submit_type === 'report' ? '倒卖举报' : 'Bug反馈')} - ${s.platform === 'qq' ? 'QQ' : (s.platform === 'douyin' ? 'dy' : 'ks')}：${s.qq}</div><div class="query-item-qq">提交: ${new Date(s.submit_time).toLocaleString()}</div></div><span class="query-item-status ${s.status === 'pending' ? 'pending' : ''}">${s.status === 'pending' ? '待审核' : '已通过'}</span></div>`).join('');
                 };
                 refreshBackButton();
+            }
+            
+            async function showAdminPanel() {
+                await loadFromSupabase();
+                const container = document.createElement('div');
+                container.style.width = '100%';
+                container.style.overflow = 'visible';
+                
+                const levelBadge = document.createElement('div');
+                levelBadge.style.cssText = 'text-align:center;margin-bottom:1rem;padding:0.5rem;border-radius:2rem';
+                levelBadge.style.background = currentAdminLevel === 'super' ? 'rgba(139,92,246,0.2)' : 'rgba(16,185,129,0.2)';
+                levelBadge.style.color = currentAdminLevel === 'super' ? '#a78bfa' : '#10b981';
+                levelBadge.innerHTML = currentAdminLevel === 'super' ? '<i class="fas fa-crown"></i> 超级管理员模式（可删除/封禁账号）' : '<i class="fas fa-user"></i> 普通管理员模式（仅可审核）';
+                container.appendChild(levelBadge);
+                
+                const statsContainer = document.createElement('div');
+                statsContainer.className = 'admin-stats';
+                statsContainer.innerHTML = `<div class="stat-card"><div class="stat-number">${pendingSignatures.length + approvedSignatures.length}</div><div class="stat-label">总提交</div></div><div class="stat-card"><div class="stat-number" style="color:#f59e0b;">${pendingSignatures.length}</div><div class="stat-label">待审核</div></div><div class="stat-card"><div class="stat-number" style="color:#10b981;">${approvedSignatures.length}</div><div class="stat-label">已通过</div></div>`;
+                container.appendChild(statsContainer);
+                
+                const tabContainer = document.createElement('div');
+                tabContainer.className = 'tab-container';
+                if (currentAdminLevel === 'super') {
+                    tabContainer.innerHTML = `
+                        <button class="tab-btn ${currentTab === 'pending' ? 'active' : ''}" data-tab="pending">待审核 (${pendingSignatures.length})</button>
+                        <button class="tab-btn ${currentTab === 'approved' ? 'active' : ''}" data-tab="approved">已通过 (${approvedSignatures.length})</button>
+                        <button class="tab-btn ${currentTab === 'logs' ? 'active' : ''}" data-tab="logs">操作日志</button>
+                        <button class="tab-btn ${currentTab === 'accounts' ? 'active' : ''}" data-tab="accounts">账号管理</button>
+                    `;
+                } else {
+                    tabContainer.innerHTML = `
+                        <button class="tab-btn ${currentTab === 'pending' ? 'active' : ''}" data-tab="pending">待审核 (${pendingSignatures.length})</button>
+                        <button class="tab-btn ${currentTab === 'approved' ? 'active' : ''}" data-tab="approved">已通过 (${approvedSignatures.length})</button>
+                        <button class="tab-btn ${currentTab === 'logs' ? 'active' : ''}" data-tab="logs">操作日志</button>
+                    `;
+                }
+                container.appendChild(tabContainer);
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'submit-form';
+                contentDiv.style.maxWidth = '800px';
+                contentDiv.style.width = '100%';
+                contentDiv.style.boxSizing = 'border-box';
+                contentDiv.style.overflow = 'auto';
+                
+                if (currentTab === 'pending') {
+                    let html = '<h3 style="color:#f59e0b;">待审核列表</h3>';
+                    if (!pendingSignatures.length) html += '<div style="color:#9ca3af;text-align:center;padding:2rem;">暂无待审核内容</div>';
+                    else {
+                        html += '<div style="max-height:500px;overflow-y:auto;">';
+                        pendingSignatures.forEach(sig => {
+                            let preview = '';
+                            if (sig.submit_type === 'signature') preview = `<div style="margin-top:0.3rem;">${convertToHtml(sig.content)}</div>`;
+                            else if (sig.submit_type === 'report') preview = `<div style="color:#ef4444;">倒卖举报 - 证据:${sig.images?.length||0}张</div>`;
+                            else preview = `<div style="color:#f59e0b;">Bug反馈: ${sig.content}</div>`;
+                            let platformText = sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks');
+                            let authorText = sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`);
+                            html += `<div style="background:rgba(255,255,255,0.03);border-radius:1rem;padding:1rem;margin-bottom:1rem;"><div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.5rem;"><span><span style="color:#818cf8;">${platformText}:</span> ${authorText}</span>${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}</div><div style="background:rgba(0,0,0,0.2);padding:0.5rem;border-radius:0.5rem;">${preview}</div><div style="color:#9ca3af;font-size:0.8rem;margin:0.5rem 0;">提交: ${new Date(sig.submit_time).toLocaleString()}</div><div style="display:flex;gap:0.5rem;flex-wrap:wrap;"><button class="query-button" style="background:#10b981;flex:1;min-width:80px;" onclick="window.approveSignature(${sig.id})">通过</button><button class="query-button" style="background:#ef4444;flex:1;min-width:80px;" onclick="window.rejectSignature(${sig.id})">拒绝</button></div></div>`;
+                        });
+                        html += '</div>';
+                    }
+                    contentDiv.innerHTML = html;
+                } else if (currentTab === 'approved') {
+                    let html = '<h3 style="color:#10b981;">已通过列表</h3>';
+                    const approvedItems = approvedSignatures.filter(s => s.submit_type === 'signature');
+                    if (!approvedItems.length) html += '<div style="color:#9ca3af;text-align:center;padding:2rem;">暂无已通过签名</div>';
+                    else {
+                        html += '<div style="max-height:500px;overflow-y:auto;">';
+                        approvedItems.forEach(sig => {
+                            let platformText = sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks');
+                            let authorText = sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`);
+                            html += `<div style="background:rgba(255,255,255,0.03);border-radius:1rem;padding:1rem;margin-bottom:1rem;"><div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.5rem;"><span><span style="color:#818cf8;">${platformText}:</span> ${authorText}</span>${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})"><i class="fas fa-trash"></i> 删除</button>` : ''}</div><div style="background:rgba(0,0,0,0.2);padding:0.5rem;border-radius:0.5rem;"><span style="color:#818cf8;">预览:</span><div style="margin-top:0.3rem;">${convertToHtml(sig.content)}</div></div></div>`;
+                        });
+                        html += '</div>';
+                    }
+                    contentDiv.innerHTML = html;
+                } else if (currentTab === 'logs') {
+                    let html = '<h3 style="color:#818cf8;">操作日志</h3><div class="log-container">';
+                    if (!operationLogs.length) html += '<div style="color:#9ca3af;text-align:center;padding:1rem;">暂无日志</div>';
+                    else operationLogs.forEach(l => html += `<div class="log-item"><span class="log-time">[${l.time}]</span><span class="log-content">${l.action}: ${l.details}</span></div>`);
+                    html += '</div>';
+                    contentDiv.innerHTML = html;
+                } else if (currentTab === 'accounts' && currentAdminLevel === 'super') {
+                    const allAccounts = getAllUserAccounts();
+                    
+                    let html = '<h3 style="color:#818cf8;margin-bottom:1rem;"><i class="fas fa-users"></i> 账号管理</h3>';
+                    html += '<div style="margin-bottom:1rem;padding:0.5rem;background:rgba(129,140,248,0.1);border-radius:1rem;font-size:0.8rem;color:#9ca3af;"><i class="fas fa-info-circle"></i> 共 ' + allAccounts.length + ' 个账号</div>';
+                    html += '<div class="account-list">';
+                    
+                    if (allAccounts.length === 0) {
+                        html += '<div style="color:#9ca3af;text-align:center;padding:2rem;">暂无账号数据</div>';
+                    } else {
+                        allAccounts.forEach(qq => {
+                            const isBanned = isQQBanned(qq);
+                            const isCurrent = qq === currentUser;
+                            html += `
+                                <div class="account-item">
+                                    <div class="account-info">
+                                        <div class="account-qq">
+                                            QQ: ${qq}
+                                            ${isCurrent ? '<span class="current-user-badge"><i class="fas fa-user-check"></i> 当前账号</span>' : ''}
+                                        </div>
+                                        <div class="account-status">
+                                            状态: <span class="${isBanned ? 'status-banned' : 'status-normal'}">${isBanned ? '已封禁' : '正常'}</span>
+                                        </div>
+                                    </div>
+                                    ${isBanned ? 
+                                        `<button class="unban-btn" onclick="window.unbanAccount('${qq}')"><i class="fas fa-unlock-alt"></i> 解封</button>` :
+                                        `<button class="ban-btn" onclick="window.banAccount('${qq}')"><i class="fas fa-ban"></i> 封禁</button>`
+                                    }
+                                </div>
+                            `;
+                        });
+                    }
+                    html += '</div>';
+                    
+                    html += `
+                        <div class="add-account-area">
+                            <div style="font-size:0.85rem;color:#818cf8;"><i class="fas fa-plus-circle"></i> 手动添加账号</div>
+                            <div class="add-account-input-group">
+                                <input type="text" id="manualAccountInput" class="add-account-input" placeholder="输入QQ号">
+                                <button id="addAccountBtn" class="add-account-btn"><i class="fas fa-plus"></i> 添加</button>
+                            </div>
+                        </div>
+                    `;
+                    contentDiv.innerHTML = html;
+                    
+                    setTimeout(() => {
+                        const addBtn = document.getElementById('addAccountBtn');
+                        const manualInput = document.getElementById('manualAccountInput');
+                        if (addBtn) {
+                            addBtn.onclick = () => {
+                                if (addBtn.classList.contains('disabled')) return;
+                                addBtn.classList.add('disabled');
+                                const newQQ = manualInput.value.trim();
+                                if (!newQQ) {
+                                    showToast('请输入QQ号');
+                                    addBtn.classList.remove('disabled');
+                                    return;
+                                }
+                                if (!/^\d+$/.test(newQQ)) {
+                                    showToast('QQ号必须为数字');
+                                    addBtn.classList.remove('disabled');
+                                    return;
+                                }
+                                if (newQQ.length < 5 || newQQ.length > 12) {
+                                    showToast('请输入正确的QQ号（5-12位数字）');
+                                    addBtn.classList.remove('disabled');
+                                    return;
+                                }
+                                if (!allLoggedUsers.includes(newQQ)) {
+                                    allLoggedUsers.push(newQQ);
+                                    saveLoggedUsersList();
+                                    showToast(`✅ 已添加账号: ${newQQ}`);
+                                    showAdminPanel();
+                                } else {
+                                    showToast('该账号已存在');
+                                    addBtn.classList.remove('disabled');
+                                }
+                            };
+                        }
+                        if (manualInput) {
+                            manualInput.addEventListener('keypress', (e) => {
+                                if (e.key === 'Enter') {
+                                    const addBtn = document.getElementById('addAccountBtn');
+                                    if (addBtn) addBtn.click();
+                                }
+                            });
+                        }
+                    }, 100);
+                }
+                container.appendChild(contentDiv);
+                
+                if (currentAdminLevel === 'super') {
+                    const syncBtn = document.createElement('button');
+                    syncBtn.className = 'download-html-btn';
+                    syncBtn.style.cssText = 'margin-top:1rem;background:linear-gradient(135deg,#f59e0b,#d97706);padding:0.8rem 1.5rem;border:none;border-radius:2rem;color:white;cursor:pointer;width:100%;font-weight:600;';
+                    syncBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 强制刷新云端';
+                    syncBtn.onclick = async () => { await loadFromSupabase(); showAdminPanel(); showToast('已刷新'); };
+                    container.appendChild(syncBtn);
+                }
+                
+                innerDynamic.innerHTML = '';
+                innerDynamic.appendChild(container);
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.onclick = () => { currentTab = btn.dataset.tab; showAdminPanel(); });
+                
+                window.banAccount = (qq) => {
+                    if (confirm(`确定要封禁账号 ${qq} 吗？封禁后该账号将无法登录。`)) {
+                        if (banQQ(qq)) {
+                            showToast(`✅ 账号 ${qq} 已封禁`);
+                            if (qq === currentUser) {
+                                localStorage.removeItem('user_qq_encrypted');
+                                window.location.href = BAN_URL + '?device=' + qq;
+                            } else {
+                                showAdminPanel();
+                            }
+                        }
+                    }
+                };
+                window.unbanAccount = (qq) => {
+                    if (confirm(`确定要解封账号 ${qq} 吗？`)) {
+                        if (unbanQQ(qq)) {
+                            showToast(`✅ 账号 ${qq} 已解封`);
+                            showAdminPanel();
+                        }
+                    }
+                };
+                
+                window.approveSignature = async (id) => {
+                    const sig = pendingSignatures.find(s => s.id === id);
+                    if (await updateInSupabase(id, { status: 'approved', review_time: new Date().toISOString(), reviewed_by: currentAdminLevel })) {
+                        await addLog('通过', `${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:${sig.qq} 的签名已通过`);
+                        showToast('已通过');
+                        await loadFromSupabase();
+                        showAdminPanel();
+                    }
+                };
+                window.rejectSignature = async (id) => {
+                    const sig = pendingSignatures.find(s => s.id === id);
+                    if (await updateInSupabase(id, { status: 'rejected', review_time: new Date().toISOString(), reviewed_by: currentAdminLevel })) {
+                        await addLog('拒绝', `${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:${sig.qq} 的签名被拒绝`);
+                        showToast('已拒绝');
+                        await loadFromSupabase();
+                        showAdminPanel();
+                    }
+                };
+                window.deleteAnyItem = async (id) => {
+                    if (confirm('确定删除？不可恢复！') && await deleteFromSupabase(id)) {
+                        showToast('已删除');
+                        await loadFromSupabase();
+                        showAdminPanel();
+                    }
+                };
             }
             
             function showAdminPage(pushToHistory = true) {
