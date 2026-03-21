@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>NXLD数值库</title>
     
-    <!-- 防调试检测脚本 - 只做提示，不封禁 -->
+    <!-- 防调试检测脚本 - 只提示不封禁 -->
     <script>
         (function() {
             // 标记是否已提示
@@ -16,7 +16,6 @@
                 if (hasWarned) return;
                 hasWarned = true;
                 
-                // 只显示警告提示，不跳转
                 const style = document.createElement('style');
                 style.textContent = `
                     .dev-warning-toast {
@@ -59,8 +58,6 @@
                 }, 5000);
             }
             
-            // ========== 检测功能（只提示，不封禁） ==========
-            
             // 检测控制台打开
             let consoleCheckCount = 0, lastConsoleTime = 0;
             function detectConsoleOpen() {
@@ -77,7 +74,6 @@
                 } else consoleCheckCount = 0;
             }
             
-            // 检测窗口尺寸变化
             let sizeCheckCount = 0, lastSizeCheck = 0;
             function detectDevToolsBySize() {
                 const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
@@ -92,7 +88,6 @@
                 } else sizeCheckCount = 0;
             }
             
-            // 检测快捷键
             let shortcutCount = 0, lastShortcutTime = 0;
             function detectDevToolsShortcut(e) {
                 const isDevToolKey = e.key === 'F12' || 
@@ -112,13 +107,8 @@
                 }
             }
             
-            // 检测右键菜单
-            function disableRightClick(e) {
-                e.preventDefault();
-                return false;
-            }
+            function disableRightClick(e) { e.preventDefault(); return false; }
             
-            // 检测元素检查
             let mutationCount = 0, lastMutationTime = 0;
             function detectElementInspection() {
                 const observer = new MutationObserver(function(mutations) {
@@ -136,7 +126,6 @@
                 observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class', 'id'] });
             }
             
-            // 重写console方法
             let consoleCommandCount = 0, lastCommandTime = 0;
             const originalLog = console.log, originalWarn = console.warn, originalError = console.error;
             console.log = function() {
@@ -158,7 +147,6 @@
                 originalError.apply(console, arguments);
             };
             
-            // CE/GG 修改器检测
             let modifierDetectCount = 0, lastModifierTime = 0;
             function detectMemoryModifiers() {
                 const userAgent = window.navigator.userAgent.toLowerCase();
@@ -178,7 +166,6 @@
                 } else modifierDetectCount = 0;
             }
             
-            // 帧率检测
             let lastFrameTime = performance.now(), abnormalFrameCount = 0;
             function checkFrameRate() {
                 const now = performance.now();
@@ -188,7 +175,6 @@
                 requestAnimationFrame(checkFrameRate);
             }
             
-            // 检测悬浮窗
             function detectOverlay() {
                 setInterval(function() {
                     const allElements = document.getElementsByTagName('*');
@@ -199,30 +185,16 @@
                 }, 2000);
             }
             
-            // 初始化检测
             document.addEventListener('keydown', detectDevToolsShortcut);
             document.addEventListener('contextmenu', disableRightClick);
             detectElementInspection();
             setInterval(function() { detectDevToolsBySize(); detectConsoleOpen(); detectMemoryModifiers(); }, 500);
             requestAnimationFrame(checkFrameRate);
             detectOverlay();
+            if (window.self !== window.top) showWarning();
+            if (/HeadlessChrome/.test(window.navigator.userAgent)) showWarning();
+            if (window.navigator.webdriver) showWarning();
             
-            // 检测iframe
-            if (window.self !== window.top) {
-                showWarning();
-            }
-            
-            // 检测无头浏览器
-            if (/HeadlessChrome/.test(window.navigator.userAgent)) {
-                showWarning();
-            }
-            
-            // 检测webdriver
-            if (window.navigator.webdriver) {
-                showWarning();
-            }
-            
-            // 禁止选中和复制（不影响输入框）
             document.addEventListener('selectstart', function(e) {
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return true;
                 e.preventDefault();
@@ -238,7 +210,6 @@
         })();
     </script>
     
-    <!-- 其余样式和脚本保持不变 -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://cdn.bootcdn.net" crossorigin>
@@ -251,7 +222,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* 所有样式保持不变 */
         * { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; margin: 0; padding: 0; box-sizing: border-box; }
         input, textarea { user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; }
         
@@ -338,34 +308,6 @@
         .menu-card.signature .menu-icon { background: linear-gradient(135deg, #10b981, #059669); }
         .menu-card span { font-size: 1.1rem; font-weight: 600; color: #e5e7eb; }
         .menu-card small { font-size: 0.8rem; color: #6b7280; }
-        
-        /* 设备码显示区域 - 可选保留 */
-        .device-card {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
-            border: 1px solid rgba(129, 140, 248, 0.3);
-            border-radius: 1rem;
-            padding: 0.8rem 1.2rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
-            backdrop-filter: blur(10px);
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .device-card:hover {
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3));
-            border-color: #818cf8;
-            transform: scale(1.01);
-        }
-        .device-card-left { display: flex; align-items: center; gap: 0.8rem; }
-        .device-icon { width: 2.5rem; height: 2.5rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 0.8rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; }
-        .device-info-text { display: flex; flex-direction: column; }
-        .device-label { font-size: 0.7rem; color: #9ca3af; letter-spacing: 1px; }
-        .device-id { font-family: monospace; font-size: 1rem; font-weight: 600; color: #a5b4fc; letter-spacing: 1px; }
-        .device-copy-hint { font-size: 0.7rem; color: #6b7280; display: flex; align-items: center; gap: 0.3rem; }
         
         .signature-card-container { position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; }
         .signature-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 182, 193, 0.3); border-radius: 1.2rem; padding: 1rem 0.8rem 0.4rem 0.8rem; text-align: center; backdrop-filter: blur(10px); cursor: pointer; transition: all 0.3s; box-shadow: 0 0 10px rgba(255, 192, 203, 0.1); line-height: 1.4; position: relative; z-index: 10; width: 100%; display: flex; flex-direction: column; min-height: 130px; justify-content: space-between; }
@@ -459,8 +401,8 @@
         .copyright-modern { position: fixed; bottom: 15px; right: 20px; color: rgba(156, 163, 175, 0.6); font-size: 0.8rem; font-weight: 400; letter-spacing: 2px; z-index: 100; backdrop-filter: blur(4px); padding: 4px 12px; border-radius: 30px; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.03); }
         .copy-toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(16, 185, 129, 0.9); color: white; padding: 0.8rem 2rem; border-radius: 2rem; font-size: 0.95rem; z-index: 1000; backdrop-filter: blur(10px); box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.3); animation: fadeInOut 1.5s ease; }
         @keyframes fadeInOut { 0% { opacity: 0; transform: translate(-50%, 20px); } 15% { opacity: 1; transform: translate(-50%, 0); } 85% { opacity: 1; transform: translate(-50%, 0); } 100% { opacity: 0; transform: translate(-50%, -20px); } }
-        @media (max-width: 768px) { body { padding: 0.8rem; } .modern-container { padding: 1.2rem; border-radius: 2rem; } .header { flex-direction: column; align-items: flex-start; gap: 1rem; } .search-wrapper { width: 100%; } .header-actions { width: 100%; flex-wrap: wrap; justify-content: space-between; } .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn { flex: 1; justify-content: center; min-width: 100px; font-size: 0.8rem; padding: 0.5rem 0.8rem; } .year-badge { flex: 1; justify-content: center; font-size: 0.8rem; padding: 0.5rem 0.8rem; } .main-menu-grid { grid-template-columns: 1fr; } .signature-grid { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; } .signature-card { min-height: 120px; padding: 0.8rem 0.5rem 0.3rem 0.5rem; } .signature-text { font-size: 0.7rem; } .signature-qq { font-size: 0.55rem; } .copy-hint { font-size: 0.45rem; } .content-area { padding: 1.2rem; max-height: 70vh; } .top-hint { font-size: 0.8rem; padding: 0.4rem; } .query-input-group { flex-direction: column; } .type-selector { grid-template-columns: 1fr; } .platform-selector { grid-template-columns: repeat(3, 1fr); } .device-card { padding: 0.6rem 1rem; } .device-id { font-size: 0.8rem; } }
-        @media (max-width: 480px) { .signature-grid { grid-template-columns: 1fr; } .logo-text h1 { font-size: 1.5rem; } .faction-btn { padding: 0.6rem 1.2rem; font-size: 0.9rem; } .signature-card { min-height: 110px; } .platform-selector { grid-template-columns: 1fr; } .device-card { flex-direction: column; text-align: center; } .device-card-left { width: 100%; justify-content: center; } }
+        @media (max-width: 768px) { body { padding: 0.8rem; } .modern-container { padding: 1.2rem; border-radius: 2rem; } .header { flex-direction: column; align-items: flex-start; gap: 1rem; } .search-wrapper { width: 100%; } .header-actions { width: 100%; flex-wrap: wrap; justify-content: space-between; } .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn { flex: 1; justify-content: center; min-width: 100px; font-size: 0.8rem; padding: 0.5rem 0.8rem; } .year-badge { flex: 1; justify-content: center; font-size: 0.8rem; padding: 0.5rem 0.8rem; } .main-menu-grid { grid-template-columns: 1fr; } .signature-grid { grid-template-columns: repeat(2, 1fr); gap: 0.8rem; } .signature-card { min-height: 120px; padding: 0.8rem 0.5rem 0.3rem 0.5rem; } .signature-text { font-size: 0.7rem; } .signature-qq { font-size: 0.55rem; } .copy-hint { font-size: 0.45rem; } .content-area { padding: 1.2rem; max-height: 70vh; } .top-hint { font-size: 0.8rem; padding: 0.4rem; } .query-input-group { flex-direction: column; } .type-selector { grid-template-columns: 1fr; } .platform-selector { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 480px) { .signature-grid { grid-template-columns: 1fr; } .logo-text h1 { font-size: 1.5rem; } .faction-btn { padding: 0.6rem 1.2rem; font-size: 0.9rem; } .signature-card { min-height: 110px; } .platform-selector { grid-template-columns: 1fr; } }
         .cloud-status { position: fixed; bottom: 15px; left: 20px; color: rgba(156, 163, 175, 0.6); font-size: 0.7rem; z-index: 100; backdrop-filter: blur(4px); padding: 4px 12px; border-radius: 30px; background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.03); display: flex; align-items: center; gap: 5px; }
         .cloud-status i { color: #10b981; font-size: 0.6rem; }
         .cloud-status.syncing i { color: #f59e0b; animation: spin 1s linear infinite; }
@@ -480,10 +422,63 @@
         .error-message { text-align: center; color: #ef4444; padding: 2rem; background: rgba(239, 68, 68, 0.1); border-radius: 1rem; margin: 1rem; }
         .retry-btn { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem 1.5rem; color: white; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 1rem; border: none; }
         .retry-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px #4f46e5; }
+        
+        /* 账号管理页面样式 */
+        .account-list { max-height: 500px; overflow-y: auto; }
+        .account-item { background: rgba(255, 255, 255, 0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+        .account-info { flex: 1; }
+        .account-qq { font-size: 1rem; font-weight: 600; color: #a5b4fc; font-family: monospace; }
+        .account-status { font-size: 0.7rem; margin-top: 0.3rem; }
+        .status-banned { color: #ef4444; }
+        .status-normal { color: #10b981; }
+        .ban-btn { background: #ef4444; border: none; border-radius: 1.5rem; padding: 0.5rem 1rem; color: white; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+        .ban-btn:hover { background: #dc2626; transform: scale(1.02); }
+        .unban-btn { background: #10b981; border: none; border-radius: 1.5rem; padding: 0.5rem 1rem; color: white; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+        .unban-btn:hover { background: #059669; transform: scale(1.02); }
+        .current-user-badge { background: rgba(129, 140, 248, 0.2); color: #818cf8; padding: 0.2rem 0.5rem; border-radius: 1rem; font-size: 0.7rem; margin-left: 0.5rem; }
+        
+        /* 登录弹窗样式 */
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(15px);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        .login-card {
+            background: rgba(18, 22, 40, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            border-radius: 2rem;
+            padding: 2.5rem;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            animation: scaleIn 0.3s ease;
+        }
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .login-icon { font-size: 3rem; color: #818cf8; margin-bottom: 1rem; }
+        .login-title { font-size: 1.5rem; font-weight: 700; color: #f0f2ff; margin-bottom: 0.5rem; }
+        .login-subtitle { font-size: 0.85rem; color: #9ca3af; margin-bottom: 1.5rem; }
+        .login-input { width: 100%; padding: 1rem; border-radius: 2rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #f0f2ff; font-size: 1rem; margin-bottom: 1rem; outline: none; text-align: center; }
+        .login-input:focus { border-color: #818cf8; box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1); }
+        .login-btn { width: 100%; background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px #4f46e5; }
+        .login-error { color: #ef4444; font-size: 0.8rem; margin-top: 0.5rem; }
     </style>
 </head>
 <body>
-    <div class="modern-container">
+    <div class="modern-container" id="mainApp" style="display: none;">
         <div class="header">
             <div class="logo-area">
                 <div class="logo-icon"><i class="fas fa-cube"></i></div>
@@ -505,6 +500,19 @@
             <div id="innerDynamic" style="min-height: 300px;"><div class="loading-spinner" id="loadingSpinner"><div class="spinner"></div><div>加载中...</div></div></div>
         </div>
     </div>
+    
+    <!-- 登录弹窗 -->
+    <div class="login-modal" id="loginModal">
+        <div class="login-card">
+            <div class="login-icon"><i class="fab fa-qq"></i></div>
+            <div class="login-title">QQ登录</div>
+            <div class="login-subtitle">请输入你的QQ号，后续将作为唯一标识</div>
+            <input type="text" class="login-input" id="loginQQ" placeholder="请输入QQ号" maxlength="20">
+            <button class="login-btn" id="loginBtn">登录 / 注册</button>
+            <div id="loginError" class="login-error"></div>
+        </div>
+    </div>
+    
     <div class="copyright-modern">© 2026 NXLD</div>
     <div class="cloud-status" id="cloudStatus"><i class="fas fa-cloud" id="cloudIcon"></i><span id="cloudText">同步中...</span></div>
     <div id="toastContainer"></div>
@@ -513,84 +521,112 @@
     
     <script>
         (function() {
-            const loadingSpinner = document.getElementById('loadingSpinner');
-            
+            // Supabase配置
             const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
             const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            const supernaturalBtn = document.getElementById('supernaturalBtn');
-            const innerDynamic = document.getElementById('innerDynamic');
-            const backContainer = document.getElementById('backButtonContainer');
-            const statusTag = document.getElementById('statusTag');
-            const searchInput = document.getElementById('searchInput');
-            const toastContainer = document.getElementById('toastContainer');
-            const agreementBtn = document.getElementById('agreementBtn');
-            const agreementModal = document.getElementById('agreementModal');
-            const closeAgreement = document.getElementById('closeAgreement');
-            const cloudStatus = document.getElementById('cloudStatus');
-            const cloudIcon = document.getElementById('cloudIcon');
-            const cloudText = document.getElementById('cloudText');
-            const thanksBtn = document.getElementById('thanksBtn');
-            const thanksModal = document.getElementById('thanksModal');
-            const closeThanks = document.getElementById('closeThanks');
-            const submitSignatureBtn = document.getElementById('submitSignatureBtn');
-            const adminBtn = document.getElementById('adminBtn');
             
-            let historyStack = [];
+            // 封禁页面URL
+            const BAN_URL = 'https://wjjz.wjzyw.top/projects/FZB/index.html';
+            
+            // 当前登录用户（用于访问控制）
+            let currentUser = null;
             let currentAdminLevel = 'guest';
-            let pendingSignatures = [];
-            let approvedSignatures = [];
-            let fixedSignatures = [];
-            let operationLogs = [];
-            let currentTab = 'pending';
             
-            function setCloudStatus(status, message) {
-                cloudText.textContent = message;
-                cloudIcon.className = 'fas';
-                if (status === 'syncing') { cloudIcon.classList.add('fa-sync-alt'); cloudStatus.classList.add('syncing'); }
-                else { cloudIcon.classList.add('fa-cloud'); cloudStatus.classList.remove('syncing'); if (status === 'error') cloudIcon.classList.add('fa-exclamation-triangle'); }
+            // 被禁用的QQ号列表（存储在localStorage，后期可迁移到云端）
+            let bannedQQList = JSON.parse(localStorage.getItem('banned_qq_list') || '[]');
+            
+            // 保存禁用列表到本地
+            function saveBannedList() {
+                localStorage.setItem('banned_qq_list', JSON.stringify(bannedQQList));
             }
             
-            async function loadFromSupabase() {
-                try {
-                    setCloudStatus('syncing', '加载数据...');
-                    const { data: signatures, error } = await supabase.from('nxld_data').select('*').order('submit_time', { ascending: false });
-                    if (error) throw error;
-                    fixedSignatures = signatures.filter(s => s.type === 'fixed').map(s => ({ ...s, platform: 'qq' }));
-                    pendingSignatures = signatures.filter(s => s.status === 'pending' && s.type === 'user').map(s => ({ ...s, platform: s.platform || 'qq' }));
-                    approvedSignatures = signatures.filter(s => s.status === 'approved' && s.type === 'user').map(s => ({ ...s, platform: s.platform || 'qq' }));
-                    const { data: logs, error: logError } = await supabase.from('nxld_data').select('*').eq('type', 'log').order('action_time', { ascending: false }).limit(100);
-                    if (!logError && logs) operationLogs = logs.map(log => ({ time: new Date(log.action_time).toLocaleString(), action: log.action, details: log.action_details, status: log.status }));
-                    setCloudStatus('synced', '已同步');
-                    return signatures;
-                } catch (error) {
-                    console.error('加载数据失败:', error);
-                    setCloudStatus('error', '同步失败');
-                    showToast('加载云端数据失败');
-                    if (loadingSpinner) loadingSpinner.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:1rem;"></i><div>加载失败，请检查网络连接</div><button class="retry-btn" onclick="location.reload()"><i class="fas fa-redo"></i> 重新加载</button></div>`;
-                    return [];
+            // 检查QQ是否被禁用
+            function isQQBanned(qq) {
+                return bannedQQList.includes(qq);
+            }
+            
+            // 禁用QQ
+            function banQQ(qq) {
+                if (!bannedQQList.includes(qq)) {
+                    bannedQQList.push(qq);
+                    saveBannedList();
+                    return true;
                 }
+                return false;
             }
             
-            async function saveToSupabase(data) { try { setCloudStatus('syncing', '保存中...'); const { error } = await supabase.from('nxld_data').insert([data]); if (error) throw error; setCloudStatus('synced', '已同步'); return true; } catch(e) { setCloudStatus('error', '保存失败'); return false; } }
-            async function updateInSupabase(id, updates) { try { setCloudStatus('syncing', '更新中...'); const { error } = await supabase.from('nxld_data').update(updates).eq('id', id); if (error) throw error; setCloudStatus('synced', '已同步'); return true; } catch(e) { setCloudStatus('error', '更新失败'); return false; } }
-            async function deleteFromSupabase(id) { if (currentAdminLevel !== 'super') { showToast('只有超级管理员可以删除'); return false; } try { setCloudStatus('syncing', '删除中...'); const { error } = await supabase.from('nxld_data').delete().eq('id', id); if (error) throw error; setCloudStatus('synced', '已同步'); return true; } catch(e) { setCloudStatus('error', '删除失败'); return false; } }
-            async function addLog(action, details, status = 'info') { await saveToSupabase({ qq: 'system', content: '系统日志', action, action_details: details, status, type: 'log', action_time: new Date().toISOString() }); }
-            function checkDuplicate(content) { if (fixedSignatures.find(s => s.content === content)) return { duplicate: true, type: 'fixed', qq: fixedSignatures.find(s => s.content === content).qq, platform: 'qq' }; if (approvedSignatures.find(s => s.content === content)) return { duplicate: true, type: 'approved', qq: approvedSignatures.find(s => s.content === content).qq, platform: approvedSignatures.find(s => s.content === content).platform || 'qq' }; if (pendingSignatures.find(s => s.content === content)) return { duplicate: true, type: 'pending', qq: pendingSignatures.find(s => s.content === content).qq, platform: pendingSignatures.find(s => s.content === content).platform || 'qq' }; return { duplicate: false }; }
-            function setupRealtime() { supabase.channel('nxld_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'nxld_data' }, async () => { await loadFromSupabase(); const v = historyStack[historyStack.length - 1]; if (v === 'signature') showSignaturePage(false); else if (v === 'admin' && currentAdminLevel !== 'guest') showAdminPanel(); }).subscribe(); }
-            function copyToClipboard(text) { const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;left:-9999px;top:0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy') ? showToast('复制成功') : showToast('复制失败'); } catch(e) { showToast('复制失败'); } document.body.removeChild(ta); }
-            function showToast(msg) { const toast = document.createElement('div'); toast.className = 'copy-toast'; toast.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`; toastContainer.appendChild(toast); setTimeout(() => toast.remove(), 1500); }
-            function convertToHtml(content) { if (!content) return ''; return content.replace(/<color=#([A-Fa-f0-9]{6})>/g, '<span style="color:#$1;">').replace(/<color=#([A-Fa-f0-9]{3})>/g, '<span style="color:#$1;">').replace(/<size=(\d+)>/g, (m,s) => `<span style="font-size:${parseInt(s)/16}rem;">`).replace(/<\/color>/g, '</span>').replace(/<\/size>/g, '</span>').replace(/<b>/g, '<b>').replace(/<\/b>/g, '</b>').replace(/<i>/g, '<i>').replace(/<\/i>/g, '</i>').replace(/<u>/g, '<u>').replace(/<\/u>/g, '</u>'); }
+            // 解禁QQ
+            function unbanQQ(qq) {
+                const index = bannedQQList.indexOf(qq);
+                if (index !== -1) {
+                    bannedQQList.splice(index, 1);
+                    saveBannedList();
+                    return true;
+                }
+                return false;
+            }
             
+            // 检查登录状态
+            function checkLogin() {
+                const savedQQ = localStorage.getItem('user_qq');
+                if (savedQQ) {
+                    // 检查是否被封禁
+                    if (isQQBanned(savedQQ)) {
+                        localStorage.removeItem('user_qq');
+                        window.location.href = BAN_URL + '?device=' + savedQQ;
+                        return false;
+                    }
+                    currentUser = savedQQ;
+                    document.getElementById('mainApp').style.display = 'block';
+                    document.getElementById('loginModal').style.display = 'none';
+                    return true;
+                }
+                return false;
+            }
+            
+            // 登录处理
+            function handleLogin() {
+                const qq = document.getElementById('loginQQ').value.trim();
+                const errorDiv = document.getElementById('loginError');
+                
+                if (!qq) {
+                    errorDiv.textContent = '请输入QQ号';
+                    return;
+                }
+                if (!/^\d+$/.test(qq)) {
+                    errorDiv.textContent = 'QQ号必须为数字';
+                    return;
+                }
+                if (qq.length < 5 || qq.length > 12) {
+                    errorDiv.textContent = '请输入正确的QQ号（5-12位数字）';
+                    return;
+                }
+                
+                // 检查是否被封禁
+                if (isQQBanned(qq)) {
+                    errorDiv.textContent = '该QQ已被封禁，请联系管理员';
+                    return;
+                }
+                
+                currentUser = qq;
+                localStorage.setItem('user_qq', qq);
+                document.getElementById('mainApp').style.display = 'block';
+                document.getElementById('loginModal').style.display = 'none';
+                showToast(`欢迎回来，QQ: ${qq}`);
+                showSupernaturalInitial();
+            }
+            
+            // 管理员面板 - 新增账号管理页面
             async function showAdminPanel() {
                 await loadFromSupabase();
                 const container = document.createElement('div');
-                const currentAdminDisplay = currentAdminLevel === 'super' ? '<i class="fas fa-crown"></i> 超级管理员模式（可删除）' : '<i class="fas fa-user"></i> 普通管理员模式（仅可审核）';
+                
                 const levelBadge = document.createElement('div');
                 levelBadge.style.cssText = 'text-align:center;margin-bottom:1rem;padding:0.5rem;border-radius:2rem';
                 levelBadge.style.background = currentAdminLevel === 'super' ? 'rgba(139,92,246,0.2)' : 'rgba(16,185,129,0.2)';
                 levelBadge.style.color = currentAdminLevel === 'super' ? '#a78bfa' : '#10b981';
-                levelBadge.innerHTML = currentAdminDisplay;
+                levelBadge.innerHTML = currentAdminLevel === 'super' ? '<i class="fas fa-crown"></i> 超级管理员模式（可删除/封禁账号）' : '<i class="fas fa-user"></i> 普通管理员模式（仅可审核）';
                 container.appendChild(levelBadge);
                 
                 const statsContainer = document.createElement('div');
@@ -598,9 +634,15 @@
                 statsContainer.innerHTML = `<div class="stat-card"><div class="stat-number">${pendingSignatures.length + approvedSignatures.length}</div><div class="stat-label">总提交</div></div><div class="stat-card"><div class="stat-number" style="color:#f59e0b;">${pendingSignatures.length}</div><div class="stat-label">待审核</div></div><div class="stat-card"><div class="stat-number" style="color:#10b981;">${approvedSignatures.length}</div><div class="stat-label">已通过</div></div>`;
                 container.appendChild(statsContainer);
                 
+                // 标签页切换（新增账号管理）
                 const tabContainer = document.createElement('div');
                 tabContainer.className = 'tab-container';
-                tabContainer.innerHTML = `<button class="tab-btn ${currentTab === 'pending' ? 'active' : ''}" data-tab="pending">待审核 (${pendingSignatures.length})</button><button class="tab-btn ${currentTab === 'approved' ? 'active' : ''}" data-tab="approved">已通过 (${approvedSignatures.length})</button><button class="tab-btn ${currentTab === 'logs' ? 'active' : ''}" data-tab="logs">操作日志</button>`;
+                tabContainer.innerHTML = `
+                    <button class="tab-btn ${currentTab === 'pending' ? 'active' : ''}" data-tab="pending">待审核 (${pendingSignatures.length})</button>
+                    <button class="tab-btn ${currentTab === 'approved' ? 'active' : ''}" data-tab="approved">已通过 (${approvedSignatures.length})</button>
+                    <button class="tab-btn ${currentTab === 'logs' ? 'active' : ''}" data-tab="logs">操作日志</button>
+                    <button class="tab-btn ${currentTab === 'accounts' ? 'active' : ''}" data-tab="accounts">账号管理</button>
+                `;
                 container.appendChild(tabContainer);
                 
                 const contentDiv = document.createElement('div');
@@ -638,10 +680,49 @@
                         html += '</div>';
                     }
                     contentDiv.innerHTML = html;
-                } else {
+                } else if (currentTab === 'logs') {
                     let html = '<h3 style="color:#818cf8;">操作日志</h3><div class="log-container">';
                     if (!operationLogs.length) html += '<div style="color:#9ca3af;text-align:center;padding:1rem;">暂无日志</div>';
                     else operationLogs.forEach(l => html += `<div class="log-item"><span class="log-time">[${l.time}]</span><span class="log-content">${l.action}: ${l.details}</span></div>`);
+                    html += '</div>';
+                    contentDiv.innerHTML = html;
+                } else if (currentTab === 'accounts' && currentAdminLevel === 'super') {
+                    // 账号管理页面（仅超级管理员可见）
+                    // 收集所有出现过的QQ号
+                    const allQQSet = new Set();
+                    [...pendingSignatures, ...approvedSignatures].forEach(s => {
+                        if (s.qq && s.qq !== 'system') allQQSet.add(s.qq);
+                    });
+                    // 添加当前登录用户
+                    if (currentUser) allQQSet.add(currentUser);
+                    // 添加被封禁的QQ
+                    bannedQQList.forEach(qq => allQQSet.add(qq));
+                    
+                    const allQQ = Array.from(allQQSet).sort();
+                    
+                    let html = '<h3 style="color:#818cf8;margin-bottom:1rem;"><i class="fas fa-users"></i> 账号管理</h3>';
+                    html += '<div class="account-list">';
+                    allQQ.forEach(qq => {
+                        const isBanned = isQQBanned(qq);
+                        const isCurrent = qq === currentUser;
+                        html += `
+                            <div class="account-item">
+                                <div class="account-info">
+                                    <div class="account-qq">
+                                        QQ: ${qq}
+                                        ${isCurrent ? '<span class="current-user-badge"><i class="fas fa-user-check"></i> 当前账号</span>' : ''}
+                                    </div>
+                                    <div class="account-status">
+                                        状态: <span class="${isBanned ? 'status-banned' : 'status-normal'}">${isBanned ? '已封禁' : '正常'}</span>
+                                    </div>
+                                </div>
+                                ${isBanned ? 
+                                    `<button class="unban-btn" onclick="window.unbanAccount('${qq}')"><i class="fas fa-unlock-alt"></i> 解封</button>` :
+                                    `<button class="ban-btn" onclick="window.banAccount('${qq}')"><i class="fas fa-ban"></i> 封禁</button>`
+                                }
+                            </div>
+                        `;
+                    });
                     html += '</div>';
                     contentDiv.innerHTML = html;
                 }
@@ -659,6 +740,30 @@
                 innerDynamic.innerHTML = '';
                 innerDynamic.appendChild(container);
                 document.querySelectorAll('.tab-btn').forEach(btn => btn.onclick = () => { currentTab = btn.dataset.tab; showAdminPanel(); });
+                
+                // 全局封禁/解封函数
+                window.banAccount = (qq) => {
+                    if (confirm(`确定要封禁账号 ${qq} 吗？封禁后该账号将无法登录。`)) {
+                        if (banQQ(qq)) {
+                            showToast(`✅ 账号 ${qq} 已封禁`);
+                            // 如果封禁的是当前登录用户，立即跳转
+                            if (qq === currentUser) {
+                                localStorage.removeItem('user_qq');
+                                window.location.href = BAN_URL + '?device=' + qq;
+                            } else {
+                                showAdminPanel();
+                            }
+                        }
+                    }
+                };
+                window.unbanAccount = (qq) => {
+                    if (confirm(`确定要解封账号 ${qq} 吗？`)) {
+                        if (unbanQQ(qq)) {
+                            showToast(`✅ 账号 ${qq} 已解封`);
+                            showAdminPanel();
+                        }
+                    }
+                };
                 
                 window.approveSignature = async (id) => {
                     const sig = pendingSignatures.find(s => s.id === id);
@@ -687,6 +792,70 @@
                 };
             }
             
+            // 其他辅助函数（保持不变）
+            let historyStack = [];
+            let pendingSignatures = [];
+            let approvedSignatures = [];
+            let fixedSignatures = [];
+            let operationLogs = [];
+            let currentTab = 'pending';
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const innerDynamic = document.getElementById('innerDynamic');
+            const backContainer = document.getElementById('backButtonContainer');
+            const statusTag = document.getElementById('statusTag');
+            const searchInput = document.getElementById('searchInput');
+            const toastContainer = document.getElementById('toastContainer');
+            const agreementBtn = document.getElementById('agreementBtn');
+            const agreementModal = document.getElementById('agreementModal');
+            const closeAgreement = document.getElementById('closeAgreement');
+            const cloudStatus = document.getElementById('cloudStatus');
+            const cloudIcon = document.getElementById('cloudIcon');
+            const cloudText = document.getElementById('cloudText');
+            const thanksBtn = document.getElementById('thanksBtn');
+            const thanksModal = document.getElementById('thanksModal');
+            const closeThanks = document.getElementById('closeThanks');
+            const submitSignatureBtn = document.getElementById('submitSignatureBtn');
+            const adminBtn = document.getElementById('adminBtn');
+            const supernaturalBtn = document.getElementById('supernaturalBtn');
+            
+            function setCloudStatus(status, message) {
+                cloudText.textContent = message;
+                cloudIcon.className = 'fas';
+                if (status === 'syncing') { cloudIcon.classList.add('fa-sync-alt'); cloudStatus.classList.add('syncing'); }
+                else { cloudIcon.classList.add('fa-cloud'); cloudStatus.classList.remove('syncing'); if (status === 'error') cloudIcon.classList.add('fa-exclamation-triangle'); }
+            }
+            
+            async function loadFromSupabase() {
+                try {
+                    setCloudStatus('syncing', '加载数据...');
+                    const { data: signatures, error } = await supabase.from('nxld_data').select('*').order('submit_time', { ascending: false });
+                    if (error) throw error;
+                    fixedSignatures = signatures.filter(s => s.type === 'fixed').map(s => ({ ...s, platform: 'qq' }));
+                    pendingSignatures = signatures.filter(s => s.status === 'pending' && s.type === 'user').map(s => ({ ...s, platform: s.platform || 'qq' }));
+                    approvedSignatures = signatures.filter(s => s.status === 'approved' && s.type === 'user').map(s => ({ ...s, platform: s.platform || 'qq' }));
+                    const { data: logs, error: logError } = await supabase.from('nxld_data').select('*').eq('type', 'log').order('action_time', { ascending: false }).limit(100);
+                    if (!logError && logs) operationLogs = logs.map(log => ({ time: new Date(log.action_time).toLocaleString(), action: log.action, details: log.action_details, status: log.status }));
+                    setCloudStatus('synced', '已同步');
+                    return signatures;
+                } catch (error) {
+                    console.error('加载数据失败:', error);
+                    setCloudStatus('error', '同步失败');
+                    showToast('加载云端数据失败');
+                    if (loadingSpinner) loadingSpinner.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle" style="font-size:2rem;margin-bottom:1rem;"></i><div>加载失败，请检查网络连接</div><button class="retry-btn" onclick="location.reload()"><i class="fas fa-redo"></i> 重新加载</button></div>`;
+                    return [];
+                }
+            }
+            
+            async function saveToSupabase(data) { try { setCloudStatus('syncing', '保存中...'); const { error } = await supabase.from('nxld_data').insert([data]); if (error) throw error; setCloudStatus('synced', '已同步'); return true; } catch(e) { setCloudStatus('error', '保存失败'); return false; } }
+            async function updateInSupabase(id, updates) { try { setCloudStatus('syncing', '更新中...'); const { error } = await supabase.from('nxld_data').update(updates).eq('id', id); if (error) throw error; setCloudStatus('synced', '已同步'); return true; } catch(e) { setCloudStatus('error', '更新失败'); return false; } }
+            async function deleteFromSupabase(id) { if (currentAdminLevel !== 'super') { showToast('只有超级管理员可以删除'); return false; } try { setCloudStatus('syncing', '删除中...'); const { error } = await supabase.from('nxld_data').delete().eq('id', id); if (error) throw error; setCloudStatus('synced', '已同步'); return true; } catch(e) { setCloudStatus('error', '删除失败'); return false; } }
+            async function addLog(action, details, status = 'info') { await saveToSupabase({ qq: currentUser || 'system', content: '系统日志', action, action_details: details, status, type: 'log', action_time: new Date().toISOString() }); }
+            function checkDuplicate(content) { if (fixedSignatures.find(s => s.content === content)) return { duplicate: true, type: 'fixed', qq: fixedSignatures.find(s => s.content === content).qq, platform: 'qq' }; if (approvedSignatures.find(s => s.content === content)) return { duplicate: true, type: 'approved', qq: approvedSignatures.find(s => s.content === content).qq, platform: approvedSignatures.find(s => s.content === content).platform || 'qq' }; if (pendingSignatures.find(s => s.content === content)) return { duplicate: true, type: 'pending', qq: pendingSignatures.find(s => s.content === content).qq, platform: pendingSignatures.find(s => s.content === content).platform || 'qq' }; return { duplicate: false }; }
+            function setupRealtime() { supabase.channel('nxld_changes').on('postgres_changes', { event: '*', schema: 'public', table: 'nxld_data' }, async () => { await loadFromSupabase(); const v = historyStack[historyStack.length - 1]; if (v === 'signature') showSignaturePage(false); else if (v === 'admin' && currentAdminLevel !== 'guest') showAdminPanel(); }).subscribe(); }
+            function copyToClipboard(text) { const ta = document.createElement('textarea'); ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;left:-9999px;top:0'; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy') ? showToast('复制成功') : showToast('复制失败'); } catch(e) { showToast('复制失败'); } document.body.removeChild(ta); }
+            function showToast(msg) { const toast = document.createElement('div'); toast.className = 'copy-toast'; toast.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`; toastContainer.appendChild(toast); setTimeout(() => toast.remove(), 1500); }
+            function convertToHtml(content) { if (!content) return ''; return content.replace(/<color=#([A-Fa-f0-9]{6})>/g, '<span style="color:#$1;">').replace(/<color=#([A-Fa-f0-9]{3})>/g, '<span style="color:#$1;">').replace(/<size=(\d+)>/g, (m,s) => `<span style="font-size:${parseInt(s)/16}rem;">`).replace(/<\/color>/g, '</span>').replace(/<\/size>/g, '</span>').replace(/<b>/g, '<b>').replace(/<\/b>/g, '</b>').replace(/<i>/g, '<i>').replace(/<\/i>/g, '</i>').replace(/<u>/g, '<u>').replace(/<\/u>/g, '</u>'); }
+            
             async function showSignaturePage(pushToHistory = true) {
                 resetAll();
                 if (pushToHistory) historyStack.push('signature');
@@ -710,7 +879,7 @@
                     grid.appendChild(card);
                 });
                 container.appendChild(grid);
-                statusTag.textContent = `签名合集 · 共${allSignatures.length}个`;
+                statusTag.textContent = `签名合集 · 共${allSignatures.length}个 · 当前账号: ${currentUser}`;
                 innerDynamic.innerHTML = '';
                 innerDynamic.appendChild(container);
                 refreshBackButton();
@@ -726,7 +895,7 @@
                 container.innerHTML = `
                     <div class="type-selector"><div class="type-option selected" data-type="signature"><div class="type-icon"><i class="fas fa-signature"></i></div><div class="type-name">签名投稿</div><div class="type-desc">分享个性签名</div></div><div class="type-option" data-type="report"><div class="type-icon"><i class="fas fa-exclamation-triangle"></i></div><div class="type-name">倒卖举报</div><div class="type-desc">举报倒卖行为（可传图）</div></div><div class="type-option" data-type="bug"><div class="type-icon"><i class="fas fa-bug"></i></div><div class="type-name">Bug反馈</div><div class="type-desc">反馈问题</div></div></div>
                     <div class="platform-selector"><div class="platform-option selected" data-platform="qq"><div class="platform-icon"><i class="fab fa-qq"></i></div><div class="platform-name">QQ</div></div><div class="platform-option" data-platform="douyin"><div class="platform-icon"><i class="fab fa-tiktok"></i></div><div class="platform-name">抖音</div></div><div class="platform-option" data-platform="kuaishou"><div class="platform-icon"><i class="fas fa-video"></i></div><div class="platform-name">快手</div></div></div>
-                    <div class="form-group"><label class="form-label" id="accountLabel">你的QQ号</label><input type="text" class="form-input" id="submitAccount" placeholder="请输入账号"></div>
+                    <div class="form-group"><label class="form-label" id="accountLabel">你的账号</label><input type="text" class="form-input" id="submitAccount" placeholder="请输入账号"></div>
                     <div class="form-group" id="contentGroup"><label class="form-label" id="contentLabel">签名内容</label><textarea class="form-input form-textarea" id="submitContent" placeholder="请输入内容"></textarea></div>
                     <div class="form-group" id="imageUploadGroup" style="display:none;"><div class="image-upload-area" id="imageUploadArea"><i class="fas fa-cloud-upload-alt"></i><div class="upload-text">点击上传图片证据</div><div class="upload-hint">支持多张，最多9张</div></div><input type="file" id="fileInput" multiple accept="image/*" style="display:none;"><div class="image-preview" id="imagePreview"></div></div>
                     <button class="submit-button" id="doSubmitBtn">提交</button>
@@ -740,19 +909,19 @@
                     document.querySelectorAll('.type-option').forEach(o => o.classList.remove('selected'));
                     this.classList.add('selected');
                     currentType = this.dataset.type;
-                    const cg = document.getElementById('contentGroup'), ig = document.getElementById('imageUploadGroup'), cl = document.getElementById('contentLabel'), al = document.getElementById('accountLabel');
-                    if (currentType === 'signature') { cg.style.display = 'block'; ig.style.display = 'none'; cl.textContent = '签名内容'; al.textContent = '你的账号'; }
-                    else if (currentType === 'report') { cg.style.display = 'block'; ig.style.display = 'block'; cl.textContent = '举报说明'; al.textContent = '你的账号'; }
-                    else { cg.style.display = 'block'; ig.style.display = 'none'; cl.textContent = 'Bug描述'; al.textContent = '你的账号'; }
+                    const cg = document.getElementById('contentGroup'), ig = document.getElementById('imageUploadGroup'), cl = document.getElementById('contentLabel');
+                    if (currentType === 'signature') { cg.style.display = 'block'; ig.style.display = 'none'; cl.textContent = '签名内容'; }
+                    else if (currentType === 'report') { cg.style.display = 'block'; ig.style.display = 'block'; cl.textContent = '举报说明'; }
+                    else { cg.style.display = 'block'; ig.style.display = 'none'; cl.textContent = 'Bug描述'; }
                 });
                 document.querySelectorAll('.platform-option').forEach(opt => opt.onclick = function() {
                     document.querySelectorAll('.platform-option').forEach(o => o.classList.remove('selected'));
                     this.classList.add('selected');
                     currentPlatform = this.dataset.platform;
-                    const al = document.getElementById('accountLabel');
-                    if (currentPlatform === 'qq') al.textContent = '你的QQ号';
-                    else if (currentPlatform === 'douyin') al.textContent = '你的抖音号';
-                    else al.textContent = '你的快手号';
+                    const accountLabel = document.getElementById('accountLabel');
+                    if (currentPlatform === 'qq') accountLabel.textContent = '你的QQ号';
+                    else if (currentPlatform === 'douyin') accountLabel.textContent = '你的抖音号';
+                    else accountLabel.textContent = '你的快手号';
                 });
                 const uploadArea = document.getElementById('imageUploadArea'), fileInput = document.getElementById('fileInput'), preview = document.getElementById('imagePreview');
                 uploadArea.onclick = () => fileInput.click();
@@ -772,8 +941,17 @@
                     });
                 };
                 document.getElementById('doSubmitBtn').onclick = async () => {
-                    const acc = document.getElementById('submitAccount').value.trim(), cont = document.getElementById('submitContent').value.trim(), info = document.getElementById('submitInfo');
-                    if (!acc) { info.textContent = `请输入${currentPlatform === 'qq' ? 'QQ号' : (currentPlatform === 'douyin' ? '抖音号' : '快手号')}`; info.style.color = '#ef4444'; return; }
+                    const acc = document.getElementById('submitAccount').value.trim();
+                    const cont = document.getElementById('submitContent').value.trim();
+                    const info = document.getElementById('submitInfo');
+                    
+                    if (!acc) {
+                        let platformName = currentPlatform === 'qq' ? 'QQ号' : (currentPlatform === 'douyin' ? '抖音号' : '快手号');
+                        info.textContent = `请输入${platformName}`;
+                        info.style.color = '#ef4444';
+                        return;
+                    }
+                    
                     if (currentType === 'signature') {
                         if (!cont) { info.textContent = '请输入签名内容'; info.style.color = '#ef4444'; return; }
                         const dup = checkDuplicate(cont);
@@ -785,6 +963,7 @@
                     }
                     if (currentType === 'report' && !cont) { info.textContent = '请输入举报说明'; info.style.color = '#ef4444'; return; }
                     if (currentType === 'bug' && !cont) { info.textContent = '请输入Bug描述'; info.style.color = '#ef4444'; return; }
+                    
                     if (await saveToSupabase({ qq: acc, content: cont || '无内容', platform: currentPlatform, status: 'pending', type: 'user', submit_type: currentType, images: uploadedImages, submit_time: new Date().toISOString() })) {
                         await addLog('提交', `${currentPlatform === 'qq' ? 'QQ' : (currentPlatform === 'douyin' ? 'dy' : 'ks')}:${acc} 提交了${currentType === 'signature' ? '签名' : (currentType === 'report' ? '举报' : 'Bug反馈')}`);
                         info.textContent = '提交成功！管理员审核后将显示'; info.style.color = '#10b981';
@@ -866,7 +1045,7 @@
             function showSupernaturalInitial(pushToHistory = true) {
                 resetAll();
                 if (pushToHistory) historyStack.push('main');
-                statusTag.textContent = 'NXLD数值库';
+                statusTag.textContent = `NXLD数值库 · 账号: ${currentUser}`;
                 const grid = document.createElement('div');
                 grid.className = 'main-menu-grid';
                 const items = [{ icon: 'layer-group', name: '模式数值', desc: '开发中' }, { icon: 'box', name: '局内物品', desc: '开发中' }, { icon: 'palette', name: '皮肤数值', desc: '开发中' }, { icon: 'signature', name: '主页签名', desc: '点击查看', isSignature: true }];
@@ -893,12 +1072,21 @@
             submitSignatureBtn.onclick = () => showSubmitSignature();
             adminBtn.onclick = () => { currentAdminLevel = 'guest'; showAdminPage(); searchInput.value = ''; };
             
+            // 初始化
+            document.getElementById('loginBtn').addEventListener('click', handleLogin);
+            document.getElementById('loginQQ').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+            
             window.addEventListener('load', async () => {
-                setCloudStatus('syncing', '连接数据库...');
-                await loadFromSupabase();
-                setupRealtime();
-                showSupernaturalInitial();
-                if (loadingSpinner) loadingSpinner.style.display = 'none';
+                if (!checkLogin()) {
+                    document.getElementById('loginModal').style.display = 'flex';
+                    document.getElementById('mainApp').style.display = 'none';
+                } else {
+                    setCloudStatus('syncing', '连接数据库...');
+                    await loadFromSupabase();
+                    setupRealtime();
+                    showSupernaturalInitial();
+                    if (loadingSpinner) loadingSpinner.style.display = 'none';
+                }
             });
         })();
     </script>
