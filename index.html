@@ -423,20 +423,6 @@
         .retry-btn { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem 1.5rem; color: white; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 1rem; border: none; }
         .retry-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px #4f46e5; }
         
-        /* 账号管理页面样式 */
-        .account-list { max-height: 500px; overflow-y: auto; }
-        .account-item { background: rgba(255, 255, 255, 0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
-        .account-info { flex: 1; }
-        .account-qq { font-size: 1rem; font-weight: 600; color: #a5b4fc; font-family: monospace; }
-        .account-status { font-size: 0.7rem; margin-top: 0.3rem; }
-        .status-banned { color: #ef4444; }
-        .status-normal { color: #10b981; }
-        .ban-btn { background: #ef4444; border: none; border-radius: 1.5rem; padding: 0.5rem 1rem; color: white; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
-        .ban-btn:hover { background: #dc2626; transform: scale(1.02); }
-        .unban-btn { background: #10b981; border: none; border-radius: 1.5rem; padding: 0.5rem 1rem; color: white; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
-        .unban-btn:hover { background: #059669; transform: scale(1.02); }
-        .current-user-badge { background: rgba(129, 140, 248, 0.2); color: #818cf8; padding: 0.2rem 0.5rem; border-radius: 1rem; font-size: 0.7rem; margin-left: 0.5rem; }
-        
         /* 登录弹窗样式 */
         .login-modal {
             position: fixed;
@@ -475,6 +461,12 @@
         .login-btn { width: 100%; background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
         .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px #4f46e5; }
         .login-error { color: #ef4444; font-size: 0.8rem; margin-top: 0.5rem; }
+        
+        /* 搜索高亮 */
+        .search-highlight { background: rgba(129, 140, 248, 0.15); border-color: #818cf8; transform: scale(1.01); }
+        
+        /* 按钮禁用状态 */
+        .login-btn.disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     </style>
 </head>
 <body>
@@ -585,39 +577,65 @@
                 return false;
             }
             
-            // 登录处理
+            // 登录处理 - 修复电脑端点击无响应问题
+            let isLoggingIn = false;
             function handleLogin() {
+                if (isLoggingIn) return;
+                isLoggingIn = true;
+                
+                const loginBtn = document.getElementById('loginBtn');
+                const originalText = loginBtn.innerHTML;
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登录中...';
+                loginBtn.disabled = true;
+                loginBtn.classList.add('disabled');
+                
                 const qq = document.getElementById('loginQQ').value.trim();
                 const errorDiv = document.getElementById('loginError');
                 
                 if (!qq) {
                     errorDiv.textContent = '请输入QQ号';
+                    resetLoginButton();
                     return;
                 }
                 if (!/^\d+$/.test(qq)) {
                     errorDiv.textContent = 'QQ号必须为数字';
+                    resetLoginButton();
                     return;
                 }
                 if (qq.length < 5 || qq.length > 12) {
                     errorDiv.textContent = '请输入正确的QQ号（5-12位数字）';
+                    resetLoginButton();
                     return;
                 }
                 
                 // 检查是否被封禁
                 if (isQQBanned(qq)) {
                     errorDiv.textContent = '该QQ已被封禁，请联系管理员';
+                    resetLoginButton();
                     return;
                 }
                 
-                currentUser = qq;
-                localStorage.setItem('user_qq', qq);
-                document.getElementById('mainApp').style.display = 'block';
-                document.getElementById('loginModal').style.display = 'none';
-                showToast(`欢迎回来，QQ: ${qq}`);
-                showSupernaturalInitial();
+                // 模拟延迟，确保界面响应
+                setTimeout(() => {
+                    currentUser = qq;
+                    localStorage.setItem('user_qq', qq);
+                    document.getElementById('mainApp').style.display = 'block';
+                    document.getElementById('loginModal').style.display = 'none';
+                    showToast(`欢迎回来，QQ: ${qq}`);
+                    showSupernaturalInitial();
+                    resetLoginButton();
+                    isLoggingIn = false;
+                }, 100);
+                
+                function resetLoginButton() {
+                    loginBtn.innerHTML = originalText;
+                    loginBtn.disabled = false;
+                    loginBtn.classList.remove('disabled');
+                    isLoggingIn = false;
+                }
             }
             
-            // 管理员面板 - 新增账号管理页面
+            // 管理员面板 - 移除普通管理员的账号管理，只有超级管理员才有账号管理
             async function showAdminPanel() {
                 await loadFromSupabase();
                 const container = document.createElement('div');
@@ -634,15 +652,23 @@
                 statsContainer.innerHTML = `<div class="stat-card"><div class="stat-number">${pendingSignatures.length + approvedSignatures.length}</div><div class="stat-label">总提交</div></div><div class="stat-card"><div class="stat-number" style="color:#f59e0b;">${pendingSignatures.length}</div><div class="stat-label">待审核</div></div><div class="stat-card"><div class="stat-number" style="color:#10b981;">${approvedSignatures.length}</div><div class="stat-label">已通过</div></div>`;
                 container.appendChild(statsContainer);
                 
-                // 标签页切换（新增账号管理）
+                // 标签页切换 - 普通管理员只有待审核和已通过，超级管理员才有账号管理
                 const tabContainer = document.createElement('div');
                 tabContainer.className = 'tab-container';
-                tabContainer.innerHTML = `
-                    <button class="tab-btn ${currentTab === 'pending' ? 'active' : ''}" data-tab="pending">待审核 (${pendingSignatures.length})</button>
-                    <button class="tab-btn ${currentTab === 'approved' ? 'active' : ''}" data-tab="approved">已通过 (${approvedSignatures.length})</button>
-                    <button class="tab-btn ${currentTab === 'logs' ? 'active' : ''}" data-tab="logs">操作日志</button>
-                    <button class="tab-btn ${currentTab === 'accounts' ? 'active' : ''}" data-tab="accounts">账号管理</button>
-                `;
+                if (currentAdminLevel === 'super') {
+                    tabContainer.innerHTML = `
+                        <button class="tab-btn ${currentTab === 'pending' ? 'active' : ''}" data-tab="pending">待审核 (${pendingSignatures.length})</button>
+                        <button class="tab-btn ${currentTab === 'approved' ? 'active' : ''}" data-tab="approved">已通过 (${approvedSignatures.length})</button>
+                        <button class="tab-btn ${currentTab === 'logs' ? 'active' : ''}" data-tab="logs">操作日志</button>
+                        <button class="tab-btn ${currentTab === 'accounts' ? 'active' : ''}" data-tab="accounts">账号管理</button>
+                    `;
+                } else {
+                    tabContainer.innerHTML = `
+                        <button class="tab-btn ${currentTab === 'pending' ? 'active' : ''}" data-tab="pending">待审核 (${pendingSignatures.length})</button>
+                        <button class="tab-btn ${currentTab === 'approved' ? 'active' : ''}" data-tab="approved">已通过 (${approvedSignatures.length})</button>
+                        <button class="tab-btn ${currentTab === 'logs' ? 'active' : ''}" data-tab="logs">操作日志</button>
+                    `;
+                }
                 container.appendChild(tabContainer);
                 
                 const contentDiv = document.createElement('div');
@@ -688,14 +714,11 @@
                     contentDiv.innerHTML = html;
                 } else if (currentTab === 'accounts' && currentAdminLevel === 'super') {
                     // 账号管理页面（仅超级管理员可见）
-                    // 收集所有出现过的QQ号
                     const allQQSet = new Set();
                     [...pendingSignatures, ...approvedSignatures].forEach(s => {
                         if (s.qq && s.qq !== 'system') allQQSet.add(s.qq);
                     });
-                    // 添加当前登录用户
                     if (currentUser) allQQSet.add(currentUser);
-                    // 添加被封禁的QQ
                     bannedQQList.forEach(qq => allQQSet.add(qq));
                     
                     const allQQ = Array.from(allQQSet).sort();
@@ -731,7 +754,7 @@
                 if (currentAdminLevel === 'super') {
                     const syncBtn = document.createElement('button');
                     syncBtn.className = 'download-html-btn';
-                    syncBtn.style.cssText = 'margin-top:1rem;background:linear-gradient(135deg,#f59e0b,#d97706)';
+                    syncBtn.style.cssText = 'margin-top:1rem;background:linear-gradient(135deg,#f59e0b,#d97706);padding:0.8rem 1.5rem;border:none;border-radius:2rem;color:white;cursor:pointer;width:100%;font-weight:600;';
                     syncBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 强制刷新云端';
                     syncBtn.onclick = async () => { await loadFromSupabase(); showAdminPanel(); showToast('已刷新'); };
                     container.appendChild(syncBtn);
@@ -746,7 +769,6 @@
                     if (confirm(`确定要封禁账号 ${qq} 吗？封禁后该账号将无法登录。`)) {
                         if (banQQ(qq)) {
                             showToast(`✅ 账号 ${qq} 已封禁`);
-                            // 如果封禁的是当前登录用户，立即跳转
                             if (qq === currentUser) {
                                 localStorage.removeItem('user_qq');
                                 window.location.href = BAN_URL + '?device=' + qq;
@@ -856,6 +878,53 @@
             function showToast(msg) { const toast = document.createElement('div'); toast.className = 'copy-toast'; toast.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`; toastContainer.appendChild(toast); setTimeout(() => toast.remove(), 1500); }
             function convertToHtml(content) { if (!content) return ''; return content.replace(/<color=#([A-Fa-f0-9]{6})>/g, '<span style="color:#$1;">').replace(/<color=#([A-Fa-f0-9]{3})>/g, '<span style="color:#$1;">').replace(/<size=(\d+)>/g, (m,s) => `<span style="font-size:${parseInt(s)/16}rem;">`).replace(/<\/color>/g, '</span>').replace(/<\/size>/g, '</span>').replace(/<b>/g, '<b>').replace(/<\/b>/g, '</b>').replace(/<i>/g, '<i>').replace(/<\/i>/g, '</i>').replace(/<u>/g, '<u>').replace(/<\/u>/g, '</u>'); }
             
+            // 修复搜索补位问题 - 搜索时不会自动补位，只高亮匹配项
+            function performGlobalSearch() {
+                const term = searchInput.value.toLowerCase().trim();
+                // 获取当前可见的内容区域内的可搜索元素
+                const searchArea = document.getElementById('innerDynamic');
+                if (!searchArea) return;
+                
+                // 清除之前的高亮和提示
+                const existingTip = document.getElementById('searchNoResultTip');
+                if (existingTip) existingTip.remove();
+                
+                // 移除所有高亮class
+                const allSearchItems = searchArea.querySelectorAll('.menu-card, .signature-card, .signature-card-container');
+                allSearchItems.forEach(item => {
+                    item.classList.remove('search-highlight');
+                    item.style.display = '';
+                });
+                
+                if (!term) return;
+                
+                let hasMatch = false;
+                allSearchItems.forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    if (text.includes(term)) {
+                        item.classList.add('search-highlight');
+                        hasMatch = true;
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                // 如果没有匹配项，显示提示（但不自动跳转或补位）
+                if (!hasMatch && allSearchItems.length > 0) {
+                    const tip = document.createElement('div');
+                    tip.id = 'searchNoResultTip';
+                    tip.style.cssText = 'text-align:center;color:#9ca3af;padding:2rem;';
+                    tip.innerHTML = `🔍 未找到 "${searchInput.value}" 的相关内容`;
+                    searchArea.appendChild(tip);
+                }
+            }
+            
+            let searchTimeout;
+            if (searchInput) {
+                searchInput.oninput = () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(performGlobalSearch, 300); };
+            }
+            
             async function showSignaturePage(pushToHistory = true) {
                 resetAll();
                 if (pushToHistory) historyStack.push('signature');
@@ -883,7 +952,8 @@
                 innerDynamic.innerHTML = '';
                 innerDynamic.appendChild(container);
                 refreshBackButton();
-                setTimeout(performGlobalSearch, 10);
+                // 延迟执行搜索，确保DOM已渲染
+                setTimeout(performGlobalSearch, 100);
             }
             
             function showSubmitSignature(pushToHistory = true) {
@@ -924,8 +994,8 @@
                     else accountLabel.textContent = '你的快手号';
                 });
                 const uploadArea = document.getElementById('imageUploadArea'), fileInput = document.getElementById('fileInput'), preview = document.getElementById('imagePreview');
-                uploadArea.onclick = () => fileInput.click();
-                fileInput.onchange = (e) => {
+                if (uploadArea) uploadArea.onclick = () => fileInput.click();
+                if (fileInput) fileInput.onchange = (e) => {
                     uploadedImages = []; preview.innerHTML = '';
                     Array.from(e.target.files).slice(0,9).forEach(f => {
                         const r = new FileReader();
@@ -940,7 +1010,8 @@
                         r.readAsDataURL(f);
                     });
                 };
-                document.getElementById('doSubmitBtn').onclick = async () => {
+                const submitBtn = document.getElementById('doSubmitBtn');
+                if (submitBtn) submitBtn.onclick = async () => {
                     const acc = document.getElementById('submitAccount').value.trim();
                     const cont = document.getElementById('submitContent').value.trim();
                     const info = document.getElementById('submitInfo');
@@ -967,11 +1038,12 @@
                     if (await saveToSupabase({ qq: acc, content: cont || '无内容', platform: currentPlatform, status: 'pending', type: 'user', submit_type: currentType, images: uploadedImages, submit_time: new Date().toISOString() })) {
                         await addLog('提交', `${currentPlatform === 'qq' ? 'QQ' : (currentPlatform === 'douyin' ? 'dy' : 'ks')}:${acc} 提交了${currentType === 'signature' ? '签名' : (currentType === 'report' ? '举报' : 'Bug反馈')}`);
                         info.textContent = '提交成功！管理员审核后将显示'; info.style.color = '#10b981';
-                        document.getElementById('submitAccount').value = ''; document.getElementById('submitContent').value = ''; uploadedImages = []; preview.innerHTML = '';
+                        document.getElementById('submitAccount').value = ''; document.getElementById('submitContent').value = ''; uploadedImages = []; if (preview) preview.innerHTML = '';
                         await loadFromSupabase();
                     } else { info.textContent = '提交失败，请重试'; info.style.color = '#ef4444'; }
                 };
-                document.getElementById('queryBtn').onclick = () => {
+                const queryBtn = document.getElementById('queryBtn');
+                if (queryBtn) queryBtn.onclick = () => {
                     const acc = document.getElementById('queryAccount').value.trim(), res = document.getElementById('queryResult');
                     if (!acc) { res.innerHTML = '<div style="color:#ef4444;">请输入账号</div>'; return; }
                     const items = [...pendingSignatures, ...approvedSignatures].filter(s => s.qq === acc);
@@ -991,7 +1063,8 @@
                     container.innerHTML = `<div class="submit-form"><div class="form-group"><label class="form-label">管理员密码</label><input type="password" class="form-input" id="adminPassword" placeholder="请输入密码"></div><button class="submit-button" id="adminLoginBtn">登录</button><div class="submit-info" id="adminLoginInfo"></div></div>`;
                     innerDynamic.innerHTML = '';
                     innerDynamic.appendChild(container);
-                    document.getElementById('adminLoginBtn').onclick = () => {
+                    const adminLoginBtn = document.getElementById('adminLoginBtn');
+                    if (adminLoginBtn) adminLoginBtn.onclick = () => {
                         const pwd = document.getElementById('adminPassword').value;
                         if (pwd === 'NXLD_RX') { currentAdminLevel = 'admin'; showAdminPanel(); document.getElementById('adminLoginInfo').textContent = '登录成功（普通管理员）'; }
                         else if (pwd === 'NXLD_MZRW') { currentAdminLevel = 'super'; showAdminPanel(); document.getElementById('adminLoginInfo').textContent = '登录成功（超级管理员）'; }
@@ -1014,33 +1087,14 @@
                     else if (v === 'admin') showAdminPage(false);
                     else showSupernaturalInitial(false);
                     searchInput.value = '';
-                    setTimeout(() => document.querySelector('.content-area').scrollTop = 0, 10);
+                    setTimeout(() => {
+                        if (document.querySelector('.content-area')) document.querySelector('.content-area').scrollTop = 0;
+                        performGlobalSearch();
+                    }, 10);
                 };
                 return btn;
             }
             function refreshBackButton() { backContainer.innerHTML = ''; if (historyStack.length >= 2) backContainer.appendChild(createBackButton()); }
-            function performGlobalSearch() {
-                const term = searchInput.value.toLowerCase().trim();
-                const cards = document.querySelectorAll('#innerDynamic .menu-card, #innerDynamic .signature-card');
-                if (!term) { cards.forEach(c => { c.style.display = ''; c.classList.remove('search-highlight'); }); return; }
-                let has = false;
-                cards.forEach(c => {
-                    const txt = c.textContent.toLowerCase();
-                    if (txt.includes(term)) { c.style.display = ''; c.classList.add('search-highlight'); has = true; }
-                    else c.style.display = 'none';
-                });
-                const tip = document.getElementById('searchNoResultTip');
-                if (tip) tip.remove();
-                if (!has && cards.length) {
-                    const t = document.createElement('div');
-                    t.id = 'searchNoResultTip';
-                    t.style.cssText = 'text-align:center;color:#9ca3af;padding:2rem;';
-                    t.innerHTML = `🔍 未找到"${searchInput.value}"`;
-                    innerDynamic.appendChild(t);
-                }
-            }
-            let searchTimeout;
-            searchInput.oninput = () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(performGlobalSearch, 50); };
             
             function showSupernaturalInitial(pushToHistory = true) {
                 resetAll();
@@ -1059,22 +1113,25 @@
                 });
                 innerDynamic.appendChild(grid);
                 refreshBackButton();
-                setTimeout(performGlobalSearch, 10);
+                setTimeout(performGlobalSearch, 100);
             }
             
-            supernaturalBtn.onclick = () => { if (historyStack.length === 0 || historyStack[historyStack.length - 1] !== 'main') { historyStack = []; showSupernaturalInitial(); searchInput.value = ''; } };
-            agreementBtn.onclick = () => agreementModal.classList.add('show');
-            closeAgreement.onclick = () => agreementModal.classList.remove('show');
-            agreementModal.onclick = (e) => { if (e.target === agreementModal) agreementModal.classList.remove('show'); };
-            thanksBtn.onclick = () => thanksModal.classList.add('show');
-            closeThanks.onclick = () => thanksModal.classList.remove('show');
-            thanksModal.onclick = (e) => { if (e.target === thanksModal) thanksModal.classList.remove('show'); };
-            submitSignatureBtn.onclick = () => showSubmitSignature();
-            adminBtn.onclick = () => { currentAdminLevel = 'guest'; showAdminPage(); searchInput.value = ''; };
+            // 绑定事件
+            if (supernaturalBtn) supernaturalBtn.onclick = () => { if (historyStack.length === 0 || historyStack[historyStack.length - 1] !== 'main') { historyStack = []; showSupernaturalInitial(); searchInput.value = ''; performGlobalSearch(); } };
+            if (agreementBtn) agreementBtn.onclick = () => agreementModal.classList.add('show');
+            if (closeAgreement) closeAgreement.onclick = () => agreementModal.classList.remove('show');
+            if (agreementModal) agreementModal.onclick = (e) => { if (e.target === agreementModal) agreementModal.classList.remove('show'); };
+            if (thanksBtn) thanksBtn.onclick = () => thanksModal.classList.add('show');
+            if (closeThanks) closeThanks.onclick = () => thanksModal.classList.remove('show');
+            if (thanksModal) thanksModal.onclick = (e) => { if (e.target === thanksModal) thanksModal.classList.remove('show'); };
+            if (submitSignatureBtn) submitSignatureBtn.onclick = () => showSubmitSignature();
+            if (adminBtn) adminBtn.onclick = () => { currentAdminLevel = 'guest'; showAdminPage(); searchInput.value = ''; performGlobalSearch(); };
             
             // 初始化
-            document.getElementById('loginBtn').addEventListener('click', handleLogin);
-            document.getElementById('loginQQ').addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
+            const loginBtn = document.getElementById('loginBtn');
+            const loginQQ = document.getElementById('loginQQ');
+            if (loginBtn) loginBtn.addEventListener('click', handleLogin);
+            if (loginQQ) loginQQ.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleLogin(); });
             
             window.addEventListener('load', async () => {
                 if (!checkLogin()) {
