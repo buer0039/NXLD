@@ -85,13 +85,21 @@
             function unlockDevice(deviceId) {
                 try {
                     let lockedDevices = JSON.parse(localStorage.getItem(LOCKED_DEVICES_KEY) || '[]');
-                    lockedDevices = lockedDevices.filter(id => id !== deviceId);
-                    localStorage.setItem(LOCKED_DEVICES_KEY, JSON.stringify(lockedDevices));
+                    const newLockedDevices = lockedDevices.filter(id => id !== deviceId);
+                    localStorage.setItem(LOCKED_DEVICES_KEY, JSON.stringify(newLockedDevices));
                     localStorage.removeItem(`nxld_lock_reason_perm_${deviceId}`);
                     localStorage.removeItem(`nxld_lock_time_perm_${deviceId}`);
                     localStorage.removeItem(`nxld_detect_count_perm_${deviceId}`);
+                    
+                    // 触发storage事件，通知其他标签页
+                    window.dispatchEvent(new StorageEvent('storage', {
+                        key: LOCKED_DEVICES_KEY,
+                        newValue: JSON.stringify(newLockedDevices)
+                    }));
+                    
                     return true;
                 } catch(e) {
+                    console.error('解锁失败:', e);
                     return false;
                 }
             }
@@ -569,6 +577,8 @@
         .manual-unlock-input:focus { border-color: #10b981; }
         .manual-unlock-btn { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 2rem; padding: 0.6rem 1.2rem; color: white; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem; }
         .manual-unlock-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 16px -8px #10b981; }
+        .unlock-result-success { background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.3rem 0.8rem; border-radius: 1rem; font-size: 0.8rem; margin-top: 0.5rem; text-align: center; }
+        .unlock-result-error { background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.3rem 0.8rem; border-radius: 1rem; font-size: 0.8rem; margin-top: 0.5rem; text-align: center; }
     </style>
 </head>
 <body>
@@ -755,7 +765,14 @@
                                         if (confirm(`确定要解锁设备 ${deviceId} 吗？`)) {
                                             if (window.__unlockDevice && window.__unlockDevice(deviceId)) {
                                                 showToast(`✅ 设备 ${deviceId} 已解锁`);
-                                                setTimeout(() => showAdminPanel(), 500);
+                                                // 刷新当前页面以更新锁定状态
+                                                setTimeout(() => {
+                                                    showAdminPanel();
+                                                    // 如果解锁的是当前设备，刷新整个页面
+                                                    if (deviceId === currentDeviceId) {
+                                                        setTimeout(() => location.reload(), 1000);
+                                                    }
+                                                }, 500);
                                             } else {
                                                 showToast('解锁失败');
                                             }
@@ -783,7 +800,7 @@
                                 <input type="text" class="manual-unlock-input" id="manualUnlockDeviceId" placeholder="输入要解锁的设备码">
                                 <button class="manual-unlock-btn" id="manualUnlockBtn"><i class="fas fa-unlock-alt"></i> 解锁设备</button>
                             </div>
-                            <div id="manualUnlockResult" style="font-size:0.7rem; color:#9ca3af; margin-top:0.5rem;"></div>
+                            <div id="manualUnlockResult" style="margin-top: 0.5rem;"></div>
                         </div>
                     `;
                     container.appendChild(manualUnlockSection);
@@ -797,18 +814,22 @@
                             manualUnlockBtn.addEventListener('click', () => {
                                 const deviceId = manualUnlockInput.value.trim();
                                 if (!deviceId) {
-                                    manualUnlockResult.innerHTML = '<i class="fas fa-exclamation-circle"></i> 请输入设备码';
-                                    manualUnlockResult.style.color = '#ef4444';
+                                    manualUnlockResult.innerHTML = '<div class="unlock-result-error"><i class="fas fa-exclamation-circle"></i> 请输入设备码</div>';
                                     return;
                                 }
                                 if (window.__unlockDevice && window.__unlockDevice(deviceId)) {
-                                    manualUnlockResult.innerHTML = '<i class="fas fa-check-circle"></i> 设备已成功解锁！';
-                                    manualUnlockResult.style.color = '#10b981';
+                                    manualUnlockResult.innerHTML = '<div class="unlock-result-success"><i class="fas fa-check-circle"></i> 设备已成功解锁！页面将刷新...</div>';
                                     manualUnlockInput.value = '';
-                                    setTimeout(() => showAdminPanel(), 1000);
+                                    // 刷新管理员面板
+                                    setTimeout(() => {
+                                        showAdminPanel();
+                                        // 如果解锁的是当前设备，刷新整个页面
+                                        if (deviceId === currentDeviceId) {
+                                            setTimeout(() => location.reload(), 1500);
+                                        }
+                                    }, 500);
                                 } else {
-                                    manualUnlockResult.innerHTML = '<i class="fas fa-times-circle"></i> 未找到该设备码或设备未被锁定';
-                                    manualUnlockResult.style.color = '#ef4444';
+                                    manualUnlockResult.innerHTML = '<div class="unlock-result-error"><i class="fas fa-times-circle"></i> 未找到该设备码或设备未被锁定</div>';
                                 }
                             });
                             manualUnlockInput.addEventListener('keypress', (e) => {
