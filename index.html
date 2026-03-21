@@ -220,8 +220,10 @@
     <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" 
           onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css'">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
     <style>
+        /* 保持原有样式不变 */
         * { user-select: none; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; margin: 0; padding: 0; box-sizing: border-box; }
         input, textarea { user-select: text; -webkit-user-select: text; -moz-user-select: text; -ms-user-select: text; }
         
@@ -262,6 +264,7 @@
             transition: all 0.3s ease;
         }
         
+        /* 其他样式保持不变... */
         .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1.5rem; }
         .logo-area { display: flex; align-items: center; gap: 1rem; }
         .logo-icon { width: 3.5rem; height: 3.5rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 1.2rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.8rem; box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3); }
@@ -537,6 +540,36 @@
     
     <script>
         (function() {
+            // ==================== 加密配置 ====================
+            // 加密密钥（生产环境应从环境变量或安全存储获取）
+            const ENCRYPTION_KEY = 'nxld_secure_key_2024_encryption';
+            
+            // 简单的AES加密函数（使用CryptoJS）
+            function encryptData(data) {
+                try {
+                    const encrypted = CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString();
+                    return encrypted;
+                } catch (e) {
+                    console.error('加密失败:', e);
+                    return data;
+                }
+            }
+            
+            function decryptData(encryptedData) {
+                try {
+                    const decrypted = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY);
+                    return decrypted.toString(CryptoJS.enc.Utf8);
+                } catch (e) {
+                    console.error('解密失败:', e);
+                    return encryptedData;
+                }
+            }
+            
+            // 简单的哈希函数（用于本地数据验证）
+            function hashData(data) {
+                return CryptoJS.SHA256(data + ENCRYPTION_KEY).toString();
+            }
+            
             // Supabase配置
             const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
             const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
@@ -549,23 +582,47 @@
             let currentUser = null;
             let currentAdminLevel = 'guest';
             
-            // 被禁用的QQ号列表（存储在localStorage，后期可迁移到云端）
-            let bannedQQList = JSON.parse(localStorage.getItem('banned_qq_list') || '[]');
+            // 被禁用的QQ号列表（存储在localStorage，使用哈希存储）
+            let bannedQQList = [];
+            try {
+                const stored = localStorage.getItem('banned_qq_list_encrypted');
+                if (stored) {
+                    const decrypted = decryptData(stored);
+                    bannedQQList = JSON.parse(decrypted) || [];
+                } else {
+                    bannedQQList = [];
+                }
+            } catch (e) {
+                bannedQQList = [];
+            }
             
-            // 存储所有登录过的用户账号（用于账号管理显示）
-            let allLoggedUsers = JSON.parse(localStorage.getItem('all_logged_users') || '[]');
+            // 存储所有登录过的用户账号（使用加密存储）
+            let allLoggedUsers = [];
+            try {
+                const stored = localStorage.getItem('all_logged_users_encrypted');
+                if (stored) {
+                    const decrypted = decryptData(stored);
+                    allLoggedUsers = JSON.parse(decrypted) || [];
+                } else {
+                    allLoggedUsers = [];
+                }
+            } catch (e) {
+                allLoggedUsers = [];
+            }
             
-            // 保存禁用列表到本地
+            // 保存禁用列表到本地（加密）
             function saveBannedList() {
-                localStorage.setItem('banned_qq_list', JSON.stringify(bannedQQList));
+                const encrypted = encryptData(JSON.stringify(bannedQQList));
+                localStorage.setItem('banned_qq_list_encrypted', encrypted);
             }
             
-            // 保存所有登录用户列表
+            // 保存所有登录用户列表（加密）
             function saveLoggedUsersList() {
-                localStorage.setItem('all_logged_users', JSON.stringify(allLoggedUsers));
+                const encrypted = encryptData(JSON.stringify(allLoggedUsers));
+                localStorage.setItem('all_logged_users_encrypted', encrypted);
             }
             
-            // 记录用户登录
+            // 记录用户登录（加密存储）
             function recordUserLogin(qq) {
                 if (!allLoggedUsers.includes(qq)) {
                     allLoggedUsers.push(qq);
@@ -573,26 +630,17 @@
                 }
             }
             
-            // 获取所有用户账号（包括已登录的、提交过内容的、被封禁的）
+            // 获取所有用户账号
             function getAllUserAccounts() {
                 const allAccountsSet = new Set();
-                
-                // 添加所有登录过的用户
                 allLoggedUsers.forEach(qq => allAccountsSet.add(qq));
-                
-                // 添加当前登录用户
                 if (currentUser) allAccountsSet.add(currentUser);
-                
-                // 添加提交过内容的用户
                 if (pendingSignatures && approvedSignatures) {
                     [...pendingSignatures, ...approvedSignatures].forEach(s => {
                         if (s.qq && s.qq !== 'system') allAccountsSet.add(s.qq);
                     });
                 }
-                
-                // 添加被封禁的用户
                 bannedQQList.forEach(qq => allAccountsSet.add(qq));
-                
                 return Array.from(allAccountsSet).sort();
             }
             
@@ -624,25 +672,28 @@
             
             // 检查登录状态
             function checkLogin() {
-                const savedQQ = localStorage.getItem('user_qq');
+                const savedQQ = localStorage.getItem('user_qq_encrypted');
                 if (savedQQ) {
-                    // 检查是否被封禁
-                    if (isQQBanned(savedQQ)) {
-                        localStorage.removeItem('user_qq');
-                        window.location.href = BAN_URL + '?device=' + savedQQ;
+                    try {
+                        const decryptedQQ = decryptData(savedQQ);
+                        if (isQQBanned(decryptedQQ)) {
+                            localStorage.removeItem('user_qq_encrypted');
+                            window.location.href = BAN_URL + '?device=' + decryptedQQ;
+                            return false;
+                        }
+                        currentUser = decryptedQQ;
+                        recordUserLogin(decryptedQQ);
+                        document.getElementById('mainApp').style.display = 'block';
+                        document.getElementById('loginModal').style.display = 'none';
+                        return true;
+                    } catch (e) {
                         return false;
                     }
-                    currentUser = savedQQ;
-                    // 记录登录用户
-                    recordUserLogin(savedQQ);
-                    document.getElementById('mainApp').style.display = 'block';
-                    document.getElementById('loginModal').style.display = 'none';
-                    return true;
                 }
                 return false;
             }
             
-            // 登录处理 - 修复电脑端点击无响应问题
+            // 登录处理（加密存储）
             let isLoggingIn = false;
             function handleLogin() {
                 if (isLoggingIn) return;
@@ -673,18 +724,17 @@
                     return;
                 }
                 
-                // 检查是否被封禁
                 if (isQQBanned(qq)) {
                     errorDiv.textContent = '该QQ已被封禁，请联系管理员';
                     resetLoginButton();
                     return;
                 }
                 
-                // 模拟延迟，确保界面响应
                 setTimeout(() => {
                     currentUser = qq;
-                    localStorage.setItem('user_qq', qq);
-                    // 记录登录用户
+                    // 加密存储QQ号
+                    const encryptedQQ = encryptData(qq);
+                    localStorage.setItem('user_qq_encrypted', encryptedQQ);
                     recordUserLogin(qq);
                     document.getElementById('mainApp').style.display = 'block';
                     document.getElementById('loginModal').style.display = 'none';
@@ -702,7 +752,39 @@
                 }
             }
             
-            // 管理员面板 - 修复手机端显示问题
+            // 云端管理员验证函数（使用哈希验证）
+            async function verifyAdminCloud(username, password) {
+                try {
+                    setCloudStatus('syncing', '验证中...');
+                    // 调用数据库中的 verify_admin 函数进行哈希验证
+                    const { data, error } = await supabase
+                        .rpc('verify_admin', {
+                            p_username: username,
+                            p_password: password
+                        });
+                    
+                    if (error) {
+                        console.error('RPC调用失败:', error);
+                        return { success: false, role: null, message: '验证失败，请重试' };
+                    }
+                    
+                    if (data && data.length > 0) {
+                        const result = data[0];
+                        return { 
+                            success: result.is_valid, 
+                            role: result.role, 
+                            message: result.message 
+                        };
+                    }
+                    
+                    return { success: false, role: null, message: '验证失败' };
+                } catch (error) {
+                    console.error('云端验证出错:', error);
+                    return { success: false, role: null, message: '网络错误，请重试' };
+                }
+            }
+            
+            // 管理员面板
             async function showAdminPanel() {
                 await loadFromSupabase();
                 const container = document.createElement('div');
@@ -721,7 +803,6 @@
                 statsContainer.innerHTML = `<div class="stat-card"><div class="stat-number">${pendingSignatures.length + approvedSignatures.length}</div><div class="stat-label">总提交</div></div><div class="stat-card"><div class="stat-number" style="color:#f59e0b;">${pendingSignatures.length}</div><div class="stat-label">待审核</div></div><div class="stat-card"><div class="stat-number" style="color:#10b981;">${approvedSignatures.length}</div><div class="stat-label">已通过</div></div>`;
                 container.appendChild(statsContainer);
                 
-                // 标签页切换
                 const tabContainer = document.createElement('div');
                 tabContainer.className = 'tab-container';
                 if (currentAdminLevel === 'super') {
@@ -785,7 +866,6 @@
                     html += '</div>';
                     contentDiv.innerHTML = html;
                 } else if (currentTab === 'accounts' && currentAdminLevel === 'super') {
-                    // 账号管理页面
                     const allAccounts = getAllUserAccounts();
                     
                     let html = '<h3 style="color:#818cf8;margin-bottom:1rem;"><i class="fas fa-users"></i> 账号管理</h3>';
@@ -889,13 +969,12 @@
                 innerDynamic.appendChild(container);
                 document.querySelectorAll('.tab-btn').forEach(btn => btn.onclick = () => { currentTab = btn.dataset.tab; showAdminPanel(); });
                 
-                // 全局封禁/解封函数
                 window.banAccount = (qq) => {
                     if (confirm(`确定要封禁账号 ${qq} 吗？封禁后该账号将无法登录。`)) {
                         if (banQQ(qq)) {
                             showToast(`✅ 账号 ${qq} 已封禁`);
                             if (qq === currentUser) {
-                                localStorage.removeItem('user_qq');
+                                localStorage.removeItem('user_qq_encrypted');
                                 window.location.href = BAN_URL + '?device=' + qq;
                             } else {
                                 showAdminPanel();
@@ -939,7 +1018,7 @@
                 };
             }
             
-            // 其他辅助函数
+            // 其他辅助函数保持不变...
             let historyStack = [];
             let pendingSignatures = [];
             let approvedSignatures = [];
@@ -965,7 +1044,6 @@
             const adminBtn = document.getElementById('adminBtn');
             const supernaturalBtn = document.getElementById('supernaturalBtn');
             
-            // 防重复提交标志
             let isSubmitting = false;
             
             function setCloudStatus(status, message) {
@@ -1006,7 +1084,6 @@
             function showToast(msg) { const toast = document.createElement('div'); toast.className = 'copy-toast'; toast.innerHTML = `<i class="fas fa-check-circle"></i> ${msg}`; toastContainer.appendChild(toast); setTimeout(() => toast.remove(), 1500); }
             function convertToHtml(content) { if (!content) return ''; return content.replace(/<color=#([A-Fa-f0-9]{6})>/g, '<span style="color:#$1;">').replace(/<color=#([A-Fa-f0-9]{3})>/g, '<span style="color:#$1;">').replace(/<size=(\d+)>/g, (m,s) => `<span style="font-size:${parseInt(s)/16}rem;">`).replace(/<\/color>/g, '</span>').replace(/<\/size>/g, '</span>').replace(/<b>/g, '<b>').replace(/<\/b>/g, '</b>').replace(/<i>/g, '<i>').replace(/<\/i>/g, '</i>').replace(/<u>/g, '<u>').replace(/<\/u>/g, '</u>'); }
             
-            // 修复搜索补位问题
             function performGlobalSearch() {
                 const term = searchInput.value.toLowerCase().trim();
                 const searchArea = document.getElementById('innerDynamic');
@@ -1136,7 +1213,6 @@
                 const submitBtn = document.getElementById('doSubmitBtn');
                 if (submitBtn) {
                     submitBtn.onclick = async () => {
-                        // 防重复提交检查
                         if (isSubmitting) {
                             showToast('请勿重复提交');
                             return;
@@ -1226,25 +1302,78 @@
                 if (currentAdminLevel !== 'guest') {
                     showAdminPanel();
                 } else {
-                    container.innerHTML = `<div class="submit-form" style="width:100%;"><div class="form-group"><label class="form-label">管理员密码</label><input type="password" class="form-input" id="adminPassword" placeholder="请输入密码"></div><button class="submit-button" id="adminLoginBtn">登录</button><div class="submit-info" id="adminLoginInfo"></div></div>`;
+                    container.innerHTML = `
+                        <div class="submit-form" style="width:100%;">
+                            <div class="form-group">
+                                <label class="form-label">管理员用户名</label>
+                                <input type="text" class="form-input" id="adminUsername" placeholder="请输入用户名">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">管理员密码</label>
+                                <input type="password" class="form-input" id="adminPassword" placeholder="请输入密码">
+                            </div>
+                            <button class="submit-button" id="adminLoginBtn">登录</button>
+                            <div class="submit-info" id="adminLoginInfo"></div>
+                        </div>
+                    `;
                     innerDynamic.innerHTML = '';
                     innerDynamic.appendChild(container);
                     const adminLoginBtn = document.getElementById('adminLoginBtn');
+                    const adminUsername = document.getElementById('adminUsername');
+                    const adminPassword = document.getElementById('adminPassword');
+                    
                     if (adminLoginBtn) {
-                        adminLoginBtn.onclick = () => {
-                            const pwd = document.getElementById('adminPassword').value;
-                            if (pwd === 'NXLD_RX') { currentAdminLevel = 'admin'; showAdminPanel(); document.getElementById('adminLoginInfo').textContent = '登录成功（普通管理员）'; }
-                            else if (pwd === 'NXLD_MZRW') { currentAdminLevel = 'super'; showAdminPanel(); document.getElementById('adminLoginInfo').textContent = '登录成功（超级管理员）'; }
-                            else { document.getElementById('adminLoginInfo').textContent = '密码错误'; document.getElementById('adminLoginInfo').style.color = '#ef4444'; }
-                        };
-                        const pwdInput = document.getElementById('adminPassword');
-                        if (pwdInput) {
-                            pwdInput.addEventListener('keypress', (e) => {
-                                if (e.key === 'Enter') {
-                                    adminLoginBtn.click();
+                        adminLoginBtn.onclick = async () => {
+                            const username = adminUsername.value.trim();
+                            const password = adminPassword.value.trim();
+                            const infoDiv = document.getElementById('adminLoginInfo');
+                            
+                            if (!username || !password) {
+                                infoDiv.textContent = '请输入用户名和密码';
+                                infoDiv.style.color = '#ef4444';
+                                return;
+                            }
+                            
+                            adminLoginBtn.disabled = true;
+                            adminLoginBtn.classList.add('disabled');
+                            const originalText = adminLoginBtn.innerHTML;
+                            adminLoginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 验证中...';
+                            
+                            try {
+                                const result = await verifyAdminCloud(username, password);
+                                
+                                if (result.success) {
+                                    currentAdminLevel = result.role;
+                                    infoDiv.textContent = result.message + `（${result.role === 'super' ? '超级管理员' : '普通管理员'}）`;
+                                    infoDiv.style.color = '#10b981';
+                                    showToast(`登录成功，欢迎 ${username}`);
+                                    showAdminPanel();
+                                } else {
+                                    infoDiv.textContent = result.message;
+                                    infoDiv.style.color = '#ef4444';
+                                    adminLoginBtn.disabled = false;
+                                    adminLoginBtn.classList.remove('disabled');
+                                    adminLoginBtn.innerHTML = originalText;
                                 }
-                            });
-                        }
+                            } catch (error) {
+                                infoDiv.textContent = '验证失败，请重试';
+                                infoDiv.style.color = '#ef4444';
+                                adminLoginBtn.disabled = false;
+                                adminLoginBtn.classList.remove('disabled');
+                                adminLoginBtn.innerHTML = originalText;
+                            }
+                        };
+                        
+                        const inputs = [adminUsername, adminPassword];
+                        inputs.forEach(input => {
+                            if (input) {
+                                input.addEventListener('keypress', (e) => {
+                                    if (e.key === 'Enter') {
+                                        adminLoginBtn.click();
+                                    }
+                                });
+                            }
+                        });
                     }
                 }
                 refreshBackButton();
@@ -1292,7 +1421,6 @@
                 setTimeout(performGlobalSearch, 100);
             }
             
-            // 绑定事件
             if (supernaturalBtn) supernaturalBtn.onclick = () => { if (historyStack.length === 0 || historyStack[historyStack.length - 1] !== 'main') { historyStack = []; showSupernaturalInitial(); if (searchInput) searchInput.value = ''; performGlobalSearch(); } };
             if (agreementBtn) agreementBtn.onclick = () => agreementModal.classList.add('show');
             if (closeAgreement) closeAgreement.onclick = () => agreementModal.classList.remove('show');
@@ -1303,7 +1431,6 @@
             if (submitSignatureBtn) submitSignatureBtn.onclick = () => showSubmitSignature();
             if (adminBtn) adminBtn.onclick = () => { currentAdminLevel = 'guest'; showAdminPage(); if (searchInput) searchInput.value = ''; performGlobalSearch(); };
             
-            // 初始化 - 添加登录弹窗回车事件
             const loginBtn = document.getElementById('loginBtn');
             const loginQQ = document.getElementById('loginQQ');
             if (loginBtn) loginBtn.addEventListener('click', handleLogin);
