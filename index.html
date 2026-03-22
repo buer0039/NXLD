@@ -208,7 +208,6 @@
                 return false;
             });
             
-            // 更新反作弊状态显示（不显示运行时间）
             setInterval(function() {
                 const statusElement = document.getElementById('antiCheatStatus');
                 if (statusElement && window.antiCheatStatus) {
@@ -228,6 +227,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     
     <style>
+        /* 基础样式保持不变 */
         * { user-select: none; -webkit-user-select: none; margin: 0; padding: 0; box-sizing: border-box; }
         input, textarea { user-select: text; -webkit-user-select: text; }
         
@@ -266,7 +266,6 @@
             padding: 2.5rem;
         }
         
-        /* 反作弊状态栏 - 不显示运行时间 */
         .anti-cheat-bar {
             position: fixed;
             bottom: 20px;
@@ -309,7 +308,6 @@
             pointer-events: none;
         }
         
-        /* 版权信息 - 修复颜色 */
         .copyright-modern {
             position: fixed;
             bottom: 20px;
@@ -323,49 +321,245 @@
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(129, 140, 248, 0.2);
             pointer-events: none;
-            font-weight: 400;
-            letter-spacing: 1px;
         }
         
-        /* Logo区域 - 修复颜色 */
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
+        .logo-area { display: flex; align-items: center; gap: 1rem; }
+        .logo-icon { width: 3.5rem; height: 3.5rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 1.2rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.8rem; box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3); }
+        .logo-text h1 { font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, #f0f2ff, #c7d2fe); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .logo-text .sub { font-size: 0.85rem; color: #94a3b8; }
         
-        .logo-icon {
-            width: 3.5rem;
-            height: 3.5rem;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
-            border-radius: 1.2rem;
+        /* 登录弹窗样式 - 增加备用登录区域 */
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            z-index: 10000;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 1.8rem;
-            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3);
         }
         
-        .logo-text h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            background: linear-gradient(135deg, #f0f2ff, #c7d2fe);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            line-height: 1.2;
+        .login-card {
+            background: rgba(18, 22, 40, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            border-radius: 2rem;
+            padding: 2rem;
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
         }
         
-        .logo-text .sub {
+        .login-icon { font-size: 3rem; color: #818cf8; margin-bottom: 1rem; }
+        .login-title { font-size: 1.5rem; font-weight: 700; color: #f0f2ff; margin-bottom: 0.3rem; }
+        .login-subtitle { font-size: 0.8rem; color: #9ca3af; margin-bottom: 1.5rem; }
+        
+        /* 登录模式切换按钮 */
+        .login-mode-switch {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2rem;
+            padding: 0.3rem;
+        }
+        
+        .mode-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border-radius: 1.5rem;
+            background: transparent;
+            border: none;
+            color: #9ca3af;
             font-size: 0.85rem;
-            color: #94a3b8;
-            font-weight: 400;
-            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
         }
         
-        /* ==================== 模态框样式 ==================== */
+        .mode-btn.active {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+        }
+        
+        .mode-btn:not(.active):hover {
+            background: rgba(129, 140, 248, 0.2);
+            color: #c7d2fe;
+        }
+        
+        /* 登录输入区域 */
+        .login-input-area {
+            margin-bottom: 1rem;
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(129, 140, 248, 0.3);
+            color: #f0f2ff;
+            font-size: 1rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .login-input:focus {
+            outline: none;
+            border-color: #818cf8;
+            background: rgba(129, 140, 248, 0.1);
+        }
+        
+        .login-input::placeholder {
+            color: #6b7280;
+        }
+        
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none;
+            border-radius: 2rem;
+            padding: 0.8rem;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 0.5rem;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+        }
+        
+        .login-btn.disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        /* 备用登录提示区域 */
+        .backup-login-hint {
+            margin-top: 1rem;
+            padding: 0.8rem;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 1rem;
+            border-left: 3px solid #10b981;
+            text-align: left;
+        }
+        
+        .backup-login-hint p {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin: 0.2rem 0;
+        }
+        
+        .backup-login-hint i {
+            color: #10b981;
+            margin-right: 0.3rem;
+        }
+        
+        .backup-status {
+            font-size: 0.7rem;
+            color: #f59e0b;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+        
+        .login-error {
+            color: #ef4444;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+        
+        /* 其他样式保持与之前相同 */
+        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1.5rem; }
+        .header-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .search-wrapper { position: relative; width: 300px; }
+        .search-wrapper i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #6b7280; }
+        .search-box-modern { width: 100%; padding: 0.8rem 0.8rem 0.8rem 2.5rem; border-radius: 2rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #f0f2ff; }
+        .search-box-modern:focus { outline: none; border-color: #818cf8; }
+        
+        .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn, .year-badge {
+            padding: 0.6rem 1.2rem;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            border-radius: 2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .agreement-btn, .admin-btn, .thanks-btn, .year-badge {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: #9ca3af;
+            backdrop-filter: blur(5px);
+        }
+        .agreement-btn:hover, .admin-btn:hover, .thanks-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(129, 140, 248, 0.3);
+            color: #a5b4fc;
+        }
+        .submit-signature-btn { background: linear-gradient(135deg, #10b981, #059669); border: none; color: white; }
+        .submit-signature-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4); }
+        .year-badge { cursor: default; }
+        
+        .faction-switch { display: flex; gap: 1rem; margin-bottom: 2.5rem; background: rgba(0, 0, 0, 0.2); padding: 0.5rem; border-radius: 3rem; width: fit-content; }
+        .faction-btn { padding: 0.8rem 2rem; border-radius: 2rem; font-size: 1rem; font-weight: 600; color: #9ca3af; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.6rem; }
+        .faction-btn.active { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; }
+        
+        .content-area { background: rgba(10, 12, 26, 0.4); border-radius: 2.5rem; padding: 2rem; backdrop-filter: blur(10px); min-height: 500px; max-height: 800px; overflow-y: auto; }
+        .status-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.8rem; }
+        .status-badge { background: rgba(129, 140, 248, 0.1); border: 1px solid rgba(129, 140, 248, 0.2); border-radius: 2rem; padding: 0.4rem 1.2rem; font-size: 0.85rem; color: #a5b4fc; display: flex; align-items: center; gap: 0.5rem; }
+        .back-btn-modern { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #d1d5db; padding: 0.6rem 1.4rem; border-radius: 2rem; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.6rem; cursor: pointer; }
+        .back-btn-modern:hover { background: rgba(255, 255, 255, 0.08); transform: translateX(-3px); }
+        
+        .main-menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.2rem; margin: 1rem 0; }
+        .menu-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.03); border-radius: 2rem; padding: 1.8rem 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.8rem; cursor: pointer; transition: all 0.25s; }
+        .menu-card:hover { background: rgba(255, 255, 255, 0.04); border-color: rgba(129, 140, 248, 0.3); transform: translateY(-4px); }
+        .menu-icon { width: 3.5rem; height: 3.5rem; border-radius: 1.5rem; background: linear-gradient(135deg, #4f46e5, #7c3aed); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.6rem; }
+        .menu-card.signature .menu-icon { background: linear-gradient(135deg, #10b981, #059669); }
+        .menu-card span { font-size: 1.1rem; font-weight: 600; color: #e5e7eb; }
+        .menu-card small { font-size: 0.8rem; color: #6b7280; }
+        
+        .signature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1rem 0; }
+        .signature-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 182, 193, 0.3); border-radius: 1.2rem; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.3s; min-height: 130px; display: flex; flex-direction: column; justify-content: center; }
+        .signature-card:hover { background: rgba(255, 255, 255, 0.08); transform: scale(1.01); }
+        .signature-text { font-size: 0.8rem; line-height: 1.4; margin-bottom: 0.3rem; }
+        .signature-qq { color: rgba(255, 255, 255, 0.5); font-size: 0.6rem; }
+        .copy-hint { margin-top: 0.2rem; font-size: 0.5rem; color: #9ca3af; opacity: 0.4; display: flex; align-items: center; justify-content: center; gap: 0.2rem; }
+        
+        .submit-form { background: rgba(255, 255, 255, 0.03); border-radius: 2rem; padding: 2rem; border: 1px solid rgba(129, 140, 248, 0.2); max-width: 600px; margin: 0 auto; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; color: #d1d5db; margin-bottom: 0.5rem; }
+        .form-input { width: 100%; padding: 1rem; border-radius: 1.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #f0f2ff; }
+        .form-input:focus { outline: none; border-color: #818cf8; }
+        .submit-button { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 2rem; padding: 1rem; color: white; font-weight: 600; cursor: pointer; width: 100%; }
+        .submit-button.disabled { opacity: 0.6; cursor: not-allowed; }
+        .type-selector, .platform-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
+        .type-option, .platform-option { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1rem; padding: 0.8rem; text-align: center; cursor: pointer; }
+        .type-option.selected, .platform-option.selected { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+        .type-icon { font-size: 1.5rem; color: #818cf8; margin-bottom: 0.3rem; }
+        .query-input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .query-button { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem 1.5rem; color: white; cursor: pointer; }
+        .query-result { background: rgba(255, 255, 255, 0.02); border-radius: 1.5rem; padding: 1rem; max-height: 300px; overflow-y: auto; }
+        .query-item { display: flex; align-items: center; justify-content: space-between; padding: 0.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .query-item-qq { color: #818cf8; font-size: 0.8rem; }
+        .query-item-status { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 1rem; background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .query-item-status.pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .top-hint { text-align: center; color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; margin-bottom: 1.2rem; padding: 0.5rem; background: rgba(129, 140, 248, 0.05); border-radius: 2rem; }
+        
         .agreement-modal, .thanks-modal {
             position: fixed;
             top: 0;
@@ -382,544 +576,54 @@
             visibility: hidden;
             transition: all 0.3s ease;
         }
-        
-        .agreement-modal.show, .thanks-modal.show {
-            opacity: 1;
-            visibility: visible;
-        }
-        
+        .agreement-modal.show, .thanks-modal.show { opacity: 1; visibility: visible; }
         .agreement-content, .thanks-content {
             background: linear-gradient(135deg, rgba(18, 22, 40, 0.98), rgba(26, 31, 58, 0.98));
             backdrop-filter: blur(20px);
             border-radius: 2rem;
-            padding: 2.2rem 2rem;
+            padding: 2rem;
             max-width: 480px;
             width: 90%;
             transform: translateY(25px) scale(0.95);
             transition: transform 0.3s ease;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(129, 140, 248, 0.3) inset;
             border: 1px solid rgba(129, 140, 248, 0.2);
         }
-        
-        .agreement-modal.show .agreement-content, 
-        .thanks-modal.show .thanks-content {
-            transform: translateY(0) scale(1);
-        }
-        
-        .agreement-header, .thanks-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid rgba(129, 140, 248, 0.3);
-        }
-        
-        .agreement-header i {
-            font-size: 2rem;
-            color: #818cf8;
-            background: rgba(129, 140, 248, 0.15);
-            padding: 0.6rem;
-            border-radius: 1rem;
-            box-shadow: 0 0 15px rgba(129, 140, 248, 0.3);
-        }
-        
-        .thanks-header i {
-            font-size: 2rem;
-            color: #fbbf24;
-            background: rgba(251, 191, 36, 0.15);
-            padding: 0.6rem;
-            border-radius: 1rem;
-            box-shadow: 0 0 15px rgba(251, 191, 36, 0.3);
-        }
-        
-        .agreement-header h3, .thanks-header h3 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #f0f2ff, #c7d2fe);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            margin: 0;
-        }
-        
-        .agreement-body, .thanks-body {
-            color: #d1d5db;
-            font-size: 1rem;
-            line-height: 1.8;
-            margin: 1.5rem 0;
-            padding: 0.5rem 0;
-            text-align: center;
-        }
-        
-        .agreement-footer, .thanks-footer {
-            display: flex;
-            justify-content: center;
-            margin-top: 1rem;
-        }
-        
-        .agreement-close {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            border: none;
-            border-radius: 2rem;
-            padding: 0.8rem 2rem;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
-            min-width: 140px;
-        }
-        
-        .thanks-close {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            border: none;
-            border-radius: 2rem;
-            padding: 0.8rem 2rem;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
-            min-width: 140px;
-        }
-        
-        .agreement-close:hover, .thanks-close:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-        }
-        
-        /* ==================== 按钮样式 ==================== */
-        .agreement-btn, .submit-signature-btn, .admin-btn, .thanks-btn, .year-badge {
-            padding: 0.6rem 1.2rem;
-            font-size: 0.9rem;
-            white-space: nowrap;
-            border-radius: 2rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-        
-        .agreement-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(129, 140, 248, 0.3);
-            color: #a5b4fc;
-            backdrop-filter: blur(5px);
-        }
-        
-        .agreement-btn i { color: #818cf8; }
-        
-        .agreement-btn:hover {
-            background: rgba(129, 140, 248, 0.2);
-            border-color: #818cf8;
-            color: #c7d2fe;
-            transform: translateY(-1px);
-        }
-        
-        .submit-signature-btn {
-            background: linear-gradient(135deg, #10b981, #059669);
-            border: none;
-            color: white;
-        }
-        
-        .submit-signature-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
-        }
-        
-        .admin-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            color: #fbbf24;
-            backdrop-filter: blur(5px);
-        }
-        
-        .admin-btn i { color: #f59e0b; }
-        
-        .admin-btn:hover {
-            background: rgba(245, 158, 11, 0.15);
-            border-color: #f59e0b;
-            color: #fde047;
-            transform: translateY(-1px);
-        }
-        
-        .thanks-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            color: #fbbf24;
-            backdrop-filter: blur(5px);
-        }
-        
-        .thanks-btn i { color: #fbbf24; }
-        
-        .thanks-btn:hover {
-            background: rgba(251, 191, 36, 0.15);
-            border-color: #fbbf24;
-            color: #fde047;
-            transform: translateY(-1px);
-        }
-        
-        .year-badge {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            color: #9ca3af;
-            cursor: default;
-        }
-        
-        .year-badge i {
-            color: #818cf8;
-        }
-        
-        /* ==================== 管理员面板样式修复 ==================== */
-        .admin-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-        
-        .stat-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(129, 140, 248, 0.2);
-            border-radius: 1.5rem;
-            padding: 1.2rem;
-            text-align: center;
-            transition: all 0.2s;
-        }
-        
-        .stat-card:hover {
-            background: rgba(129, 140, 248, 0.1);
-            border-color: rgba(129, 140, 248, 0.4);
-            transform: translateY(-2px);
-        }
-        
-        .stat-number {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #818cf8;
-            margin-bottom: 0.3rem;
-        }
-        
-        .stat-label {
-            font-size: 0.8rem;
-            color: #9ca3af;
-        }
-        
-        .tab-container {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            border-bottom: 1px solid rgba(129, 140, 248, 0.2);
-            padding-bottom: 0.5rem;
-            flex-wrap: wrap;
-        }
-        
-        .tab-btn {
-            background: transparent;
-            border: none;
-            color: #9ca3af;
-            padding: 0.6rem 1.2rem;
-            border-radius: 2rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 0.9rem;
-        }
-        
-        .tab-btn:hover {
-            background: rgba(129, 140, 248, 0.1);
-            color: #c7d2fe;
-        }
-        
-        .tab-btn.active {
-            background: rgba(129, 140, 248, 0.2);
-            color: #818cf8;
-            border: 1px solid rgba(129, 140, 248, 0.3);
-        }
-        
-        /* 待审核/已通过列表样式 */
-        .review-item {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(129, 140, 248, 0.2);
-            border-radius: 1rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            transition: all 0.2s;
-        }
-        
-        .review-item:hover {
-            background: rgba(129, 140, 248, 0.05);
-            border-color: rgba(129, 140, 248, 0.4);
-        }
-        
-        .review-platform {
-            color: #818cf8;
-            font-weight: 500;
-        }
-        
-        .review-content {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 0.5rem;
-            border-radius: 0.5rem;
-            margin: 0.5rem 0;
-            color: #e5e7eb;
-        }
-        
-        .review-time {
-            color: #9ca3af;
-            font-size: 0.8rem;
-            margin: 0.5rem 0;
-        }
-        
-        .review-actions {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-            flex-wrap: wrap;
-        }
-        
-        /* 操作日志样式 */
-        .log-container {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 1.5rem;
-            padding: 1rem;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-        
-        .log-item {
-            padding: 0.8rem;
-            border-bottom: 1px solid rgba(129, 140, 248, 0.1);
-            font-size: 0.85rem;
-        }
-        
-        .log-item:last-child {
-            border-bottom: none;
-        }
-        
-        .log-time {
-            color: #818cf8;
-            font-size: 0.7rem;
-            margin-right: 0.5rem;
-        }
-        
-        .log-content {
-            color: #d1d5db;
-        }
-        
-        /* 账号管理样式 */
-        .account-list {
-            max-height: 500px;
-            overflow-y: auto;
-        }
-        
-        .account-item {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(129, 140, 248, 0.2);
-            border-radius: 1rem;
-            padding: 1rem;
-            margin-bottom: 0.8rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 1rem;
-            transition: all 0.2s;
-        }
-        
-        .account-item:hover {
-            background: rgba(129, 140, 248, 0.05);
-            border-color: rgba(129, 140, 248, 0.4);
-        }
-        
-        .account-qq {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #a5b4fc;
-            font-family: monospace;
-        }
-        
-        .account-status {
-            font-size: 0.7rem;
-            margin-top: 0.3rem;
-        }
-        
-        .status-banned {
-            color: #ef4444;
-        }
-        
-        .status-normal {
-            color: #10b981;
-        }
-        
-        .ban-btn, .unban-btn {
-            border: none;
-            border-radius: 1.5rem;
-            padding: 0.5rem 1rem;
-            color: white;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .ban-btn {
-            background: #ef4444;
-        }
-        
-        .ban-btn:hover {
-            background: #dc2626;
-            transform: scale(1.02);
-        }
-        
-        .unban-btn {
-            background: #10b981;
-        }
-        
-        .unban-btn:hover {
-            background: #059669;
-            transform: scale(1.02);
-        }
-        
-        .current-user-badge {
-            background: rgba(129, 140, 248, 0.2);
-            color: #818cf8;
-            padding: 0.2rem 0.5rem;
-            border-radius: 1rem;
-            font-size: 0.7rem;
-            margin-left: 0.5rem;
-        }
-        
-        /* 添加账号区域 */
-        .add-account-area {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(129, 140, 248, 0.2);
-            border-radius: 1rem;
-        }
-        
-        .add-account-input-group {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-            flex-wrap: wrap;
-        }
-        
-        .add-account-input {
-            flex: 1;
-            padding: 0.8rem;
-            border-radius: 1.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(129, 140, 248, 0.2);
-            color: #f0f2ff;
-        }
-        
-        .add-account-input:focus {
-            outline: none;
-            border-color: #818cf8;
-        }
-        
-        .add-account-btn {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            border: none;
-            border-radius: 1.5rem;
-            padding: 0.8rem 1.5rem;
-            color: white;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .add-account-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-        }
-        
-        /* 其他样式 */
-        .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1.5rem; }
-        .header-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-        .search-wrapper { position: relative; width: 300px; }
-        .search-wrapper i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #6b7280; }
-        .search-box-modern { width: 100%; padding: 0.8rem 0.8rem 0.8rem 2.5rem; border-radius: 2rem; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #f0f2ff; }
-        .search-box-modern:focus { outline: none; border-color: #818cf8; }
-        .faction-switch { display: flex; gap: 1rem; margin-bottom: 2.5rem; background: rgba(0, 0, 0, 0.2); padding: 0.5rem; border-radius: 3rem; width: fit-content; }
-        .faction-btn { padding: 0.8rem 2rem; border-radius: 2rem; font-size: 1rem; font-weight: 600; color: #9ca3af; background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.6rem; }
-        .faction-btn.active { background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; }
-        .content-area { background: rgba(10, 12, 26, 0.4); border-radius: 2.5rem; padding: 2rem; backdrop-filter: blur(10px); min-height: 500px; max-height: 800px; overflow-y: auto; }
-        .status-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.8rem; }
-        .status-badge { background: rgba(129, 140, 248, 0.1); border: 1px solid rgba(129, 140, 248, 0.2); border-radius: 2rem; padding: 0.4rem 1.2rem; font-size: 0.85rem; color: #a5b4fc; display: flex; align-items: center; gap: 0.5rem; }
-        .back-btn-modern { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); color: #d1d5db; padding: 0.6rem 1.4rem; border-radius: 2rem; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 0.6rem; cursor: pointer; }
-        .back-btn-modern:hover { background: rgba(255, 255, 255, 0.08); transform: translateX(-3px); }
-        .main-menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.2rem; margin: 1rem 0; }
-        .menu-card { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.03); border-radius: 2rem; padding: 1.8rem 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.8rem; cursor: pointer; transition: all 0.25s; }
-        .menu-card:hover { background: rgba(255, 255, 255, 0.04); border-color: rgba(129, 140, 248, 0.3); transform: translateY(-4px); }
-        .menu-icon { width: 3.5rem; height: 3.5rem; border-radius: 1.5rem; background: linear-gradient(135deg, #4f46e5, #7c3aed); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.6rem; }
-        .menu-card.signature .menu-icon { background: linear-gradient(135deg, #10b981, #059669); }
-        .menu-card span { font-size: 1.1rem; font-weight: 600; color: #e5e7eb; }
-        .menu-card small { font-size: 0.8rem; color: #6b7280; }
-        
-        .signature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; margin: 1rem 0; }
-        .signature-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 182, 193, 0.3); border-radius: 1.2rem; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.3s; min-height: 130px; display: flex; flex-direction: column; justify-content: center; }
-        .signature-card:hover { background: rgba(255, 255, 255, 0.08); transform: scale(1.01); }
-        .signature-text { font-size: 0.8rem; line-height: 1.4; margin-bottom: 0.3rem; }
-        .signature-qq { color: rgba(255, 255, 255, 0.5); font-size: 0.6rem; }
-        .copy-hint { margin-top: 0.2rem; font-size: 0.5rem; color: #9ca3af; opacity: 0.4; display: flex; align-items: center; justify-content: center; gap: 0.2rem; }
-        .submit-form { background: rgba(255, 255, 255, 0.03); border-radius: 2rem; padding: 2rem; border: 1px solid rgba(129, 140, 248, 0.2); max-width: 600px; margin: 0 auto; }
-        .form-group { margin-bottom: 1.5rem; }
-        .form-label { display: block; color: #d1d5db; margin-bottom: 0.5rem; }
-        .form-input { width: 100%; padding: 1rem; border-radius: 1.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #f0f2ff; }
-        .form-input:focus { outline: none; border-color: #818cf8; }
-        .submit-button { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 2rem; padding: 1rem; color: white; font-weight: 600; cursor: pointer; width: 100%; }
-        .submit-button.disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
-        .type-selector, .platform-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
-        .type-option, .platform-option { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1rem; padding: 0.8rem; text-align: center; cursor: pointer; transition: all 0.2s; }
-        .type-option.selected, .platform-option.selected { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
-        .type-icon { font-size: 1.5rem; color: #818cf8; margin-bottom: 0.3rem; }
-        .query-input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-        .query-button { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem 1.5rem; color: white; cursor: pointer; }
-        .query-result { background: rgba(255, 255, 255, 0.02); border-radius: 1.5rem; padding: 1rem; max-height: 300px; overflow-y: auto; }
-        .query-item { display: flex; align-items: center; justify-content: space-between; padding: 0.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-        .query-item-qq { color: #818cf8; font-size: 0.8rem; }
-        .query-item-status { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 1rem; background: rgba(16, 185, 129, 0.1); color: #10b981; }
-        .query-item-status.pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
-        .top-hint { text-align: center; color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; margin-bottom: 1.2rem; padding: 0.5rem; background: rgba(129, 140, 248, 0.05); border-radius: 2rem; }
-        
-        .login-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(15px);
-            z-index: 10000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .login-card {
-            background: rgba(18, 22, 40, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(129, 140, 248, 0.3);
-            border-radius: 2rem;
-            padding: 2.5rem;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-        }
-        .login-icon { font-size: 3rem; color: #818cf8; margin-bottom: 1rem; }
-        .login-title { font-size: 1.5rem; font-weight: 700; color: #f0f2ff; }
-        .login-subtitle { font-size: 0.85rem; color: #9ca3af; margin-bottom: 1.5rem; }
-        .login-input { width: 100%; padding: 1rem; border-radius: 2rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #f0f2ff; font-size: 1rem; text-align: center; margin-bottom: 1rem; }
-        .login-input:focus { outline: none; border-color: #818cf8; }
-        .login-btn { width: 100%; background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem; color: white; font-size: 1rem; font-weight: 600; cursor: pointer; }
-        .login-btn.disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
-        .login-error { color: #ef4444; font-size: 0.8rem; margin-top: 0.5rem; }
-        
-        .search-highlight { background: rgba(129, 140, 248, 0.15); border-color: #818cf8; transform: scale(1.01); }
-        .disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
+        .agreement-modal.show .agreement-content, .thanks-modal.show .thanks-content { transform: translateY(0) scale(1); }
+        .agreement-header, .thanks-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(129, 140, 248, 0.3); padding-bottom: 1rem; }
+        .agreement-header i { font-size: 2rem; color: #818cf8; background: rgba(129, 140, 248, 0.15); padding: 0.6rem; border-radius: 1rem; }
+        .thanks-header i { font-size: 2rem; color: #fbbf24; background: rgba(251, 191, 36, 0.15); padding: 0.6rem; border-radius: 1rem; }
+        .agreement-header h3, .thanks-header h3 { font-size: 1.5rem; font-weight: 700; background: linear-gradient(135deg, #f0f2ff, #c7d2fe); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .agreement-body, .thanks-body { color: #d1d5db; font-size: 1rem; line-height: 1.8; margin: 1.5rem 0; text-align: center; }
+        .agreement-footer, .thanks-footer { display: flex; justify-content: center; margin-top: 1rem; }
+        .agreement-close { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem 2rem; color: white; font-weight: 600; cursor: pointer; min-width: 140px; }
+        .thanks-close { background: linear-gradient(135deg, #f59e0b, #d97706); border: none; border-radius: 2rem; padding: 0.8rem 2rem; color: white; font-weight: 600; cursor: pointer; min-width: 140px; }
+        
+        .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(129, 140, 248, 0.2); border-radius: 1.5rem; padding: 1.2rem; text-align: center; }
+        .stat-number { font-size: 2rem; font-weight: 700; color: #818cf8; }
+        .stat-label { font-size: 0.8rem; color: #9ca3af; }
+        .tab-container { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; border-bottom: 1px solid rgba(129, 140, 248, 0.2); padding-bottom: 0.5rem; flex-wrap: wrap; }
+        .tab-btn { background: transparent; border: none; color: #9ca3af; padding: 0.6rem 1.2rem; border-radius: 2rem; cursor: pointer; }
+        .tab-btn.active { background: rgba(129, 140, 248, 0.2); color: #818cf8; }
+        .review-item { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(129, 140, 248, 0.2); border-radius: 1rem; padding: 1rem; margin-bottom: 1rem; }
+        .review-content { background: rgba(0, 0, 0, 0.3); padding: 0.5rem; border-radius: 0.5rem; margin: 0.5rem 0; }
+        .review-time { color: #9ca3af; font-size: 0.8rem; margin: 0.5rem 0; }
+        .review-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+        .log-container { background: rgba(255, 255, 255, 0.02); border-radius: 1.5rem; padding: 1rem; max-height: 400px; overflow-y: auto; }
+        .log-item { padding: 0.8rem; border-bottom: 1px solid rgba(129, 140, 248, 0.1); font-size: 0.85rem; }
+        .log-time { color: #818cf8; font-size: 0.7rem; margin-right: 0.5rem; }
+        .log-content { color: #d1d5db; }
+        .account-list { max-height: 500px; overflow-y: auto; }
+        .account-item { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(129, 140, 248, 0.2); border-radius: 1rem; padding: 1rem; margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+        .account-qq { font-size: 1rem; font-weight: 600; color: #a5b4fc; }
+        .ban-btn, .unban-btn { border: none; border-radius: 1.5rem; padding: 0.5rem 1rem; color: white; font-size: 0.8rem; cursor: pointer; }
+        .ban-btn { background: #ef4444; }
+        .unban-btn { background: #10b981; }
+        .current-user-badge { background: rgba(129, 140, 248, 0.2); color: #818cf8; padding: 0.2rem 0.5rem; border-radius: 1rem; font-size: 0.7rem; margin-left: 0.5rem; }
+        .add-account-area { margin-top: 1.5rem; padding: 1rem; background: rgba(255, 255, 255, 0.02); border-radius: 1rem; }
+        .add-account-input-group { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+        .add-account-input { flex: 1; padding: 0.8rem; border-radius: 1.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(129, 140, 248, 0.2); color: #f0f2ff; }
+        .add-account-btn { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 1.5rem; padding: 0.8rem 1.5rem; color: white; cursor: pointer; }
         .delete-btn { background: #ef4444; color: white; border: none; border-radius: 1rem; padding: 0.3rem 0.8rem; font-size: 0.7rem; cursor: pointer; margin-left: 0.5rem; }
         .delete-btn:hover { background: #dc2626; }
         .loading-spinner { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; color: #818cf8; }
@@ -938,9 +642,9 @@
             .cloud-status { font-size: 0.6rem; padding: 4px 10px; }
             .copyright-modern { left: 180px; font-size: 0.6rem; }
             .logo-text h1 { font-size: 1.5rem; }
-            .logo-icon { width: 2.5rem; height: 2.5rem; font-size: 1.2rem; }
-            .admin-stats { grid-template-columns: 1fr; gap: 0.8rem; }
-            .tab-btn { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+            .admin-stats { grid-template-columns: 1fr; }
+            .login-card { padding: 1.5rem; }
+            .mode-btn { font-size: 0.75rem; }
         }
         @media (max-width: 480px) {
             .signature-grid { grid-template-columns: 1fr; }
@@ -979,14 +683,43 @@
         <i class="fas fa-shield-alt" style="color: #10b981; animation: pulse 2s infinite;"></i> 反作弊运行中
     </div>
     
+    <!-- 登录弹窗 - 带备用登录切换 -->
     <div class="login-modal" id="loginModal">
         <div class="login-card">
             <div class="login-icon"><i class="fab fa-qq"></i></div>
             <div class="login-title">QQ登录</div>
-            <div class="login-subtitle">请输入你的QQ号，后续将作为唯一标识</div>
-            <input type="text" class="login-input" id="loginQQ" placeholder="请输入QQ号" maxlength="20">
-            <button class="login-btn" id="loginBtn">登录 / 注册</button>
-            <div id="loginError" class="login-error"></div>
+            <div class="login-subtitle">选择登录方式</div>
+            
+            <!-- 登录模式切换 -->
+            <div class="login-mode-switch">
+                <button class="mode-btn active" data-mode="normal">
+                    <i class="fas fa-keyboard"></i> 普通登录
+                </button>
+                <button class="mode-btn" data-mode="backup">
+                    <i class="fas fa-shield-alt"></i> 备用登录
+                </button>
+            </div>
+            
+            <!-- 普通登录区域 -->
+            <div id="normalLoginArea" class="login-input-area">
+                <input type="text" class="login-input" id="loginQQ" placeholder="请输入QQ号" maxlength="20">
+                <button class="login-btn" id="loginBtn">登录 / 注册</button>
+                <div id="loginError" class="login-error"></div>
+            </div>
+            
+            <!-- 备用登录区域（初始隐藏） -->
+            <div id="backupLoginArea" class="login-input-area" style="display: none;">
+                <input type="text" class="login-input" id="backupQQ1" placeholder="第一次输入QQ号" maxlength="20">
+                <input type="text" class="login-input" id="backupQQ2" placeholder="第二次输入QQ号（确认）" maxlength="20" style="margin-top: 0.8rem;">
+                <div id="backupHint" class="backup-login-hint">
+                    <p><i class="fas fa-info-circle"></i> 备用登录说明：</p>
+                    <p>1. 两次输入相同的QQ号</p>
+                    <p>2. 输入完成后自动登录，无需点击按钮</p>
+                    <p>3. 适用于主登录按钮无法使用的情况</p>
+                </div>
+                <div id="backupStatus" class="backup-status"></div>
+                <div id="backupError" class="login-error"></div>
+            </div>
         </div>
     </div>
     
@@ -1032,12 +765,8 @@
     </div>
     
     <script>
-        // ==================== 完整的JavaScript代码（与之前相同，此处省略重复部分）====================
-        // 由于代码量较大，这里省略JavaScript部分，实际使用时需要包含完整的JS逻辑
-        // 为了保持完整性，以下是简化的脚本框架，实际功能与之前相同
-        
         (function() {
-            // Supabase配置
+            // ==================== Supabase配置 ====================
             const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
             const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1055,8 +784,10 @@
             let operationLogs = [];
             let currentTab = 'pending';
             let isSubmitting = false;
+            let backupLoginTimeout = null;
+            let currentLoginMode = 'normal';
             
-            // 加密函数
+            // ==================== 加密函数 ====================
             function encryptData(data) {
                 try { return CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString(); }
                 catch(e) { return data; }
@@ -1069,7 +800,7 @@
                 } catch(e) { return encryptedData; }
             }
             
-            // 本地存储管理
+            // ==================== 本地存储管理 ====================
             function loadLocalData() {
                 try {
                     const stored = localStorage.getItem('banned_qq_list_encrypted');
@@ -1128,7 +859,7 @@
                 return Array.from(set).sort();
             }
             
-            // UI辅助函数
+            // ==================== UI辅助函数 ====================
             function showToast(msg) {
                 const container = document.getElementById('toastContainer');
                 if (!container) return;
@@ -1179,7 +910,7 @@
                 document.body.removeChild(ta);
             }
             
-            // 数据同步
+            // ==================== 数据同步 ====================
             async function loadFromSupabase() {
                 try {
                     setCloudStatus('syncing', '加载数据...');
@@ -1250,7 +981,7 @@
                 }).subscribe();
             }
             
-            // 云端验证
+            // ==================== 云端验证 ====================
             async function verifyAdminCloud(username, password) {
                 try {
                     const { data, error } = await supabase.rpc('verify_admin', { p_username: username, p_password: password });
@@ -1260,7 +991,165 @@
                 } catch(e) { return { success: false, role: null, message: '网络错误' }; }
             }
             
-            // 搜索功能
+            // ==================== 执行登录 ====================
+            function performLogin(qq) {
+                if (isQQBanned(qq)) {
+                    showToast('该QQ已被封禁');
+                    return false;
+                }
+                currentUser = qq;
+                localStorage.setItem('user_qq_encrypted', encryptData(qq));
+                recordUserLogin(qq);
+                const mainApp = document.getElementById('mainApp');
+                const loginModal = document.getElementById('loginModal');
+                if (mainApp) mainApp.style.display = 'block';
+                if (loginModal) loginModal.style.display = 'none';
+                showToast(`欢迎回来，QQ: ${qq}`);
+                showSupernaturalInitial();
+                return true;
+            }
+            
+            // ==================== 普通登录 ====================
+            let isLoggingIn = false;
+            function handleNormalLogin() {
+                if (isLoggingIn) return;
+                isLoggingIn = true;
+                const btn = document.getElementById('loginBtn');
+                const input = document.getElementById('loginQQ');
+                const errorDiv = document.getElementById('loginError');
+                const originalText = btn ? btn.innerHTML : '登录';
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登录中...';
+                    btn.disabled = true;
+                    btn.classList.add('disabled');
+                }
+                const qq = input ? input.value.trim() : '';
+                if (!qq) { if (errorDiv) errorDiv.textContent = '请输入QQ号'; reset(); return; }
+                if (!/^\d+$/.test(qq)) { if (errorDiv) errorDiv.textContent = 'QQ号必须为数字'; reset(); return; }
+                if (qq.length < 5 || qq.length > 12) { if (errorDiv) errorDiv.textContent = '请输入正确的QQ号（5-12位）'; reset(); return; }
+                if (isQQBanned(qq)) { if (errorDiv) errorDiv.textContent = '该QQ已被封禁'; reset(); return; }
+                
+                performLogin(qq);
+                reset();
+                
+                function reset() {
+                    setTimeout(() => {
+                        if (btn) {
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                            btn.classList.remove('disabled');
+                        }
+                        isLoggingIn = false;
+                    }, 500);
+                }
+            }
+            
+            // ==================== 备用登录（双次输入自动登录） ====================
+            function setupBackupLogin() {
+                const input1 = document.getElementById('backupQQ1');
+                const input2 = document.getElementById('backupQQ2');
+                const backupStatus = document.getElementById('backupStatus');
+                const backupError = document.getElementById('backupError');
+                
+                if (!input1 || !input2) return;
+                
+                function checkAndLogin() {
+                    const qq1 = input1.value.trim();
+                    const qq2 = input2.value.trim();
+                    
+                    if (!qq1 && !qq2) {
+                        if (backupStatus) backupStatus.innerHTML = '';
+                        if (backupError) backupError.textContent = '';
+                        return;
+                    }
+                    
+                    if (!qq1) {
+                        if (backupStatus) backupStatus.innerHTML = '<i class="fas fa-edit"></i> 请先输入QQ号';
+                        return;
+                    }
+                    
+                    if (!qq2) {
+                        if (backupStatus) backupStatus.innerHTML = '<i class="fas fa-edit"></i> 请再次输入确认';
+                        return;
+                    }
+                    
+                    if (qq1 !== qq2) {
+                        if (backupStatus) backupStatus.innerHTML = '<i class="fas fa-times-circle" style="color:#ef4444;"></i> 两次输入的QQ号不一致';
+                        if (backupError) backupError.textContent = '两次输入的QQ号不一致';
+                        return;
+                    }
+                    
+                    if (!/^\d+$/.test(qq1)) {
+                        if (backupStatus) backupStatus.innerHTML = '<i class="fas fa-times-circle" style="color:#ef4444;"></i> QQ号必须为数字';
+                        if (backupError) backupError.textContent = 'QQ号必须为数字';
+                        return;
+                    }
+                    
+                    if (qq1.length < 5 || qq1.length > 12) {
+                        if (backupStatus) backupStatus.innerHTML = '<i class="fas fa-times-circle" style="color:#ef4444;"></i> QQ号长度不正确（5-12位）';
+                        if (backupError) backupError.textContent = 'QQ号长度不正确（5-12位）';
+                        return;
+                    }
+                    
+                    if (isQQBanned(qq1)) {
+                        if (backupStatus) backupStatus.innerHTML = '<i class="fas fa-ban" style="color:#ef4444;"></i> 该QQ已被封禁';
+                        if (backupError) backupError.textContent = '该QQ已被封禁';
+                        return;
+                    }
+                    
+                    // 验证通过，自动登录
+                    if (backupStatus) backupStatus.innerHTML = '<i class="fas fa-check-circle" style="color:#10b981;"></i> 验证通过，正在登录...';
+                    setTimeout(() => {
+                        performLogin(qq1);
+                    }, 300);
+                }
+                
+                // 监听输入事件，自动检测
+                input1.addEventListener('input', function() {
+                    clearTimeout(backupLoginTimeout);
+                    backupLoginTimeout = setTimeout(checkAndLogin, 500);
+                });
+                
+                input2.addEventListener('input', function() {
+                    clearTimeout(backupLoginTimeout);
+                    backupLoginTimeout = setTimeout(checkAndLogin, 500);
+                });
+            }
+            
+            // ==================== 登录模式切换 ====================
+            function switchLoginMode(mode) {
+                currentLoginMode = mode;
+                const normalArea = document.getElementById('normalLoginArea');
+                const backupArea = document.getElementById('backupLoginArea');
+                const modeBtns = document.querySelectorAll('.mode-btn');
+                
+                modeBtns.forEach(btn => {
+                    if (btn.dataset.mode === mode) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+                
+                if (mode === 'normal') {
+                    if (normalArea) normalArea.style.display = 'block';
+                    if (backupArea) backupArea.style.display = 'none';
+                } else {
+                    if (normalArea) normalArea.style.display = 'none';
+                    if (backupArea) backupArea.style.display = 'block';
+                    // 重置备用登录输入框状态
+                    const input1 = document.getElementById('backupQQ1');
+                    const input2 = document.getElementById('backupQQ2');
+                    const backupStatus = document.getElementById('backupStatus');
+                    const backupError = document.getElementById('backupError');
+                    if (input1) input1.value = '';
+                    if (input2) input2.value = '';
+                    if (backupStatus) backupStatus.innerHTML = '';
+                    if (backupError) backupError.textContent = '';
+                }
+            }
+            
+            // ==================== 搜索功能 ====================
             function performGlobalSearch() {
                 const searchInput = document.getElementById('searchInput');
                 const innerDynamic = document.getElementById('innerDynamic');
@@ -1290,7 +1179,7 @@
                 }
             }
             
-            // 页面导航
+            // ==================== 页面导航 ====================
             function resetAll() {
                 const innerDynamic = document.getElementById('innerDynamic');
                 const backContainer = document.getElementById('backButtonContainer');
@@ -1321,7 +1210,7 @@
                 }
             }
             
-            // 主页
+            // ==================== 主页 ====================
             function showSupernaturalInitial(pushToHistory = true) {
                 resetAll();
                 if (pushToHistory) historyStack.push('main');
@@ -1349,7 +1238,7 @@
                 setTimeout(performGlobalSearch, 100);
             }
             
-            // 签名页面
+            // ==================== 签名页面 ====================
             async function showSignaturePage(pushToHistory = true) {
                 resetAll();
                 if (pushToHistory) historyStack.push('signature');
@@ -1382,7 +1271,7 @@
                 setTimeout(performGlobalSearch, 100);
             }
             
-            // 提交页面
+            // ==================== 提交页面 ====================
             function showSubmitSignature(pushToHistory = true) {
                 resetAll();
                 if (pushToHistory) historyStack.push('submit');
@@ -1492,7 +1381,7 @@
                 refreshBackButton();
             }
             
-            // 管理员面板
+            // ==================== 管理员面板 ====================
             async function showAdminPanel() {
                 await loadFromSupabase();
                 const container = document.createElement('div');
@@ -1536,7 +1425,7 @@
                     else pendingSignatures.forEach(sig => {
                         let preview = sig.submit_type === 'signature' ? convertToHtml(sig.content) : (sig.submit_type === 'report' ? '倒卖举报' : 'Bug反馈');
                         html += `<div class="review-item">
-                            <div><span class="review-platform">${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:</span> ${sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`)}</div>
+                            <div><span style="color:#818cf8;">${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:</span> ${sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`)}</div>
                             <div class="review-content">${preview}</div>
                             <div class="review-time">提交: ${new Date(sig.submit_time).toLocaleString()}</div>
                             <div class="review-actions">
@@ -1553,7 +1442,7 @@
                     if (!items.length) html += '<div style="text-align:center;padding:2rem;">暂无已通过签名</div>';
                     else items.forEach(sig => {
                         html += `<div class="review-item">
-                            <div><span class="review-platform">${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:</span> ${sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`)}</div>
+                            <div><span style="color:#818cf8;">${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:</span> ${sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`)}</div>
                             <div class="review-content">${convertToHtml(sig.content)}</div>
                             ${currentAdminLevel === 'super' ? `<div style="margin-top:0.5rem;"><button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})">删除</button></div>` : ''}
                         </div>`;
@@ -1676,7 +1565,7 @@
                 refreshBackButton();
             }
             
-            // 登录相关
+            // ==================== 登录状态检查 ====================
             function checkLogin() {
                 const saved = localStorage.getItem('user_qq_encrypted');
                 if (saved) {
@@ -1699,49 +1588,7 @@
                 return false;
             }
             
-            let isLoggingIn = false;
-            function handleLogin() {
-                if (isLoggingIn) return;
-                isLoggingIn = true;
-                const btn = document.getElementById('loginBtn');
-                const input = document.getElementById('loginQQ');
-                const errorDiv = document.getElementById('loginError');
-                const originalText = btn ? btn.innerHTML : '登录';
-                if (btn) {
-                    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登录中...';
-                    btn.disabled = true;
-                    btn.classList.add('disabled');
-                }
-                const qq = input ? input.value.trim() : '';
-                if (!qq) { if (errorDiv) errorDiv.textContent = '请输入QQ号'; reset(); return; }
-                if (!/^\d+$/.test(qq)) { if (errorDiv) errorDiv.textContent = 'QQ号必须为数字'; reset(); return; }
-                if (qq.length < 5 || qq.length > 12) { if (errorDiv) errorDiv.textContent = '请输入正确的QQ号（5-12位）'; reset(); return; }
-                if (isQQBanned(qq)) { if (errorDiv) errorDiv.textContent = '该QQ已被封禁'; reset(); return; }
-                
-                currentUser = qq;
-                localStorage.setItem('user_qq_encrypted', encryptData(qq));
-                recordUserLogin(qq);
-                const mainApp = document.getElementById('mainApp');
-                const loginModal = document.getElementById('loginModal');
-                if (mainApp) mainApp.style.display = 'block';
-                if (loginModal) loginModal.style.display = 'none';
-                showToast(`欢迎回来，QQ: ${qq}`);
-                showSupernaturalInitial();
-                reset();
-                
-                function reset() {
-                    setTimeout(() => {
-                        if (btn) {
-                            btn.innerHTML = originalText;
-                            btn.disabled = false;
-                            btn.classList.remove('disabled');
-                        }
-                        isLoggingIn = false;
-                    }, 500);
-                }
-            }
-            
-            // 模态框事件绑定
+            // ==================== 模态框事件绑定 ====================
             function bindModalEvents() {
                 const agreementBtn = document.getElementById('agreementBtn');
                 const agreementModal = document.getElementById('agreementModal');
@@ -1758,20 +1605,36 @@
                 if (thanksModal) thanksModal.onclick = (e) => { if (e.target === thanksModal) thanksModal.classList.remove('show'); };
             }
             
-            // 绑定事件
+            // ==================== 绑定事件 ====================
             function bindEvents() {
+                // 普通登录按钮
                 const loginBtn = document.getElementById('loginBtn');
+                if (loginBtn) loginBtn.addEventListener('click', handleNormalLogin);
+                
+                // 普通登录回车
                 const loginInput = document.getElementById('loginQQ');
-                if (loginBtn) loginBtn.addEventListener('click', handleLogin);
                 if (loginInput) loginInput.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
                         e.preventDefault();
-                        handleLogin();
+                        handleNormalLogin();
                     }
                 });
                 
+                // 登录模式切换
+                const modeBtns = document.querySelectorAll('.mode-btn');
+                modeBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        switchLoginMode(btn.dataset.mode);
+                    });
+                });
+                
+                // 备用登录设置
+                setupBackupLogin();
+                
+                // 模态框事件
                 bindModalEvents();
                 
+                // 其他按钮
                 const supernaturalBtn = document.getElementById('supernaturalBtn');
                 const submitBtn = document.getElementById('submitSignatureBtn');
                 const adminBtn = document.getElementById('adminBtn');
@@ -1783,6 +1646,7 @@
                 if (searchInput) searchInput.oninput = () => { clearTimeout(window.searchTimeout); window.searchTimeout = setTimeout(performGlobalSearch, 300); };
             }
             
+            // ==================== 初始化 ====================
             function init() {
                 loadLocalData();
                 bindEvents();
@@ -1792,6 +1656,8 @@
                     const loginModal = document.getElementById('loginModal');
                     if (mainApp) mainApp.style.display = 'none';
                     if (loginModal) loginModal.style.display = 'flex';
+                    // 默认显示普通登录模式
+                    switchLoginMode('normal');
                 } else {
                     setCloudStatus('syncing', '连接数据库...');
                     loadFromSupabase().then(() => {
