@@ -208,14 +208,11 @@
                 return false;
             });
             
+            // 更新反作弊状态显示（不显示运行时间）
             setInterval(function() {
                 const statusElement = document.getElementById('antiCheatStatus');
                 if (statusElement && window.antiCheatStatus) {
-                    const runtime = Math.floor((Date.now() - window.antiCheatStatus.startTime) / 1000);
-                    const minutes = Math.floor(runtime / 60);
-                    const seconds = runtime % 60;
-                    const timeStr = minutes > 0 ? `${minutes}分${seconds}秒` : `${seconds}秒`;
-                    statusElement.innerHTML = `<i class="fas fa-shield-alt" style="color: #10b981; animation: pulse 2s infinite;"></i> 反作弊运行中 | 已运行 ${timeStr}`;
+                    statusElement.innerHTML = `<i class="fas fa-shield-alt" style="color: #10b981; animation: pulse 2s infinite;"></i> 反作弊运行中`;
                 }
             }, 1000);
             
@@ -269,6 +266,7 @@
             padding: 2.5rem;
         }
         
+        /* 反作弊状态栏 - 不显示运行时间 */
         .anti-cheat-bar {
             position: fixed;
             bottom: 20px;
@@ -311,19 +309,60 @@
             pointer-events: none;
         }
         
+        /* 版权信息 - 修复颜色 */
         .copyright-modern {
             position: fixed;
             bottom: 20px;
             left: 220px;
-            color: rgba(156, 163, 175, 0.5);
+            color: rgba(156, 163, 175, 0.7);
             font-size: 0.7rem;
             z-index: 100;
             backdrop-filter: blur(4px);
             padding: 4px 12px;
             border-radius: 30px;
             background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(129, 140, 248, 0.2);
             pointer-events: none;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+        
+        /* Logo区域 - 修复颜色 */
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .logo-icon {
+            width: 3.5rem;
+            height: 3.5rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            border-radius: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.8rem;
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3);
+        }
+        
+        .logo-text h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #f0f2ff, #c7d2fe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1.2;
+        }
+        
+        .logo-text .sub {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: 400;
+            letter-spacing: 0.5px;
         }
         
         /* ==================== 模态框样式 ==================== */
@@ -531,304 +570,275 @@
             cursor: default;
         }
         
-        /* ==================== 提交投稿页面样式 ==================== */
-        .submit-form {
-            background: rgba(18, 22, 40, 0.6);
-            border-radius: 2rem;
-            padding: 2rem;
-            border: 1px solid rgba(129, 140, 248, 0.3);
-            backdrop-filter: blur(10px);
-            max-width: 600px;
-            margin: 0 auto;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        .year-badge i {
+            color: #818cf8;
         }
         
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-label {
-            display: block;
-            color: #c7d2fe;
-            margin-bottom: 0.5rem;
-            font-size: 0.95rem;
-            font-weight: 500;
-            letter-spacing: 0.3px;
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 1rem;
-            border-radius: 1.5rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(129, 140, 248, 0.3);
-            color: #f0f2ff;
-            font-size: 0.95rem;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            transition: all 0.2s;
-        }
-        
-        .form-input:focus {
-            outline: none;
-            border-color: #818cf8;
-            background: rgba(129, 140, 248, 0.1);
-            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
-        }
-        
-        .form-input::placeholder {
-            color: #6b7280;
-        }
-        
-        .form-textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-        
-        /* 类型选择器样式 */
-        .type-selector, .platform-selector {
+        /* ==================== 管理员面板样式修复 ==================== */
+        .admin-stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 0.8rem;
-            margin-bottom: 1.5rem;
+            gap: 1rem;
+            margin-bottom: 2rem;
         }
         
-        .type-option, .platform-option {
-            background: rgba(255, 255, 255, 0.03);
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(129, 140, 248, 0.2);
-            border-radius: 1rem;
-            padding: 1rem 0.5rem;
+            border-radius: 1.5rem;
+            padding: 1.2rem;
             text-align: center;
-            cursor: pointer;
             transition: all 0.2s;
         }
         
-        .type-option:hover, .platform-option:hover {
+        .stat-card:hover {
             background: rgba(129, 140, 248, 0.1);
-            border-color: rgba(129, 140, 248, 0.5);
+            border-color: rgba(129, 140, 248, 0.4);
             transform: translateY(-2px);
         }
         
-        .type-option.selected, .platform-option.selected {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            border-color: transparent;
-            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
-        }
-        
-        .type-option.selected .type-icon, .type-option.selected .type-name,
-        .platform-option.selected .platform-icon, .platform-option.selected .platform-name {
-            color: white;
-        }
-        
-        .type-icon, .platform-icon {
-            font-size: 1.5rem;
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
             color: #818cf8;
             margin-bottom: 0.3rem;
         }
         
-        .platform-icon {
-            font-size: 1.2rem;
-        }
-        
-        .type-name, .platform-name {
-            font-size: 0.9rem;
-            color: #d1d5db;
-        }
-        
-        .type-desc {
-            font-size: 0.7rem;
+        .stat-label {
+            font-size: 0.8rem;
             color: #9ca3af;
-            margin-top: 0.2rem;
         }
         
-        /* 图片上传区域 */
-        .image-upload-area {
-            border: 2px dashed rgba(129, 140, 248, 0.4);
-            border-radius: 1.5rem;
-            padding: 1.5rem;
-            text-align: center;
+        .tab-container {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(129, 140, 248, 0.2);
+            padding-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #9ca3af;
+            padding: 0.6rem 1.2rem;
+            border-radius: 2rem;
             cursor: pointer;
             transition: all 0.2s;
-            background: rgba(129, 140, 248, 0.05);
-        }
-        
-        .image-upload-area:hover {
-            border-color: #818cf8;
-            background: rgba(129, 140, 248, 0.1);
-            transform: scale(1.01);
-        }
-        
-        .image-upload-area i {
-            font-size: 2rem;
-            color: #818cf8;
-            margin-bottom: 0.5rem;
-        }
-        
-        .upload-text {
-            color: #d1d5db;
             font-size: 0.9rem;
         }
         
-        .upload-hint {
+        .tab-btn:hover {
+            background: rgba(129, 140, 248, 0.1);
+            color: #c7d2fe;
+        }
+        
+        .tab-btn.active {
+            background: rgba(129, 140, 248, 0.2);
+            color: #818cf8;
+            border: 1px solid rgba(129, 140, 248, 0.3);
+        }
+        
+        /* 待审核/已通过列表样式 */
+        .review-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .review-item:hover {
+            background: rgba(129, 140, 248, 0.05);
+            border-color: rgba(129, 140, 248, 0.4);
+        }
+        
+        .review-platform {
+            color: #818cf8;
+            font-weight: 500;
+        }
+        
+        .review-content {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            margin: 0.5rem 0;
+            color: #e5e7eb;
+        }
+        
+        .review-time {
             color: #9ca3af;
+            font-size: 0.8rem;
+            margin: 0.5rem 0;
+        }
+        
+        .review-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        /* 操作日志样式 */
+        .log-container {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 1.5rem;
+            padding: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .log-item {
+            padding: 0.8rem;
+            border-bottom: 1px solid rgba(129, 140, 248, 0.1);
+            font-size: 0.85rem;
+        }
+        
+        .log-item:last-child {
+            border-bottom: none;
+        }
+        
+        .log-time {
+            color: #818cf8;
+            font-size: 0.7rem;
+            margin-right: 0.5rem;
+        }
+        
+        .log-content {
+            color: #d1d5db;
+        }
+        
+        /* 账号管理样式 */
+        .account-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .account-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            border-radius: 1rem;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .account-item:hover {
+            background: rgba(129, 140, 248, 0.05);
+            border-color: rgba(129, 140, 248, 0.4);
+        }
+        
+        .account-qq {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #a5b4fc;
+            font-family: monospace;
+        }
+        
+        .account-status {
             font-size: 0.7rem;
             margin-top: 0.3rem;
         }
         
-        .image-preview {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
-            margin-top: 1rem;
+        .status-banned {
+            color: #ef4444;
         }
         
-        .preview-item {
-            position: relative;
-            aspect-ratio: 1;
-            border-radius: 0.8rem;
-            overflow: hidden;
-            border: 1px solid rgba(129, 140, 248, 0.3);
-        }
-        
-        .preview-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        
-        .preview-item .remove-image {
-            position: absolute;
-            top: 0.2rem;
-            right: 0.2rem;
-            background: rgba(239, 68, 68, 0.9);
-            color: white;
-            width: 1.2rem;
-            height: 1.2rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.6rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .preview-item .remove-image:hover {
-            background: #dc2626;
-            transform: scale(1.1);
-        }
-        
-        /* 提交按钮 */
-        .submit-button {
-            background: linear-gradient(135deg, #10b981, #059669);
-            border: none;
-            border-radius: 2rem;
-            padding: 1rem;
-            color: white;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            width: 100%;
-            margin-top: 0.5rem;
-        }
-        
-        .submit-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
-        }
-        
-        .submit-button.disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-            pointer-events: none;
-        }
-        
-        /* 查询区域 */
-        .query-section {
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(129, 140, 248, 0.2);
-        }
-        
-        .query-input-group {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .query-button {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
-            border: none;
-            border-radius: 2rem;
-            padding: 0.8rem 1.5rem;
-            color: white;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
-        
-        .query-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px -8px #4f46e5;
-        }
-        
-        .query-result {
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 1.5rem;
-            padding: 1rem;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
-        .query-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0.8rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        
-        .query-item:last-child {
-            border-bottom: none;
-        }
-        
-        .query-item-qq {
-            color: #818cf8;
-            font-size: 0.8rem;
-        }
-        
-        .query-item-status {
-            font-size: 0.7rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 1rem;
-            background: rgba(16, 185, 129, 0.1);
+        .status-normal {
             color: #10b981;
         }
         
-        .query-item-status.pending {
-            background: rgba(245, 158, 11, 0.1);
-            color: #f59e0b;
+        .ban-btn, .unban-btn {
+            border: none;
+            border-radius: 1.5rem;
+            padding: 0.5rem 1rem;
+            color: white;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
         }
         
-        .submit-info {
-            text-align: center;
-            color: #9ca3af;
-            font-size: 0.9rem;
-            margin-top: 1rem;
-            padding: 0.5rem;
-            background: rgba(129, 140, 248, 0.05);
+        .ban-btn {
+            background: #ef4444;
+        }
+        
+        .ban-btn:hover {
+            background: #dc2626;
+            transform: scale(1.02);
+        }
+        
+        .unban-btn {
+            background: #10b981;
+        }
+        
+        .unban-btn:hover {
+            background: #059669;
+            transform: scale(1.02);
+        }
+        
+        .current-user-badge {
+            background: rgba(129, 140, 248, 0.2);
+            color: #818cf8;
+            padding: 0.2rem 0.5rem;
+            border-radius: 1rem;
+            font-size: 0.7rem;
+            margin-left: 0.5rem;
+        }
+        
+        /* 添加账号区域 */
+        .add-account-area {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(129, 140, 248, 0.2);
             border-radius: 1rem;
         }
         
-        /* 其余样式 */
+        .add-account-input-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .add-account-input {
+            flex: 1;
+            padding: 0.8rem;
+            border-radius: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(129, 140, 248, 0.2);
+            color: #f0f2ff;
+        }
+        
+        .add-account-input:focus {
+            outline: none;
+            border-color: #818cf8;
+        }
+        
+        .add-account-btn {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none;
+            border-radius: 1.5rem;
+            padding: 0.8rem 1.5rem;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .add-account-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+        
+        /* 其他样式 */
         .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1.5rem; }
-        .logo-area { display: flex; align-items: center; gap: 1rem; }
-        .logo-icon { width: 3.5rem; height: 3.5rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 1.2rem; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.8rem; }
-        .logo-text h1 { font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, #f0f2ff, #c7d2fe); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .logo-text .sub { font-size: 0.85rem; color: #94a3b8; }
         .header-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
         .search-wrapper { position: relative; width: 300px; }
         .search-wrapper i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #6b7280; }
@@ -856,6 +866,25 @@
         .signature-text { font-size: 0.8rem; line-height: 1.4; margin-bottom: 0.3rem; }
         .signature-qq { color: rgba(255, 255, 255, 0.5); font-size: 0.6rem; }
         .copy-hint { margin-top: 0.2rem; font-size: 0.5rem; color: #9ca3af; opacity: 0.4; display: flex; align-items: center; justify-content: center; gap: 0.2rem; }
+        .submit-form { background: rgba(255, 255, 255, 0.03); border-radius: 2rem; padding: 2rem; border: 1px solid rgba(129, 140, 248, 0.2); max-width: 600px; margin: 0 auto; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; color: #d1d5db; margin-bottom: 0.5rem; }
+        .form-input { width: 100%; padding: 1rem; border-radius: 1.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #f0f2ff; }
+        .form-input:focus { outline: none; border-color: #818cf8; }
+        .submit-button { background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 2rem; padding: 1rem; color: white; font-weight: 600; cursor: pointer; width: 100%; }
+        .submit-button.disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
+        .type-selector, .platform-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-bottom: 1.5rem; }
+        .type-option, .platform-option { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 1rem; padding: 0.8rem; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .type-option.selected, .platform-option.selected { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+        .type-icon { font-size: 1.5rem; color: #818cf8; margin-bottom: 0.3rem; }
+        .query-input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .query-button { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 2rem; padding: 0.8rem 1.5rem; color: white; cursor: pointer; }
+        .query-result { background: rgba(255, 255, 255, 0.02); border-radius: 1.5rem; padding: 1rem; max-height: 300px; overflow-y: auto; }
+        .query-item { display: flex; align-items: center; justify-content: space-between; padding: 0.8rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .query-item-qq { color: #818cf8; font-size: 0.8rem; }
+        .query-item-status { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 1rem; background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .query-item-status.pending { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .top-hint { text-align: center; color: rgba(255, 255, 255, 0.6); font-size: 0.9rem; margin-bottom: 1.2rem; padding: 0.5rem; background: rgba(129, 140, 248, 0.05); border-radius: 2rem; }
         
         .login-modal {
             position: fixed;
@@ -892,38 +921,12 @@
         .search-highlight { background: rgba(129, 140, 248, 0.15); border-color: #818cf8; transform: scale(1.01); }
         .disabled { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
         .delete-btn { background: #ef4444; color: white; border: none; border-radius: 1rem; padding: 0.3rem 0.8rem; font-size: 0.7rem; cursor: pointer; margin-left: 0.5rem; }
-        .admin-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem; }
-        .stat-card { background: rgba(255, 255, 255, 0.03); border-radius: 1.5rem; padding: 1.2rem; text-align: center; }
-        .stat-number { font-size: 2rem; font-weight: 700; color: #818cf8; }
-        .tab-container { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .tab-btn { background: transparent; border: none; color: #9ca3af; padding: 0.6rem 1.2rem; border-radius: 2rem; cursor: pointer; }
-        .tab-btn.active { background: rgba(129, 140, 248, 0.1); color: #818cf8; }
+        .delete-btn:hover { background: #dc2626; }
         .loading-spinner { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; color: #818cf8; }
         .spinner { width: 50px; height: 50px; border: 3px solid rgba(129, 140, 248, 0.3); border-radius: 50%; border-top-color: #818cf8; animation: spin 1s linear infinite; margin-bottom: 1rem; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .copy-toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(16, 185, 129, 0.9); color: white; padding: 0.8rem 2rem; border-radius: 2rem; z-index: 1000; animation: fadeOut 2s ease forwards; }
         @keyframes fadeOut { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
-        .account-list { max-height: 500px; overflow-y: auto; }
-        .account-item { background: rgba(255, 255, 255, 0.03); border-radius: 1rem; padding: 1rem; margin-bottom: 0.8rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
-        .account-qq { font-size: 1rem; font-weight: 600; color: #a5b4fc; }
-        .ban-btn, .unban-btn { border: none; border-radius: 1.5rem; padding: 0.5rem 1rem; color: white; font-size: 0.8rem; cursor: pointer; }
-        .ban-btn { background: #ef4444; }
-        .unban-btn { background: #10b981; }
-        .current-user-badge { background: rgba(129, 140, 248, 0.2); color: #818cf8; padding: 0.2rem 0.5rem; border-radius: 1rem; font-size: 0.7rem; margin-left: 0.5rem; }
-        .add-account-area { margin-top: 1.5rem; padding: 1rem; background: rgba(255, 255, 255, 0.02); border-radius: 1rem; }
-        .add-account-input-group { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
-        .add-account-input { flex: 1; padding: 0.8rem; border-radius: 1.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #f0f2ff; }
-        .add-account-btn { background: linear-gradient(135deg, #4f46e5, #7c3aed); border: none; border-radius: 1.5rem; padding: 0.8rem 1.5rem; color: white; cursor: pointer; }
-        
-        .top-hint {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 0.9rem;
-            margin-bottom: 1.2rem;
-            padding: 0.5rem;
-            background: rgba(129, 140, 248, 0.05);
-            border-radius: 2rem;
-        }
         
         @media (max-width: 768px) {
             body { padding: 0.8rem; }
@@ -934,14 +937,17 @@
             .anti-cheat-bar { font-size: 0.65rem; padding: 5px 12px; }
             .cloud-status { font-size: 0.6rem; padding: 4px 10px; }
             .copyright-modern { left: 180px; font-size: 0.6rem; }
-            .submit-form { padding: 1.2rem; }
+            .logo-text h1 { font-size: 1.5rem; }
+            .logo-icon { width: 2.5rem; height: 2.5rem; font-size: 1.2rem; }
+            .admin-stats { grid-template-columns: 1fr; gap: 0.8rem; }
+            .tab-btn { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
         }
         @media (max-width: 480px) {
             .signature-grid { grid-template-columns: 1fr; }
             .anti-cheat-bar { font-size: 0.55rem; padding: 4px 10px; left: 12px; bottom: 12px; }
             .cloud-status { font-size: 0.5rem; padding: 3px 8px; right: 12px; bottom: 12px; }
             .copyright-modern { left: 150px; font-size: 0.5rem; }
-            .submit-form { padding: 1rem; }
+            .logo-text h1 { font-size: 1.2rem; }
         }
     </style>
 </head>
@@ -970,7 +976,7 @@
     </div>
     
     <div class="anti-cheat-bar" id="antiCheatStatus">
-        <i class="fas fa-shield-alt" style="color: #10b981; animation: pulse 2s infinite;"></i> 反作弊运行中 | 初始化...
+        <i class="fas fa-shield-alt" style="color: #10b981; animation: pulse 2s infinite;"></i> 反作弊运行中
     </div>
     
     <div class="login-modal" id="loginModal">
@@ -1026,8 +1032,12 @@
     </div>
     
     <script>
+        // ==================== 完整的JavaScript代码（与之前相同，此处省略重复部分）====================
+        // 由于代码量较大，这里省略JavaScript部分，实际使用时需要包含完整的JS逻辑
+        // 为了保持完整性，以下是简化的脚本框架，实际功能与之前相同
+        
         (function() {
-            // ==================== 全局变量 ====================
+            // Supabase配置
             const SUPABASE_URL = 'https://ssevtpugvqvhtusjqpcg.supabase.co';
             const SUPABASE_KEY = 'sb_publishable_kCaFQB5lhmOSkLtdSSuE_w_DRQo9Vdj';
             const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1046,7 +1056,7 @@
             let currentTab = 'pending';
             let isSubmitting = false;
             
-            // ==================== 加密函数 ====================
+            // 加密函数
             function encryptData(data) {
                 try { return CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString(); }
                 catch(e) { return data; }
@@ -1059,7 +1069,7 @@
                 } catch(e) { return encryptedData; }
             }
             
-            // ==================== 本地存储管理 ====================
+            // 本地存储管理
             function loadLocalData() {
                 try {
                     const stored = localStorage.getItem('banned_qq_list_encrypted');
@@ -1118,7 +1128,7 @@
                 return Array.from(set).sort();
             }
             
-            // ==================== UI辅助函数 ====================
+            // UI辅助函数
             function showToast(msg) {
                 const container = document.getElementById('toastContainer');
                 if (!container) return;
@@ -1169,7 +1179,7 @@
                 document.body.removeChild(ta);
             }
             
-            // ==================== 数据同步 ====================
+            // 数据同步
             async function loadFromSupabase() {
                 try {
                     setCloudStatus('syncing', '加载数据...');
@@ -1240,7 +1250,7 @@
                 }).subscribe();
             }
             
-            // ==================== 云端验证 ====================
+            // 云端验证
             async function verifyAdminCloud(username, password) {
                 try {
                     const { data, error } = await supabase.rpc('verify_admin', { p_username: username, p_password: password });
@@ -1250,7 +1260,7 @@
                 } catch(e) { return { success: false, role: null, message: '网络错误' }; }
             }
             
-            // ==================== 搜索功能 ====================
+            // 搜索功能
             function performGlobalSearch() {
                 const searchInput = document.getElementById('searchInput');
                 const innerDynamic = document.getElementById('innerDynamic');
@@ -1280,7 +1290,7 @@
                 }
             }
             
-            // ==================== 页面导航 ====================
+            // 页面导航
             function resetAll() {
                 const innerDynamic = document.getElementById('innerDynamic');
                 const backContainer = document.getElementById('backButtonContainer');
@@ -1311,7 +1321,7 @@
                 }
             }
             
-            // ==================== 主页 ====================
+            // 主页
             function showSupernaturalInitial(pushToHistory = true) {
                 resetAll();
                 if (pushToHistory) historyStack.push('main');
@@ -1339,7 +1349,7 @@
                 setTimeout(performGlobalSearch, 100);
             }
             
-            // ==================== 签名页面 ====================
+            // 签名页面
             async function showSignaturePage(pushToHistory = true) {
                 resetAll();
                 if (pushToHistory) historyStack.push('signature');
@@ -1372,7 +1382,7 @@
                 setTimeout(performGlobalSearch, 100);
             }
             
-            // ==================== 提交页面 ====================
+            // 提交页面
             function showSubmitSignature(pushToHistory = true) {
                 resetAll();
                 if (pushToHistory) historyStack.push('submit');
@@ -1482,7 +1492,7 @@
                 refreshBackButton();
             }
             
-            // ==================== 管理员面板 ====================
+            // 管理员面板
             async function showAdminPanel() {
                 await loadFromSupabase();
                 const container = document.createElement('div');
@@ -1525,14 +1535,16 @@
                     if (!pendingSignatures.length) html += '<div style="text-align:center;padding:2rem;">暂无待审核内容</div>';
                     else pendingSignatures.forEach(sig => {
                         let preview = sig.submit_type === 'signature' ? convertToHtml(sig.content) : (sig.submit_type === 'report' ? '倒卖举报' : 'Bug反馈');
-                        html += `<div style="background:rgba(255,255,255,0.03);border-radius:1rem;padding:1rem;margin-bottom:1rem;">
-                            <div><span style="color:#818cf8;">${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:</span> ${sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`)}</div>
-                            <div style="background:rgba(0,0,0,0.2);padding:0.5rem;border-radius:0.5rem;margin:0.5rem 0;">${preview}</div>
-                            <div>提交: ${new Date(sig.submit_time).toLocaleString()}</div>
-                            <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+                        html += `<div class="review-item">
+                            <div><span class="review-platform">${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:</span> ${sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`)}</div>
+                            <div class="review-content">${preview}</div>
+                            <div class="review-time">提交: ${new Date(sig.submit_time).toLocaleString()}</div>
+                            <div class="review-actions">
                                 <button class="query-button" style="background:#10b981;" onclick="window.approveSignature(${sig.id})">通过</button>
                                 <button class="query-button" style="background:#ef4444;" onclick="window.rejectSignature(${sig.id})">拒绝</button>
-                            </div></div>`;
+                                ${currentAdminLevel === 'super' ? `<button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})">删除</button>` : ''}
+                            </div>
+                        </div>`;
                     });
                     contentDiv.innerHTML = html;
                 } else if (currentTab === 'approved') {
@@ -1540,9 +1552,10 @@
                     const items = approvedSignatures.filter(s => s.submit_type === 'signature');
                     if (!items.length) html += '<div style="text-align:center;padding:2rem;">暂无已通过签名</div>';
                     else items.forEach(sig => {
-                        html += `<div style="background:rgba(255,255,255,0.03);border-radius:1rem;padding:1rem;margin-bottom:1rem;">
-                            <div><span style="color:#818cf8;">${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:</span> ${sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`)}</div>
-                            <div style="background:rgba(0,0,0,0.2);padding:0.5rem;border-radius:0.5rem;">${convertToHtml(sig.content)}</div>
+                        html += `<div class="review-item">
+                            <div><span class="review-platform">${sig.platform === 'qq' ? 'QQ' : (sig.platform === 'douyin' ? 'dy' : 'ks')}:</span> ${sig.platform === 'qq' ? `QQ：${sig.qq}` : (sig.platform === 'douyin' ? `dy：${sig.qq}` : `ks：${sig.qq}`)}</div>
+                            <div class="review-content">${convertToHtml(sig.content)}</div>
+                            ${currentAdminLevel === 'super' ? `<div style="margin-top:0.5rem;"><button class="delete-btn" onclick="window.deleteAnyItem(${sig.id})">删除</button></div>` : ''}
                         </div>`;
                     });
                     contentDiv.innerHTML = html;
@@ -1663,7 +1676,7 @@
                 refreshBackButton();
             }
             
-            // ==================== 登录相关 ====================
+            // 登录相关
             function checkLogin() {
                 const saved = localStorage.getItem('user_qq_encrypted');
                 if (saved) {
@@ -1728,7 +1741,7 @@
                 }
             }
             
-            // ==================== 模态框事件绑定 ====================
+            // 模态框事件绑定
             function bindModalEvents() {
                 const agreementBtn = document.getElementById('agreementBtn');
                 const agreementModal = document.getElementById('agreementModal');
@@ -1737,33 +1750,16 @@
                 const thanksModal = document.getElementById('thanksModal');
                 const closeThanks = document.getElementById('closeThanks');
                 
-                if (agreementBtn && agreementModal) {
-                    agreementBtn.onclick = () => agreementModal.classList.add('show');
-                }
-                if (closeAgreement && agreementModal) {
-                    closeAgreement.onclick = () => agreementModal.classList.remove('show');
-                }
-                if (agreementModal) {
-                    agreementModal.onclick = (e) => {
-                        if (e.target === agreementModal) agreementModal.classList.remove('show');
-                    };
-                }
-                if (thanksBtn && thanksModal) {
-                    thanksBtn.onclick = () => thanksModal.classList.add('show');
-                }
-                if (closeThanks && thanksModal) {
-                    closeThanks.onclick = () => thanksModal.classList.remove('show');
-                }
-                if (thanksModal) {
-                    thanksModal.onclick = (e) => {
-                        if (e.target === thanksModal) thanksModal.classList.remove('show');
-                    };
-                }
+                if (agreementBtn && agreementModal) agreementBtn.onclick = () => agreementModal.classList.add('show');
+                if (closeAgreement && agreementModal) closeAgreement.onclick = () => agreementModal.classList.remove('show');
+                if (agreementModal) agreementModal.onclick = (e) => { if (e.target === agreementModal) agreementModal.classList.remove('show'); };
+                if (thanksBtn && thanksModal) thanksBtn.onclick = () => thanksModal.classList.add('show');
+                if (closeThanks && thanksModal) closeThanks.onclick = () => thanksModal.classList.remove('show');
+                if (thanksModal) thanksModal.onclick = (e) => { if (e.target === thanksModal) thanksModal.classList.remove('show'); };
             }
             
-            // ==================== 绑定事件和初始化 ====================
+            // 绑定事件
             function bindEvents() {
-                // 登录按钮
                 const loginBtn = document.getElementById('loginBtn');
                 const loginInput = document.getElementById('loginQQ');
                 if (loginBtn) loginBtn.addEventListener('click', handleLogin);
@@ -1774,10 +1770,8 @@
                     }
                 });
                 
-                // 模态框事件
                 bindModalEvents();
                 
-                // 其他按钮
                 const supernaturalBtn = document.getElementById('supernaturalBtn');
                 const submitBtn = document.getElementById('submitSignatureBtn');
                 const adminBtn = document.getElementById('adminBtn');
